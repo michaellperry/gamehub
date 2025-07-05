@@ -12,6 +12,10 @@ This guide walks you through the initial project setup, directory structure unde
   - [Directory Structure](#directory-structure)
     - [Root Level Organization](#root-level-organization)
     - [Application Structure (`/app`)](#application-structure-app)
+    - [Infrastructure Structure (`/mesh`)](#infrastructure-structure-mesh)
+    - [Scripts Structure (`/scripts`)](#scripts-structure-scripts)
+  - [Environment Configuration](#environment-configuration)
+    - [Service Authentication Setup](#service-authentication-setup)
   - [Initial Setup Scripts](#initial-setup-scripts)
     - [Automated Setup](#automated-setup)
     - [Manual Setup Steps](#manual-setup-steps)
@@ -78,7 +82,6 @@ app/
 - **gamehub-model** - Shared TypeScript library with dual ESM/CJS builds
 - **player-ip** - Node.js console application for player IP management
 - **gamehub-admin** - Vite-based web application for administration
-```
 
 ### Infrastructure Structure (`/mesh`)
 ```
