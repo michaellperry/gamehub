@@ -10,8 +10,8 @@ This guide covers the setup and configuration of the backend services that provi
     - [Overview of Backend Services](#overview-of-backend-services)
     - [Service Communication Patterns](#service-communication-patterns)
     - [API Design Principles](#api-design-principles)
-  - [Player Identity Provider (player-ip)](#player-identity-provider-player-ip)
-    - [Service Purpose and Authentication Flow](#service-purpose-and-authentication-flow)
+  - [Player IP Management (player-ip)](#player-ip-management-player-ip)
+    - [Service Purpose and Functionality](#service-purpose-and-functionality)
     - [Directory Structure](#directory-structure)
     - [Development Commands](#development-commands)
   - [Service Identity Provider (service-ip)](#service-identity-provider-service-ip)
@@ -70,78 +70,51 @@ GameHub uses a microservices architecture with three specialized backend service
 - **Error Standardization**: Consistent error response formats
 - **Content Negotiation**: JSON for APIs, multipart for file uploads
 
-## Player Identity Provider (player-ip)
+## Player IP Management (player-ip)
 
-### Service Purpose and Authentication Flow
+### Service Purpose and Functionality
 
-The player-ip service implements OAuth 2.0 Authorization Code Flow with PKCE (Proof Key for Code Exchange) to provide secure authentication for player applications.
+The player-ip service is now a Node.js console application for player IP management rather than a web service. It handles player identity and IP address management operations.
 
 **Key Features:**
-- OAuth 2.0 + PKCE implementation
-- JWT token generation and validation
-- Refresh token rotation mechanisms
-- SQLite database for session storage
-- Cookie-based identity management
-- QR code authentication support
+- Node.js console application
+- Player IP address management
+- Integration with shared gamehub-model
+- TypeScript-based implementation
+- Part of the monorepo workspace
 
 ### Directory Structure
 
 ```
 app/player-ip/
 ├── src/
-│   ├── gap/                  # Game Access Protocol
-│   │   ├── index.ts          # GAP initialization
-│   │   ├── jinaga-config.ts  # Jinaga configuration
-│   │   ├── provider.ts       # GAP provider implementation
-│   │   └── subscription.ts   # Real-time subscriptions
-│   ├── config/
-│   │   ├── database.ts       # SQLite database setup
-│   │   └── environment.ts    # Environment configuration
-│   ├── gamehub-model/        # Shared data models
-│   ├── models/               # Service-specific models
-│   │   ├── gap.ts            # GAP type definitions
-│   │   ├── auth.ts           # Authentication models
-│   │   ├── session.ts        # Game session models
-│   │   └── user.ts           # User models
-│   ├── repository/           # Data access layer
-│   │   ├── index.ts          # Repository exports
-│   │   ├── memory/           # In-memory implementations
-│   │   └── sqlite/           # SQLite implementations
-│   ├── routes/
-│   │   ├── auth.ts           # Authentication endpoints
-│   │   └── index.ts          # Route configuration
-│   ├── utils/
-│   │   ├── cookie.ts         # Cookie utilities
-│   │   ├── jwt.ts            # JWT utilities
-│   │   ├── oauth.ts          # OAuth utilities
-│   │   └── service-client.ts # Service client utilities
-│   └── server.ts             # Express server setup
-├── package.json
-├── tsconfig.json
-├── Dockerfile
-└── .env
+│   └── index.ts              # Main console application entry point
+├── package.json              # Package configuration
+├── tsconfig.json             # TypeScript configuration
+└── README.md                 # Service documentation
 ```
+
+The player-ip application is a simple console application that depends on the shared `gamehub-model` package for data models and business logic.
 
 ### Development Commands
 
-```bash
-# Navigate to service
-cd app/player-ip
+Since player-ip is part of the monorepo, you can use the workspace commands:
 
-# Install dependencies
+```bash
+# From the app directory (monorepo root)
+# Install dependencies for all packages
 npm install
 
-# Start development server with hot reload
+# Start development mode for player-ip
+npm run dev:player-ip
+
+# Build only the player-ip package
+npm run build:player-ip
+
+# Or work directly in the package directory
+cd app/player-ip
 npm run dev
-
-# Build TypeScript to JavaScript
 npm run build
-
-# Start production server
-npm start
-
-# Generate JWT for testing
-node generate-jwt.js
 ```
 
 ## Service Identity Provider (service-ip)

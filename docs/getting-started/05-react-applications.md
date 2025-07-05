@@ -12,7 +12,6 @@ This guide provides comprehensive documentation for setting up and configuring R
   - [Project Structure and Architecture](#project-structure-and-architecture)
     - [Directory Organization Following Atomic Design](#directory-organization-following-atomic-design)
       - [Admin Portal Structure](#admin-portal-structure)
-      - [Player Portal Structure](#player-portal-structure)
   - [Jinaga Integration](#jinaga-integration)
     - [Pre-populated Sample Data Setup](#pre-populated-sample-data-setup)
     - [Real-time Data Synchronization Patterns](#real-time-data-synchronization-patterns)
@@ -22,10 +21,11 @@ This guide provides comprehensive documentation for setting up and configuring R
 
 ### Project Initialization
 
-The GameHub platform includes two React applications built with Vite:
+The GameHub platform includes a React application built with Vite as part of the monorepo:
 
 1. **Admin Portal** (`app/gamehub-admin/`) - Management interface for session organizers
-2. **Player Portal** (`app/gamehub-player/`) - Participant interface for game players
+
+Note: The player interface is now handled by the `player-ip` console application rather than a separate React application.
 
 ### Technology Stack
 
@@ -41,7 +41,7 @@ The GameHub platform includes two React applications built with Vite:
 
 ### Directory Organization Following Atomic Design
 
-Both applications follow atomic design principles for component organization:
+The admin application follows atomic design principles for component organization:
 
 #### Admin Portal Structure
 ```
@@ -91,28 +91,7 @@ app/gamehub-admin/
 └── tsconfig.json             # TypeScript configuration
 ```
 
-#### Player Portal Structure
-```
-app/gamehub-player/
-├── public/                   # Static assets
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── atoms/          # Basic UI elements
-│   │   ├── molecules/      # Composite components
-│   │   ├── organisms/      # Complex components
-│   │   └── templates/      # Page templates
-│   ├── player/             # Player-specific features
-│   ├── auth/               # Authentication components
-│   ├── sessions/           # Session participation features
-│   ├── home/               # Landing page components
-│   ├── legal/              # Legal and compliance pages
-│   ├── services/           # API and utility services
-│   ├── styles/             # Global styles
-│   ├── theme/              # Theme configuration
-│   ├── types/              # TypeScript type definitions
-│   └── utils/              # Utility functions
-└── [configuration files]
-```
+The admin application is part of the monorepo and depends on the shared `gamehub-model` package for data models and Jinaga integration.
 
 ## Jinaga Integration
 
@@ -134,6 +113,9 @@ The `jinaga-config.ts` file initializes sample data for development. This data i
 
 ## Next Steps
 
-With React applications configured and running:
+With the React admin application configured and running:
 
 1. **Backend Integration**: Set up API services in [Backend Services](./06-backend-services.md)
+2. **Development Workflow**: Use `npm run dev:admin` from the monorepo root to start development
+3. **Building**: Use `npm run build:admin` to build the admin application
+4. **Model Updates**: Remember to run `npm run build:model` after making changes to the shared model

@@ -4,7 +4,7 @@ Welcome to the GameHub platform - a comprehensive collaborative multiplayer game
 
 ## Overview
 
-GameHub is a full-stack application designed to manage multiplayer gaming sessions and collaborative gameplay experiences. The platform consists of multiple interconnected services including player interfaces, administrative dashboards, and backend services, all orchestrated through Docker Compose.
+GameHub is a full-stack application designed to manage multiplayer gaming sessions and collaborative gameplay experiences. The platform is built as a Node.js monorepo using npm workspaces, containing shared libraries and multiple applications including administrative dashboards and backend services, all orchestrated through Docker Compose.
 
 ## Architecture
 
@@ -19,10 +19,11 @@ The platform is built using:
 ## Quick Start
 
 1. **Prerequisites**: Ensure you have Docker, Node.js, and required development tools installed
-2. **Clone & Setup**: Clone the repository and run initial setup scripts
-3. **Configure**: Set up environment variables and authentication
-4. **Launch**: Use Docker Compose to start all services
-5. **Access**: Navigate to the admin and player interfaces
+2. **Clone & Setup**: Clone the repository and navigate to the app directory
+3. **Install Dependencies**: Run `npm install` to install all workspace dependencies
+4. **Build Shared Model**: Run `npm run build:model` to build the shared Jinaga model
+5. **Start Development**: Use `npm run dev:admin` or `npm run dev:player-ip` for development
+6. **Production Mode**: Use Docker Compose to start all services for production-like environment
 
 ## Documentation Sections
 

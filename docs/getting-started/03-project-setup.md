@@ -12,19 +12,15 @@ This guide walks you through the initial project setup, directory structure unde
   - [Directory Structure](#directory-structure)
     - [Root Level Organization](#root-level-organization)
     - [Application Structure (`/app`)](#application-structure-app)
-    - [Infrastructure Structure (`/mesh`)](#infrastructure-structure-mesh)
-    - [Scripts Structure (`/scripts`)](#scripts-structure-scripts)
-  - [Environment Configuration](#environment-configuration)
-    - [Service Authentication Setup](#service-authentication-setup)
   - [Initial Setup Scripts](#initial-setup-scripts)
     - [Automated Setup](#automated-setup)
     - [Manual Setup Steps](#manual-setup-steps)
       - [1. Install Application Dependencies](#1-install-application-dependencies)
       - [2. Build Shared Model](#2-build-shared-model)
   - [Development Workflow](#development-workflow)
-    - [Production-like Environment (Recommended)](#production-like-environment-recommended)
+    - [Local Development Mode (Recommended for Development)](#local-development-mode-recommended-for-development)
+    - [Production-like Environment](#production-like-environment)
       - [Development URLs (Production Mode)](#development-urls-production-mode)
-    - [Local Development Mode](#local-development-mode)
   - [Next Steps](#next-steps)
 
 ## Repository Setup
@@ -65,15 +61,23 @@ gamehub/
 ```
 
 ### Application Structure (`/app`)
+
+The `/app` directory contains a Node.js monorepo using npm workspaces with the following structure:
+
 ```
 app/
-├── gamehub-admin/          # Admin React application
-├── gamehub-player/         # Player React application
-├── gamehub-model/          # Shared Jinaga data model
-├── service-ip/             # Core backend service
-├── player-ip/              # Player-specific service
-├── content-store/          # File management service
-└── load-test/              # Performance testing
+├── package.json            # Root package.json with workspace configuration
+├── tsconfig.json           # Root TypeScript configuration
+├── gamehub-model/          # Shared TypeScript library with Jinaga domain model
+├── player-ip/              # Node.js console application for player IP management
+├── gamehub-admin/          # Vite-based web application for administration
+└── [other legacy services] # Additional services (being migrated)
+```
+
+**Key Components:**
+- **gamehub-model** - Shared TypeScript library with dual ESM/CJS builds
+- **player-ip** - Node.js console application for player IP management
+- **gamehub-admin** - Vite-based web application for administration
 ```
 
 ### Infrastructure Structure (`/mesh`)
@@ -134,37 +138,29 @@ npm start -- --api-key <your-fusionauth-api-key>
 ### Manual Setup Steps
 
 #### 1. Install Application Dependencies
+
+The monorepo uses npm workspaces, so you can install all dependencies from the root:
+
 ```bash
-# Install shared model dependencies (required first)
-cd app/gamehub-model
-npm install
-npm run build
+# Navigate to the app directory (monorepo root)
+cd app
 
-# Install admin app dependencies
-cd ../gamehub-admin
-npm install
-
-# Install player app dependencies
-cd ../gamehub-player
-npm install
-
-# Install backend service dependencies
-cd ../service-ip
-npm install
-
-cd ../player-ip
-npm install
-
-cd ../content-store
+# Install dependencies for all workspace packages
 npm install
 ```
 
+This single command installs dependencies for all packages in the monorepo:
+- gamehub-model
+- player-ip
+- gamehub-admin
+
 #### 2. Build Shared Model
+
 The Jinaga model must be built before other services can use it:
 
 ```bash
-cd app/gamehub-model
-npm run build
+# From the app directory (monorepo root)
+npm run build:model
 
 # Generate authorization policies
 npm run generate-policies
@@ -172,7 +168,37 @@ npm run generate-policies
 
 ## Development Workflow
 
-### Production-like Environment (Recommended)
+The monorepo supports both local development and production-like environments.
+
+### Local Development Mode (Recommended for Development)
+
+For active development, use the monorepo's development scripts:
+
+```bash
+# Navigate to the app directory (monorepo root)
+cd app
+
+# Install dependencies for all packages
+npm install
+
+# Build the shared model (required first)
+npm run build:model
+
+# Start development mode for admin application
+npm run dev:admin  # Usually runs on http://localhost:5173
+
+# OR start development mode for player-ip console application
+npm run dev:player-ip
+```
+
+**Available Development Scripts:**
+- `npm run build` - Build all packages
+- `npm run build:model` - Build only the gamehub-model package
+- `npm run dev:admin` - Start development mode for gamehub-admin
+- `npm run dev:player-ip` - Start development mode for player-ip
+- `npm run generate-policies` - Generate Jinaga policies from gamehub-model
+
+### Production-like Environment
 Start all services using Docker Compose for a production-like environment:
 
 ```bash
@@ -192,48 +218,30 @@ docker compose logs -f [service-name]
 #### Development URLs (Production Mode)
 - **Main Application**: http://localhost (Nginx routes to appropriate apps)
 - **Admin Portal**: http://localhost/admin
-- **Player Portal**: http://localhost/player
 - **FusionAuth Admin**: http://localhost:9011
 - **Jinaga Replicator**: http://localhost:8080 (internal)
 
-When you make a change to service code, run this command again to update the containers. This is not necessary for deploying common application changes.
+When you make changes to the model or authorization rules:
 
 ```bash
-# After changing authorization or distribution rules, build and deploy a policy file for the replicator
-cd app/gamehub-model
-npm run build
+# From the app directory (monorepo root)
+npm run build:model
 npm run generate-policies
 
 # Restart the replicator service to apply changes
-cd ../../mesh
+cd ../mesh
 docker compose restart front-end-replicator
 ```
 
+When you make changes to the admin application:
+
 ```bash
-# After changing the admin portal, build and deploy a new bundle to NGINX
-cd app/gamehub-admin
+# From the app directory (monorepo root)
+npm run build:admin
+
+# Or build and deploy to container
+cd gamehub-admin
 npm run build:container
-```
-
-```bash
-# After changing the player app, build and deploy a new bundle to NGINX
-cd app/gamehub-player
-npm run build:container
-```
-
-### Local Development Mode
-In development mode, applications use an in-memory data store seeded with test data. Edit the test data in `jinaga-config.ts` to set up local development scenarios.
-
-```bash
-# Admin app development
-cd app/gamehub-admin
-npm run dev  # Usually runs on http://localhost:5173
-```
-
-```bash
-# Player app development
-cd app/gamehub-player
-npm run dev  # Usually runs on http://localhost:5174
 ```
 
 ## Next Steps

@@ -308,10 +308,19 @@ The model package includes automated policy generation for the replicator servic
 
 The `generate-policies` script compiles the model to CommonJS and generates security policies based on the defined authorization and distribution rules. It outputs the policies to a directory mounted to the replicator in the Docker Compose mesh.
 
+In the monorepo, you can run the policy generation from the root:
+
+```bash
+# From the app directory (monorepo root)
+npm run generate-policies
+```
+
+This script is defined in the root package.json and runs the policy generation for the gamehub-model package:
+
 ```json
 {
   "scripts": {
-    "generate-policies": "npm run build:cjs && node --enable-source-maps ./dist/cjs --generate-policies > ../../mesh/front-end/policies/gamehub.policy"
+    "generate-policies": "npm run generate-policies --workspace=gamehub-model"
   }
 }
 ```
@@ -319,10 +328,12 @@ The `generate-policies` script compiles the model to CommonJS and generates secu
 Run this script after making changes to the model or rules to ensure the replicator has the latest policies. Then restart the replicator service to apply the new policies.
 
 ```bash
-cd app/gamehub-model
+# From the app directory (monorepo root)
+npm run build:model
 npm run generate-policies
 
-cd ../../mesh
+# Navigate to mesh and restart the replicator
+cd ../mesh
 docker-compose restart front-end-replicator
 ```
 
