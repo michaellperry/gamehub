@@ -1,20 +1,24 @@
 {
   "name": "player-ip",
   "version": "1.0.0",
-  "description": "GameHub Player IP Console Application",
+  "description": "GameHub Player IP Console Application - Demonstrates usage of gamehub-model",
   "private": true,
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "echo 'Build script will be implemented'",
-    "dev": "echo 'Dev script will be implemented'",
-    "start": "echo 'Start script will be implemented'"
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "npm run build && node dist/index.js",
+    "clean": "rimraf dist",
+    "rebuild": "npm run clean && npm run build"
   },
   "dependencies": {
-    "gamehub-model": "*"
+    "gamehub-model": "file:../gamehub-model",
+    "jinaga": "^6.7.8"
   },
   "devDependencies": {
     "@types/node": "^22.15.17",
+    "rimraf": "^5.0.5",
     "typescript": "^5.8.2"
   },
   "author": "Michael L Perry",
