@@ -1,0 +1,73 @@
+{
+  "name": "gamehub-model",
+  "version": "1.0.0",
+  "description": "GameHub domain model",
+  "type": "module",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/types/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./authorization": {
+      "import": {
+        "types": "./dist/types/authorization/index.d.ts",
+        "default": "./dist/esm/authorization/index.js"
+      },
+      "require": {
+        "types": "./dist/types/authorization/index.d.ts",
+        "default": "./dist/cjs/authorization/index.js"
+      }
+    },
+    "./distribution": {
+      "import": {
+        "types": "./dist/types/distribution/index.d.ts",
+        "default": "./dist/esm/distribution/index.js"
+      },
+      "require": {
+        "types": "./dist/types/distribution/index.d.ts",
+        "default": "./dist/cjs/distribution/index.js"
+      }
+    },
+    "./model": {
+      "import": {
+        "types": "./dist/types/model/index.d.ts",
+        "default": "./dist/esm/model/index.js"
+      },
+      "require": {
+        "types": "./dist/types/model/index.d.ts",
+        "default": "./dist/cjs/model/index.js"
+      }
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:types": "tsc -p tsconfig.types.json",
+    "generate-policies": "npm run build:cjs && node --enable-source-maps ./dist/cjs --generate-policies > ../../mesh/front-end/policies/gamehub.policy",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Michael L Perry",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "jinaga": "^6.7.8"
+  }
+}
