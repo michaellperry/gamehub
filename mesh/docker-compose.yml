@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  service-ip:
+    build:
+      context: ../app/service-ip
+      dockerfile: Dockerfile
+    container_name: gamehub-service-ip
+    ports:
+      - "8083:8083"
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=8083
+      - JWT_SECRET=${JWT_SECRET:-production-secret-key-change-me}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN:-1h}
+      - JWT_ISSUER=${JWT_ISSUER:-service-ip}
+      - JWT_AUDIENCE=${JWT_AUDIENCE:-service-clients}
+      - JWT_KEY_ID=${JWT_KEY_ID:-service-ip-key}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CLIENTS_DIR=/app/secrets/clients
+    volumes:
+      - ./secrets/service-ip/clients:/app/secrets/clients:ro
+      - ./secrets/shared:/app/secrets/shared:ro
+    networks:
+      - gamehub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8083/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on: []
+
+networks:
+  gamehub-network:
+    driver: bridge
+    name: gamehub-network
+
+volumes:
+  service-ip-data:
+    name: gamehub-service-ip-data

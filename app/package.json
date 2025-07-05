@@ -7,17 +7,21 @@
   "workspaces": [
     "gamehub-model",
     "player-ip",
-    "gamehub-admin"
+    "gamehub-admin",
+    "service-ip"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "build:model": "npm run build --workspace=gamehub-model",
     "build:player-ip": "npm run build --workspace=player-ip",
     "build:admin": "npm run build --workspace=gamehub-admin",
+    "build:service-ip": "npm run build --workspace=service-ip",
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "dev:player-ip": "npm run build:model && npm run dev --workspace=player-ip",
     "dev:admin": "npm run build:model && npm run dev --workspace=gamehub-admin",
+    "dev:service-ip": "npm run dev --workspace=service-ip",
+    "start:service-ip": "npm run start --workspace=service-ip",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
@@ -25,8 +29,8 @@
     "generate-policies": "npm run generate-policies --workspace=gamehub-model"
   },
   "devDependencies": {
-    "@types/node": "^22.15.17",
-    "typescript": "^5.8.2",
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.2",
     "rimraf": "^5.0.5"
   },
   "engines": {
