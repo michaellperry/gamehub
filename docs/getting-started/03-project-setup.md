@@ -114,7 +114,7 @@ Run these commands to generate and configure the shared secrets:
 ```bash
 SHARED_SECRET=$(openssl rand -base64 32)
 mkdir -p mesh/secrets/service-ip/clients
-echo "player-ip:$SHARED_SECRET" > mesh/secrets/service-ip/clients/player-ip
+echo "$SHARED_SECRET" > mesh/secrets/service-ip/clients/player-ip
 mkdir -p mesh/secrets/player-ip
 echo "$SHARED_SECRET" > mesh/secrets/player-ip/service-ip-client
 ```
