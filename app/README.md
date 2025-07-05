@@ -55,8 +55,7 @@ npm run build --workspace=gamehub-model
 ## Development Workflow
 
 1. **Install dependencies**: `npm install`
-2. **Build the shared model**: `npm run build:model`
-3. **Start development**: `npm run dev:admin` or `npm run dev:player-ip`
+2. **Start development**: `npm run dev:admin` or `npm run dev:player-ip` (automatically builds model first)
 
 ## Package Dependencies
 
