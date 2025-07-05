@@ -1,0 +1,38 @@
+{
+  "name": "gamehub-monorepo",
+  "version": "1.0.0",
+  "description": "GameHub monorepo containing shared model, player IP console app, and admin web app",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "gamehub-model",
+    "player-ip",
+    "gamehub-admin"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:model": "npm run build --workspace=gamehub-model",
+    "build:player-ip": "npm run build --workspace=player-ip",
+    "build:admin": "npm run build --workspace=gamehub-admin",
+    "clean": "npm run clean --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:player-ip": "npm run dev --workspace=player-ip",
+    "dev:admin": "npm run dev --workspace=gamehub-admin",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "type-check": "npm run type-check --workspaces --if-present",
+    "install-all": "npm install",
+    "generate-policies": "npm run generate-policies --workspace=gamehub-model"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "typescript": "^5.8.2",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "author": "Michael L Perry",
+  "license": "ISC"
+}

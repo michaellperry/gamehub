@@ -1,0 +1,22 @@
+{
+  "name": "gamehub-admin",
+  "version": "1.0.0",
+  "description": "GameHub Admin Web Application",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'Build script will be implemented'",
+    "dev": "echo 'Dev script will be implemented'",
+    "preview": "echo 'Preview script will be implemented'"
+  },
+  "dependencies": {
+    "gamehub-model": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "typescript": "^5.8.2",
+    "vite": "^5.0.0"
+  },
+  "author": "Michael L Perry",
+  "license": "ISC"
+}

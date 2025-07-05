@@ -1,0 +1,22 @@
+{
+  "name": "player-ip",
+  "version": "1.0.0",
+  "description": "GameHub Player IP Console Application",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "echo 'Build script will be implemented'",
+    "dev": "echo 'Dev script will be implemented'",
+    "start": "echo 'Start script will be implemented'"
+  },
+  "dependencies": {
+    "gamehub-model": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.17",
+    "typescript": "^5.8.2"
+  },
+  "author": "Michael L Perry",
+  "license": "ISC"
+}
