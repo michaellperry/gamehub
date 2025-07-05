@@ -626,16 +626,16 @@ Error: invalid_client or invalid_grant
 ```bash
 # Verify client credentials exist
 ls -la mesh/secrets/service-ip/clients/
-cat mesh/secrets/service-ip/clients/test-client
+cat mesh/secrets/service-ip/clients/your-client-id
 
 # Check client configuration format
-cat mesh/secrets/service-ip/clients/test-client.json
-# Should contain: {"clientId": "test-client", "clientSecret": "...", "scopes": [...]}
+cat mesh/secrets/service-ip/clients/your-client-id.json
+# Should contain: {"clientId": "your-client-id", "clientSecret": "...", "scopes": [...]}
 
 # Test token endpoint directly
 curl -X POST http://localhost:8083/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)"
+  -d "grant_type=client_credentials&client_id=your-client-id&client_secret=$(cat mesh/secrets/service-ip/clients/your-client-id)"
 
 # Check service-ip logs
 docker compose logs service-ip
@@ -723,7 +723,7 @@ Error: 401 Unauthorized when calling other services
 # Test token generation
 TOKEN=$(curl -s -X POST http://localhost:8083/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)" \
+  -d "grant_type=client_credentials&client_id=your-client-id&client_secret=$(cat mesh/secrets/service-ip/clients/your-client-id)" \
   | jq -r '.access_token')
 
 echo "Generated token: $TOKEN"
@@ -1088,11 +1088,11 @@ docker-compose logs front-end-replicator > replicator.log
 curl -I http://localhost:8083/health
 curl -X POST http://localhost:8083/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)"
+  -d "grant_type=client_credentials&client_id=your-client-id&client_secret=$(cat mesh/secrets/service-ip/clients/your-client-id)"
 
 # Debug client credentials
 ls -la mesh/secrets/service-ip/clients/
-cat mesh/secrets/service-ip/clients/test-client.json
+cat mesh/secrets/service-ip/clients/your-client-id.json
 
 # Check service-ip logs and environment
 docker-compose exec service-ip env | grep -E "(PORT|JWT_SECRET|CLIENTS_DIR|NODE_ENV)"
@@ -1101,7 +1101,7 @@ docker-compose logs service-ip --tail=50
 # Test JWT token validation
 TOKEN=$(curl -s -X POST http://localhost:8083/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)" \
+  -d "grant_type=client_credentials&client_id=your-client-id&client_secret=$(cat mesh/secrets/service-ip/clients/your-client-id)" \
   | jq -r '.access_token')
 echo $TOKEN | cut -d. -f2 | base64 -d | jq .
 ```

@@ -193,7 +193,7 @@ Service-ip uses file-based client management stored in `mesh/secrets/service-ip/
 **Client Configuration Example:**
 ```json
 {
-  "clientId": "test-client",
+  "clientId": "your-client-id",
   "clientSecret": "generated-secret-value",
   "scopes": ["read", "write"],
   "description": "Test client for development"

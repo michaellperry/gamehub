@@ -121,8 +121,20 @@ jobs:
         
     - name: Run integration tests
       run: |
-        chmod +x scripts/test-service-ip.sh
-        ./scripts/test-service-ip.sh
+        # Test health endpoint
+        curl -f http://localhost:8083/health
+        
+        # Test OAuth token endpoint
+        curl -X POST http://localhost:8083/token \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "grant_type=client_credentials&client_id=test-client&client_secret=test-secret-123" \
+          | jq -e '.access_token'
+        
+        # Test invalid credentials
+        ! curl -X POST http://localhost:8083/token \
+          -H "Content-Type: application/x-www-form-urlencoded" \
+          -d "grant_type=client_credentials&client_id=invalid&client_secret=invalid" \
+          | jq -e '.access_token'
         
     - name: Check service logs
       if: failure()

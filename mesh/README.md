@@ -19,10 +19,10 @@ This directory contains the Docker Compose configuration and deployment scripts 
    ./scripts/deploy-mesh.sh
    ```
 
-3. **Test Deployment**:
+3. **Verify Deployment**:
    ```bash
-   # Test service-ip functionality
-   ./scripts/test-service-ip.sh
+   # Check service health
+   curl http://localhost:8083/health
    ```
 
 ## Services
@@ -57,21 +57,12 @@ mesh/
 ├── secrets/
 │   ├── service-ip/
 │   │   └── clients/
-│   │       ├── test-client.json
-│   │       └── [other-client].json
+│   │       └── [client-files]
 │   └── shared/
 │       └── [shared-secrets]
 ```
 
-Each client file should contain:
-```json
-{
-  "client_id": "unique-client-id",
-  "client_secret": "secure-client-secret",
-  "name": "Client Display Name",
-  "description": "Client description"
-}
-```
+Each client file has the name of the client ID and contains the client secret in plain text. The directory should be mounted as a read-only volume in the Docker container.
 
 ## Docker Compose Commands
 
@@ -135,13 +126,13 @@ docker-compose logs --tail=50 service-ip
 
 ## Testing
 
-### Automated Testing
+### Service Verification
 ```bash
-# Run comprehensive tests
-./scripts/test-service-ip.sh
+# Check service health
+curl http://localhost:8083/health
 
-# Test with custom endpoint
-SERVICE_IP_URL=http://localhost:8083 ./scripts/test-service-ip.sh
+# Check service status
+docker-compose ps service-ip
 ```
 
 ### Manual Testing
@@ -155,7 +146,7 @@ SERVICE_IP_URL=http://localhost:8083 ./scripts/test-service-ip.sh
    ```bash
    curl -X POST http://localhost:8083/token \
      -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "grant_type=client_credentials&client_id=test-client&client_secret=test-secret-123"
+     -d "grant_type=client_credentials&client_id=your-client-id&client_secret=your-client-secret"
    ```
 
 3. **Test Invalid Credentials**:
