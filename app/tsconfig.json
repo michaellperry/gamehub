@@ -18,8 +18,8 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "gamehub-model": ["./gamehub-model/dist/esm/index.js"],
-      "gamehub-model/*": ["./gamehub-model/dist/esm/*"]
+      "gamehub-model": ["./gamehub-model/dist/types/index.d.ts"],
+      "gamehub-model/*": ["./gamehub-model/dist/types/*"]
     }
   },
   "references": [

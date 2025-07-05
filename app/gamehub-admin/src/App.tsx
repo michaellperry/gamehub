@@ -1,50 +1,41 @@
-// Import only what we need to avoid process.argv issues
+// Import gamehub-model components
 import { User } from 'jinaga'
+import { model, authorization, distribution, getModelInfo } from 'gamehub-model'
+import {
+  Tenant,
+  Player,
+  GameSession,
+  PlayerName,
+  GameSessionName,
+  Participant
+} from 'gamehub-model/model'
 import './App.css'
 
-// For demonstration, we'll create mock types that match the gamehub-model structure
-interface MockTenant {
-  type: string
-  creator: { publicKey: string }
-}
-
-interface MockPlayer {
-  type: string
-  createdAt: string
-  tenant: MockTenant
-}
-
-interface MockGameSession {
-  type: string
-  id: string
-  tenant: MockTenant
-}
-
 function App() {
-  // Demonstrate that we can reference the types and create mock data
+  // Demonstrate actual gamehub-model usage
   const modelInfo = {
-    hasModel: true, // We'll show this works conceptually
-    hasAuthorization: true,
-    hasDistribution: true,
-    authModules: 2, // Mock values
-    distModules: 1
+    hasModel: !!model,
+    hasAuthorization: !!authorization,
+    hasDistribution: !!distribution,
+    factTypes: Object.keys(model.given || {}).length,
+    authModules: Object.keys(authorization || {}).length,
+    distModules: Object.keys(distribution || {}).length,
+    ...getModelInfo() // Integration test: use new function from gamehub-model
   }
 
-  // Create sample instances to show type usage with mock data
+  // Create actual instances using gamehub-model
   const sampleUser = new User('admin@gamehub.com')
-  const sampleTenant: MockTenant = {
-    type: "GameHub.Tenant",
-    creator: sampleUser
-  }
-  const samplePlayer: MockPlayer = {
-    type: "GameHub.Player",
-    createdAt: new Date().toISOString(),
-    tenant: sampleTenant
-  }
-  const sampleSession: MockGameSession = {
-    type: "GameHub.GameSession",
-    id: 'demo-session',
-    tenant: sampleTenant
+  const sampleTenant = new Tenant(sampleUser)
+  const samplePlayer = new Player(sampleTenant, new Date().toISOString())
+  const playerName = new PlayerName(samplePlayer, 'Admin Player', [])
+  const sampleSession = new GameSession(sampleTenant, `admin-session-${Date.now()}`)
+  const sessionName = new GameSessionName(sampleSession, 'Admin Demo Session', [])
+  const participant = new Participant(sampleUser, sampleTenant)
+  
+  // Additional data for display
+  const participantInfo = {
+    user: participant.user.publicKey,
+    tenant: participant.tenant.creator.publicKey
   }
 
   return (
@@ -71,9 +62,9 @@ function App() {
             <div className="info-card">
               <h3>🏗️ Type References</h3>
               <ul>
-                <li>Tenant: {sampleTenant.type}</li>
-                <li>Player: {samplePlayer.type}</li>
-                <li>GameSession: {sampleSession.type}</li>
+                <li>Tenant: {Tenant.Type}</li>
+                <li>Player: {Player.Type}</li>
+                <li>GameSession: {GameSession.Type}</li>
                 <li>User: {sampleUser.publicKey}</li>
               </ul>
             </div>
@@ -81,8 +72,10 @@ function App() {
             <div className="info-card">
               <h3>📊 Module Stats</h3>
               <ul>
+                <li>Fact types: {modelInfo.factTypes}</li>
                 <li>Authorization modules: {modelInfo.authModules}</li>
                 <li>Distribution modules: {modelInfo.distModules}</li>
+                <li>Model version: {modelInfo.version}</li>
                 <li>Vite HMR: Active</li>
                 <li>TypeScript: Enabled</li>
               </ul>
@@ -96,7 +89,7 @@ function App() {
             <div className="data-item">
               <h4>Sample Tenant</h4>
               <pre>{JSON.stringify({
-                type: sampleTenant.type,
+                type: Tenant.Type,
                 creator: sampleTenant.creator.publicKey
               }, null, 2)}</pre>
             </div>
@@ -104,18 +97,27 @@ function App() {
             <div className="data-item">
               <h4>Sample Player</h4>
               <pre>{JSON.stringify({
-                type: samplePlayer.type,
+                type: Player.Type,
                 createdAt: samplePlayer.createdAt,
-                tenant: samplePlayer.tenant.type
+                name: playerName.name
               }, null, 2)}</pre>
             </div>
             
             <div className="data-item">
               <h4>Sample Game Session</h4>
               <pre>{JSON.stringify({
-                type: sampleSession.type,
+                type: GameSession.Type,
                 id: sampleSession.id,
-                tenant: sampleSession.tenant.type
+                name: sessionName.value
+              }, null, 2)}</pre>
+            </div>
+            
+            <div className="data-item">
+              <h4>Sample Participant</h4>
+              <pre>{JSON.stringify({
+                type: Participant.Type,
+                user: participantInfo.user,
+                tenant: participantInfo.tenant
               }, null, 2)}</pre>
             </div>
           </div>

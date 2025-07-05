@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { User } from "jinaga";
-import { model, authorization, distribution } from "gamehub-model";
+import { model, authorization, distribution, getModelInfo } from "gamehub-model";
 import { 
   Tenant, 
   Player, 
@@ -28,6 +28,13 @@ console.log("=========================================\n");
 console.log("📦 Model Information:");
 console.log(`Model contains ${Object.keys(model.given).length} fact types`);
 console.log("Available fact types:", Object.keys(model.given).join(", "));
+
+// Test integration with new function
+const modelInfo = getModelInfo();
+console.log("📋 Integration Test:");
+console.log(`Model version: ${modelInfo.version}`);
+console.log(`Build timestamp: ${modelInfo.timestamp}`);
+console.log(`Available modules: ${modelInfo.modules.join(", ")}`);
 console.log();
 
 // Create sample data to demonstrate the model
@@ -122,6 +129,7 @@ export {
   model,
   authorization,
   distribution,
+  getModelInfo,
   Tenant,
   Player,
   GameSession,

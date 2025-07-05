@@ -3,6 +3,15 @@ import { authorization } from "./authorization/index.js";
 import { model } from "./model/index.js";
 import { distribution } from "./distribution/index.js";
 
+// Utility function for testing integration
+export function getModelInfo() {
+  return {
+    version: "1.0.0",
+    timestamp: new Date().toISOString(),
+    modules: ["model", "authorization", "distribution"]
+  };
+}
+
 // Re-export the modules
 export { authorization } from "./authorization/index.js";
 export { distribution } from "./distribution/index.js";
@@ -13,6 +22,7 @@ export default {
   authorization,
   distribution,
   model,
+  getModelInfo,
   describeAuthorizationRules,
   describeDistributionRules,
 };
