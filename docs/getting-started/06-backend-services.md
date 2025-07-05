@@ -205,7 +205,7 @@ For detailed client setup procedures, see [Deployment - Client Management](./09-
 ### API Endpoints
 
 **Primary Endpoint:**
-- `POST /oauth/token` - OAuth 2.0 Client Credentials token endpoint
+- `POST /token` - OAuth 2.0 Client Credentials token endpoint
 - `GET /health` - Service health check
 
 **Standard OAuth 2.0 Response:**
