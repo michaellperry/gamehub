@@ -44,6 +44,12 @@ This guide provides solutions to common issues encountered when setting up, deve
     - [API Endpoint Issues](#api-endpoint-issues)
       - [Problem: 404 Not Found for API routes](#problem-404-not-found-for-api-routes)
       - [Problem: 500 Internal Server Error](#problem-500-internal-server-error)
+    - [Service IP Issues](#service-ip-issues)
+      - [Problem: OAuth token request fails](#problem-oauth-token-request-fails)
+      - [Problem: JWT token validation fails](#problem-jwt-token-validation-fails)
+      - [Problem: Client credentials file not found](#problem-client-credentials-file-not-found)
+      - [Problem: Service-ip container fails to start](#problem-service-ip-container-fails-to-start)
+      - [Problem: Service-to-service authentication fails](#problem-service-to-service-authentication-fails)
     - [Jinaga Issues](#jinaga-issues)
       - [Problem: Jinaga replicator connection fails](#problem-jinaga-replicator-connection-fails)
       - [Problem: Authorization policies not working](#problem-authorization-policies-not-working)
@@ -68,6 +74,7 @@ This guide provides solutions to common issues encountered when setting up, deve
       - [Jinaga Model Issues](#jinaga-model-issues)
       - [Frontend Build Issues](#frontend-build-issues)
       - [Backend Service Issues](#backend-service-issues-1)
+      - [Service IP Debugging](#service-ip-debugging)
     - [Support Resources](#support-resources)
     - [Creating Bug Reports](#creating-bug-reports)
     - [Quick Diagnostic Commands](#quick-diagnostic-commands)
@@ -608,6 +615,130 @@ router.get('/sessions', async (req, res) => {
 });
 ```
 
+### Service IP Issues
+
+#### Problem: OAuth token request fails
+```bash
+Error: invalid_client or invalid_grant
+```
+
+**Solution:**
+```bash
+# Verify client credentials exist
+ls -la mesh/secrets/service-ip/clients/
+cat mesh/secrets/service-ip/clients/test-client
+
+# Check client configuration format
+cat mesh/secrets/service-ip/clients/test-client.json
+# Should contain: {"clientId": "test-client", "clientSecret": "...", "scopes": [...]}
+
+# Test token endpoint directly
+curl -X POST http://localhost:8083/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)"
+
+# Check service-ip logs
+docker compose logs service-ip
+```
+
+#### Problem: JWT token validation fails
+```bash
+Error: JsonWebTokenError: invalid signature
+```
+
+**Solution:**
+```bash
+# Verify JWT_SECRET matches between services
+echo $JWT_SECRET
+
+# Check token format and expiration
+# Use jwt.io to decode and inspect token
+
+# Ensure consistent JWT_SECRET across all services
+# In .env files:
+JWT_SECRET=your-shared-secret-here
+
+# Restart services after changing JWT_SECRET
+docker compose restart service-ip
+```
+
+#### Problem: Client credentials file not found
+```bash
+Error: ENOENT: no such file or directory, open 'clients/client-name'
+```
+
+**Solution:**
+```bash
+# Create client credentials directory
+mkdir -p mesh/secrets/service-ip/clients
+
+# Generate new client credentials
+CLIENT_SECRET=$(openssl rand -base64 32)
+echo "$CLIENT_SECRET" > mesh/secrets/service-ip/clients/new-client
+
+# Create JSON configuration
+echo "{
+  \"clientId\": \"new-client\",
+  \"clientSecret\": \"$CLIENT_SECRET\",
+  \"scopes\": [\"read\", \"write\"],
+  \"description\": \"New service client\"
+}" > mesh/secrets/service-ip/clients/new-client.json
+
+# Verify file permissions
+ls -la mesh/secrets/service-ip/clients/
+```
+
+#### Problem: Service-ip container fails to start
+```bash
+Error: Container exits with code 1
+```
+
+**Solution:**
+```bash
+# Check container logs
+docker compose logs service-ip
+
+# Verify environment variables
+docker compose exec service-ip env | grep -E "(PORT|JWT_SECRET|CLIENTS_DIR)"
+
+# Check volume mounts
+docker compose exec service-ip ls -la /app/secrets/clients
+
+# Verify Dockerfile and build process
+docker build -t service-ip ./app/service-ip
+docker run --rm service-ip npm test
+
+# Check for port conflicts
+lsof -i :8083  # macOS/Linux
+netstat -ano | findstr :8083  # Windows
+```
+
+#### Problem: Service-to-service authentication fails
+```bash
+Error: 401 Unauthorized when calling other services
+```
+
+**Solution:**
+```bash
+# Test token generation
+TOKEN=$(curl -s -X POST http://localhost:8083/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)" \
+  | jq -r '.access_token')
+
+echo "Generated token: $TOKEN"
+
+# Test token usage
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8081/api/protected-endpoint
+
+# Verify token payload
+echo $TOKEN | cut -d. -f2 | base64 -d | jq .
+
+# Check service logs for authentication errors
+docker compose logs player-ip
+docker compose logs content-store
+```
+
 ### Jinaga Issues
 
 #### Problem: Jinaga replicator connection fails
@@ -919,6 +1050,9 @@ cat .env | sed 's/=.*/=***/'
 curl -I http://localhost
 curl -I http://localhost:9011
 curl -I http://localhost:8080
+curl -I http://localhost:8083/health  # service-ip
+curl -I http://localhost:8082  # player-ip
+curl -I http://localhost:8081  # content-store
 ```
 
 ### Service-Specific Debugging
@@ -942,9 +1076,34 @@ npm run build 2>&1 | tee player-build.log
 #### Backend Service Issues
 ```bash
 cd mesh/
-docker-compose logs game-service > game-service.log
-docker-compose logs player-service > player-service.log
+docker-compose logs service-ip > service-ip.log
+docker-compose logs player-ip > player-ip.log
+docker-compose logs content-store > content-store.log
 docker-compose logs front-end-replicator > replicator.log
+```
+
+#### Service IP Debugging
+```bash
+# Check service-ip health and configuration
+curl -I http://localhost:8083/health
+curl -X POST http://localhost:8083/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)"
+
+# Debug client credentials
+ls -la mesh/secrets/service-ip/clients/
+cat mesh/secrets/service-ip/clients/test-client.json
+
+# Check service-ip logs and environment
+docker-compose exec service-ip env | grep -E "(PORT|JWT_SECRET|CLIENTS_DIR|NODE_ENV)"
+docker-compose logs service-ip --tail=50
+
+# Test JWT token validation
+TOKEN=$(curl -s -X POST http://localhost:8083/oauth/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials&client_id=test-client&client_secret=$(cat mesh/secrets/service-ip/clients/test-client)" \
+  | jq -r '.access_token')
+echo $TOKEN | cut -d. -f2 | base64 -d | jq .
 ```
 
 ### Support Resources

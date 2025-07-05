@@ -76,6 +76,7 @@ app/
 ├── package.json            # Root package.json with workspace configuration
 ├── tsconfig.json           # Root TypeScript configuration
 ├── gamehub-model/          # Shared TypeScript library with Jinaga domain model
+├── service-ip/             # OAuth 2.0 Client Credentials service (Port 8083)
 ├── player-ip/              # Node.js console application for player IP management
 ├── gamehub-admin/          # Vite-based web application for administration
 └── [other legacy services] # Additional services (being migrated)
@@ -83,6 +84,7 @@ app/
 
 **Key Components:**
 - **gamehub-model** - Shared TypeScript library with dual ESM/CJS builds
+- **service-ip** - OAuth 2.0 Client Credentials service for service-to-service authentication
 - **player-ip** - Node.js console application for player IP management
 - **gamehub-admin** - Vite-based web application for administration
 
@@ -194,8 +196,11 @@ npm run dev:player-ip
 **Available Development Scripts:**
 - `npm run build` - Build all packages
 - `npm run build:model` - Build only the gamehub-model package
+- `npm run build:service-ip` - Build only the service-ip package
 - `npm run dev:admin` - Start development mode for gamehub-admin
+- `npm run dev:service-ip` - Start development mode for service-ip
 - `npm run dev:player-ip` - Start development mode for player-ip
+- `npm run start:service-ip` - Start production mode for service-ip
 - `npm run generate-policies` - Generate Jinaga policies from gamehub-model
 
 ### Production-like Environment
