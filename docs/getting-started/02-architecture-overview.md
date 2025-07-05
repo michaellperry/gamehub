@@ -4,61 +4,62 @@ This guide provides a high-level overview of the GameHub platform architecture, 
 
 ## Table of Contents
 
-- [System Architecture](#system-architecture)
-- [Core Components](#core-components)
-- [Data Architecture](#data-architecture)
-- [Service Communication](#service-communication)
-- [Security Architecture](#security-architecture)
-- [Deployment Architecture](#deployment-architecture)
+- [Architecture Overview](#architecture-overview)
+  - [Table of Contents](#table-of-contents)
+  - [System Architecture](#system-architecture)
+    - [High-Level Overview](#high-level-overview)
+    - [Architecture Diagram](#architecture-diagram)
+  - [Core Components](#core-components)
+    - [Frontend Applications](#frontend-applications)
+      - [Admin Portal (`gamehub-admin`)](#admin-portal-gamehub-admin)
+      - [Player Portal (`gamehub-player`)](#player-portal-gamehub-player)
+    - [Backend Services](#backend-services)
+      - [Service IP (Port 8083)](#service-ip-port-8083)
+      - [Player IP (Port 8082)](#player-ip-port-8082)
+      - [Content Store (Port 8081)](#content-store-port-8081)
+      - [Jinaga Replicator (Port 8080)](#jinaga-replicator-port-8080)
+  - [Data Architecture](#data-architecture)
+    - [Jinaga Model](#jinaga-model)
+    - [Data Flow](#data-flow)
+    - [Storage Layers](#storage-layers)
+  - [Next Steps](#next-steps)
 
 ## System Architecture
 
 ### High-Level Overview
 GameHub follows a microservices architecture pattern with the following key characteristics:
 - **Frontend**: Multiple React applications for different user roles
-- **Backend**: Node.js services with RESTful APIs
 - **Data Layer**: Jinaga for distributed data management
+- **Backend Services**: Game logic and content
 - **Orchestration**: Docker Compose for local development
-- **Authentication**: OAuth 2.0 with Azure AD integration
+- **Authentication**: OAuth 2.0 identity providers (IP) for different audiences
 
 ### Architecture Diagram
-```
-┌─────────────────┐    ┌─────────────────┐
-│  Admin Portal   │    │  Player Portal  │
-│   (React/Vite)  │    │   (React/Vite)  │
-│   Static Files  │    │   Static Files  │
-└─────────┬───────┘    └─────────┬───────┘
-          │                      │
-          └──────────┬───────────┘
-                     │
-         ┌───────────▼───────────┐
-         │       Nginx           │
-         │   (Port 80)           │
-         │  Reverse Proxy        │
-         └───┬───────────────┬───┘
-             │               │
-    ┌────────▼────┐    ┌─────▼──────┐
-    │  Player IP  │    │Content Store│
-    │ (Port 8082) │    │(Port 8081)  │
-    └─────┬───────┘    └─────┬──────┘
-          │                  │
-          └──────┬───────────┘
-                 │
-    ┌────────────▼────────────┐
-    │      Service IP         │
-    │     (Port 8083)         │
-    └─────────┬───────────────┘
-              │
-    ┌─────────▼─────────┐
-    │ Jinaga Replicator │
-    │   (Port 8080)     │
-    └─────────┬─────────┘
-              │
-    ┌─────────▼─────────┐    ┌─────────────┐
-    │   PostgreSQL      │    │ FusionAuth  │
-    │   (Port 5432)     │    │(Port 9011)  │
-    │  Database + Auth  │    │Auth Service │
-    └───────────────────┘    └─────────────┘
+```mermaid
+graph TD
+    A[Admin Portal<br/>React/Vite<br/>Static Files] --> C[Nginx<br/>Port 80<br/>Reverse Proxy]
+    B[Player Portal<br/>React/Vite<br/>Static Files] --> C
+    
+    C --> D[Player IP<br/>Port 8082]
+    C --> E[Content Store<br/>Port 8081]
+    
+    D --> F[Service IP<br/>Port 8083]
+    E --> F
+    
+    C --> G[Jinaga Replicator<br/>Port 8080]
+    
+    C --> I[FusionAuth<br/>Port 9011<br/>Auth Service]
+    I --> H[PostgreSQL<br/>Port 5432<br/>Database + Auth]
+    
+    style A fill:#e1f5fe
+    style B fill:#e1f5fe
+    style C fill:#f3e5f5
+    style D fill:#fff3e0
+    style E fill:#fff3e0
+    style F fill:#fff3e0
+    style G fill:#e8f5e8
+    style H fill:#ffebee
+    style I fill:#ffebee
 ```
 
 ## Core Components
@@ -66,31 +67,29 @@ GameHub follows a microservices architecture pattern with the following key char
 ### Frontend Applications
 
 #### Admin Portal (`gamehub-admin`)
-- **Purpose**: Administrative interface for game session management
+- **Purpose**: Administrative interface for environment management
 - **Technology**: React 18 + TypeScript + Vite
-- **Features**: Session creation, player management, analytics dashboard
-- **Authentication**: OAuth 2.0 with admin role requirements
+- **Features**: Tenant creation, service management, configuration
+- **Authentication**: OAuth 2.0 via FusionAuth
 
 #### Player Portal (`gamehub-player`)
-- **Purpose**: Player interface for game session participation
+- **Purpose**: Player interface for game session initiation and participation
 - **Technology**: React 18 + TypeScript + Vite
 - **Features**: Session registration, gameplay interactions, real-time updates
-- **Authentication**: OAuth 2.0 with player access
+- **Authentication**: OAuth 2.0 via player IP
 
 ### Backend Services
 
 #### Service IP (Port 8083)
-- **Purpose**: Core business logic and API endpoints
+- **Purpose**: Identity provider for backend services
 - **Technology**: Node.js + Express + TypeScript
-- **Responsibilities**: Game session management, player operations, business rules
-- **Data Access**: Jinaga model integration
-- **Authentication**: JWT-based with service-to-service communication
+- **Responsibilities**: Validate shared secrets and issue tokens
 - **Client Management**: Handles client credentials in `/app/secrets/clients`
 
 #### Player IP (Port 8082)
-- **Purpose**: Player-specific operations and data processing
+- **Purpose**: Identity provider for players
 - **Technology**: Node.js + Express + TypeScript
-- **Responsibilities**: Registration handling, gameplay processing, notifications
+- **Responsibilities**: Generate cookies and issue tokens
 - **Data Access**: SQLite local storage + Jinaga replicator integration
 - **Authentication**: JWT with refresh token rotation
 - **External APIs**: Communicates with Service IP and FusionAuth
@@ -112,95 +111,23 @@ GameHub follows a microservices architecture pattern with the following key char
 ## Data Architecture
 
 ### Jinaga Model
-- **Pattern**: Event sourcing with immutable facts
+- **Pattern**: Historical modeling with immutable facts
 - **Distribution**: Automatic data synchronization across services
 - **Authorization**: Rule-based access control
 - **Benefits**: Audit trail, real-time updates, conflict resolution
 
 ### Data Flow
 1. **Player Actions**: Frontend applications capture player interactions
-2. **API Calls**: REST APIs process requests and validate data
-3. **Fact Creation**: Business logic creates immutable facts
-4. **Distribution**: Jinaga distributes facts to relevant subscribers
-5. **UI Updates**: Frontend applications receive real-time updates
+2. **Fact Creation**: Business logic creates immutable facts
+3. **Distribution**: Jinaga distributes facts to relevant subscribers
+4. **UI Updates**: Frontend applications receive real-time updates
 
 ### Storage Layers
-- **PostgreSQL**: Primary data storage for Jinaga facts
-- **SQLite**: Local development and testing database
+- **Jinaga Replicator**: Primary data storage for Jinaga facts
+- **SQLite**: Operational storage for identity providers
+- **IndexedDB**: Local storage of Jinaga facts for browser-based applications
 - **File System**: Static assets and uploaded content
-- **Memory**: Caching and session management
-
-## Service Communication
-
-### API Communication
-- **Protocol**: HTTP/HTTPS with RESTful endpoints
-- **Format**: JSON request/response bodies
-- **Authentication**: Bearer tokens with OAuth 2.0
-- **Error Handling**: Standardized error responses
-
-### Real-time Updates
-- **Technology**: Jinaga subscription system
-- **Pattern**: Observer pattern with automatic updates
-- **Scope**: Cross-service data synchronization
-- **Performance**: Optimized for minimal network overhead
-
-### Inter-service Communication
-- **Internal APIs**: Direct HTTP calls between services
-- **Shared Models**: Common TypeScript interfaces and types
-- **Data Consistency**: Jinaga ensures eventual consistency
-- **Service Discovery**: Docker Compose networking
-
-## Security Architecture
-
-### Authentication Flow
-1. **OAuth Provider**: Azure AD handles user authentication
-2. **Token Validation**: Services validate JWT tokens
-3. **Role Authorization**: Role-based access control (RBAC)
-4. **Session Management**: Secure session handling
-
-### Data Security
-- **Encryption**: HTTPS for all external communication
-- **Authorization Rules**: Jinaga-based access control
-- **Input Validation**: Server-side validation for all inputs
-- **SQL Injection Prevention**: Parameterized queries
-
-### Network Security
-- **Container Isolation**: Docker network segmentation
-- **Port Exposure**: Minimal external port exposure
-- **Reverse Proxy**: Nginx for request routing and SSL termination
-- **Environment Variables**: Secure configuration management
-
-## Deployment Architecture
-
-### Development Environment
-- **Docker Compose**: Local service orchestration
-- **Hot Reload**: Development servers with live updates
-- **Database**: Local PostgreSQL container
-- **Networking**: Internal Docker networks
-
-### Production Environment
-- **Container Registry**: Azure Container Registry (ACR)
-- **Orchestration**: Docker Compose on Azure Container Instances
-- **Database**: Azure Database for PostgreSQL (compatible with v16.0)
-- **Static Assets**: Nginx-served React builds
-- **Authentication**: Self-hosted FusionAuth instance
-- **Monitoring**: Container logs and health checks
-- **Networking**: Internal Docker networks with Nginx reverse proxy
-
-### CI/CD Pipeline
-- **Source Control**: Git with Azure DevOps
-- **Build Process**: Multi-stage Docker builds for each service
-- **Testing**: Automated unit and integration tests
-- **Deployment**: Container-based deployment with health checks
-- **Pipeline File**: `.azure-pipelines.yml` in project root
-
-### Service Communication Patterns
-- **Frontend → Nginx**: HTTP/HTTPS requests to port 80
-- **Nginx → Services**: Internal routing to service ports
-- **Services → Jinaga**: HTTP API calls to replicator
-- **Services → Database**: PostgreSQL connections
-- **Service-to-Service**: JWT-authenticated HTTP calls
-- **Authentication Flow**: FusionAuth OAuth 2.0 with JWT tokens
+- **PostgreSQL**: Storage for FusionAuth configuration and accounts
 
 ## Next Steps
 

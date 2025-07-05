@@ -14,7 +14,7 @@ The platform is built using:
 - **Backend**: Node.js services with Express
 - **Authentication**: OAuth-based authentication system
 - **Orchestration**: Docker Compose for service management
-- **Deployment**: Azure DevOps CI/CD pipelines
+- **Deployment**: GitHub Actions CI/CD pipelines
 
 ## Quick Start
 
@@ -57,20 +57,6 @@ CI/CD pipelines, Azure deployment, and production configuration
 
 ### 🔧 [Troubleshooting](./10-troubleshooting.md)
 Common issues, debugging tips, and solutions
-
-## Key Resources
-
-- **Repository**: Current project repository
-- **Azure DevOps**: CI/CD pipelines and project management
-- **Docker Hub**: Container images and deployment artifacts
-- **Documentation**: Additional technical documentation in `/docs`
-
-## Support
-
-For questions and support:
-- Check the [Troubleshooting Guide](./10-troubleshooting.md)
-- Review existing documentation in the `/docs` directory
-- Consult the project's issue tracker
 
 ---
 

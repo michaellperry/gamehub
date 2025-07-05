@@ -4,12 +4,22 @@ This guide covers the system requirements and prerequisites needed to develop an
 
 ## Table of Contents
 
-- [System Requirements](#system-requirements)
-- [Development Tools](#development-tools)
-- [Runtime Dependencies](#runtime-dependencies)
-- [Optional Tools](#optional-tools)
-- [Environment Setup](#environment-setup)
-- [Verification](#verification)
+- [Prerequisites](#prerequisites)
+  - [Table of Contents](#table-of-contents)
+  - [System Requirements](#system-requirements)
+    - [Operating System](#operating-system)
+    - [Hardware Requirements](#hardware-requirements)
+  - [Development Tools](#development-tools)
+    - [Node.js and npm](#nodejs-and-npm)
+    - [Docker and Docker Compose](#docker-and-docker-compose)
+    - [Git](#git)
+  - [Environment Setup](#environment-setup)
+    - [Environment Variables](#environment-variables)
+    - [Network Configuration](#network-configuration)
+    - [Development vs Production Ports](#development-vs-production-ports)
+  - [Verification](#verification)
+    - [Check Installations](#check-installations)
+  - [Next Steps](#next-steps)
 
 ## System Requirements
 
@@ -25,59 +35,20 @@ This guide covers the system requirements and prerequisites needed to develop an
 
 ## Development Tools
 
-### Required Tools
-
-#### Node.js and npm
+### Node.js and npm
 - **Version**: Node.js 18.x or later
 - **Package Manager**: npm 9.x or later
 - **Installation**: Download from [nodejs.org](https://nodejs.org/)
 
-#### Docker and Docker Compose
+### Docker and Docker Compose
 - **Docker**: Version 20.x or later
 - **Docker Compose**: Version 2.x or later
 - **Installation**: Download Docker Desktop from [docker.com](https://docker.com/)
 
-#### Git
+### Git
 - **Version**: Git 2.30 or later
 - **Configuration**: Set up user name and email
 - **SSH Keys**: Configure SSH keys for repository access
-
-### Code Editor
-- **Recommended**: Visual Studio Code with extensions:
-  - TypeScript and JavaScript Language Features
-  - Docker extension
-  - GitLens
-  - Prettier - Code formatter
-  - ESLint
-
-## Runtime Dependencies
-
-### Database Systems
-- **PostgreSQL**: Version 16.0 or later for Jinaga replicator and FusionAuth
-- **SQLite**: For local development and player-ip service data storage
-
-### Authentication Services
-- **FusionAuth**: Self-hosted authentication service (handled via Docker)
-- **OAuth 2.0**: JWT-based authentication with refresh token support
-- **Certificates**: SSL certificates for HTTPS (development and production)
-
-### Container Registry
-- **Azure Container Registry**: For production deployments
-- **Docker Hub**: Alternative for public images
-
-## Optional Tools
-
-### Development Utilities
-- **Postman**: API testing and development
-- **Azure CLI**: For Azure resource management and container registry access
-- **FusionAuth CLI**: For authentication service management
-- **HTTP files**: VS Code REST Client extension for API testing
-
-### Monitoring and Debugging
-- **Docker Desktop**: Container management and monitoring
-- **Browser DevTools**: Chrome/Firefox developer tools
-- **Network Tools**: curl, wget for API testing
-- **Database Tools**: pgAdmin, DBeaver for PostgreSQL management
 
 ## Environment Setup
 
@@ -85,23 +56,6 @@ This guide covers the system requirements and prerequisites needed to develop an
 Create the following environment files in the `mesh/` directory:
 - `.env`: Main environment configuration
 - `.env.local`: Local overrides (optional, not committed to git)
-
-Required environment variables:
-```bash
-# Database Configuration
-POSTGRES_USER=gamehub_user
-POSTGRES_PASSWORD=secure_password_here
-DATABASE_USERNAME=fusionauth_user
-DATABASE_PASSWORD=fusionauth_password_here
-
-# JWT Configuration
-JWT_SECRET=your_jwt_secret_key_here
-
-# FusionAuth Configuration
-FUSIONAUTH_APP_MEMORY=512M
-FUSIONAUTH_APP_RUNTIME_MODE=development
-FUSIONAUTH_SEARCH_ENGINE_TYPE=database
-```
 
 ### Network Configuration
 - **Port 80**: Nginx reverse proxy (main entry point)
@@ -131,40 +85,6 @@ docker-compose --version
 # Verify Git configuration
 git --version
 git config --list | grep user
-```
-
-### Test Docker Setup
-```bash
-# Test Docker installation
-docker run hello-world
-
-# Test Docker Compose with project
-cd mesh/
-docker-compose config  # Validate compose file
-
-# Test PostgreSQL image pull
-docker pull postgres:16.0-bookworm
-```
-
-### Validate Development Environment
-- [ ] Node.js 18.x or later installed
-- [ ] Docker Desktop running and accessible
-- [ ] Git configured with user name and email
-- [ ] Code editor set up with recommended extensions
-- [ ] Environment variables configured in `mesh/.env`
-- [ ] All required ports available (80, 8080-8083, 9011, 5432)
-- [ ] Azure CLI installed (for production deployments)
-
-### Test Project Structure Access
-```bash
-# Verify project structure
-ls -la app/
-ls -la mesh/
-ls -la docs/
-
-# Check key configuration files
-cat mesh/docker-compose.yml | head -20
-cat app/gamehub-model/package.json | grep version
 ```
 
 ## Next Steps

@@ -4,27 +4,43 @@ This guide covers the setup and configuration of the Jinaga data model, which pr
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Jinaga Model Package Structure](#jinaga-model-package-structure)
-- [Data Model Architecture](#data-model-architecture)
-- [Authorization Rules](#authorization-rules)
-- [Distribution Rules](#distribution-rules)
-- [Security Policy Generation](#security-policy-generation)
-- [Development Workflow](#development-workflow)
-- [Integration Examples](#integration-examples)
-- [Testing Strategies](#testing-strategies)
-- [Migration Patterns](#migration-patterns)
+- [Jinaga Data Model](#jinaga-data-model)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+    - [What is Jinaga?](#what-is-jinaga)
+    - [Benefits for GameHub](#benefits-for-gamehub)
+  - [Jinaga Model Package Structure](#jinaga-model-package-structure)
+    - [Directory Organization](#directory-organization)
+  - [Data Model Architecture](#data-model-architecture)
+    - [Fact Definition Patterns](#fact-definition-patterns)
+    - [Model Composition](#model-composition)
+    - [Mutable Property Pattern](#mutable-property-pattern)
+    - [Static Helper Methods](#static-helper-methods)
+  - [Authorization Rules](#authorization-rules)
+    - [Authorization Structure](#authorization-structure)
+    - [Permission Patterns](#permission-patterns)
+      - [Creator-based Authorization](#creator-based-authorization)
+      - [Role-based Authorization](#role-based-authorization)
+      - [Self-service Authorization](#self-service-authorization)
+    - [Service Principal Authorization](#service-principal-authorization)
+  - [Distribution Rules](#distribution-rules)
+    - [Distribution Rules Structure](#distribution-rules-structure)
+  - [Security Policy Generation](#security-policy-generation)
+  - [Migration Patterns](#migration-patterns)
+    - [Adding New Fact Types](#adding-new-fact-types)
+    - [Modifying Existing Fact Types](#modifying-existing-fact-types)
+  - [Next Steps](#next-steps)
 
 ## Overview
 
 ### What is Jinaga?
 
-Jinaga is a distributed data management system that uses immutable facts and event sourcing to provide:
+Jinaga is a distributed data management system that uses immutable facts and historical modeling to provide:
 
 - **Immutable Facts**: All data is stored as immutable facts that never change
-- **Event Sourcing**: Changes are recorded as a sequence of events over time
+- **Historical Modeling**: Changes are recorded as a graph of facts over time
 - **Automatic Distribution**: Data synchronizes automatically across services and clients
-- **Conflict Resolution**: Built-in handling of concurrent updates through fact succession
+- **Conflict Detection**: Built-in recognition of concurrent updates through fact succession
 - **Real-time Updates**: UI updates automatically when data changes anywhere in the system
 
 ### Benefits for GameHub
@@ -33,7 +49,7 @@ Jinaga is a distributed data management system that uses immutable facts and eve
 - **Offline Support**: Applications work offline and sync when reconnected
 - **Scalability**: Distributed architecture scales horizontally
 - **Multi-tenant Security**: Fine-grained authorization and distribution rules
-- **Real-time Collaboration**: Multiple players can work simultaneously with automatic conflict resolution
+- **Real-time Collaboration**: Multiple players can work simultaneously with automatic conflict detection
 
 ## Jinaga Model Package Structure
 
@@ -44,128 +60,37 @@ The GameHub platform uses an isolated npm package for the Jinaga data model, ena
 ```
 app/gamehub-model/
 ├── package.json              # Dual build configuration (ESM + CJS)
-├── tsconfig.base.json         # Base TypeScript configuration
+├── tsconfig.base.json        # Base TypeScript configuration
 ├── tsconfig.json             # ESM build configuration
 ├── tsconfig.cjs.json         # CommonJS build configuration
 ├── tsconfig.types.json       # Type declarations configuration
 ├── index.ts                  # Main entry point with policy generation
 ├── model/                    # Fact definitions organized by domain
-│   ├── index.ts             # Combined model builder
-│   ├── bookkeeping.ts       # Financial and accounting facts
-│   ├── gamehub.ts           # Core platform facts (tenants, sessions, players)
-│   ├── gameplay.ts          # Gameplay and interaction facts
-│   └── invitation.ts        # Invitation and access control facts
-├── authorization/           # Authorization rules by domain
-│   ├── index.ts            # Combined authorization rules
+│   ├── index.ts              # Combined model builder
+│   ├── bookkeeping.ts        # State-management facts
+│   ├── gamehub.ts            # Core platform facts (tenants, sessions, players)
+│   ├── gameplay.ts           # Gameplay and interaction facts
+│   └── invitation.ts         # Invitation and access control facts
+├── authorization/            # Authorization rules by domain
+│   ├── index.ts              # Combined authorization rules
 │   ├── tenantAuthorization.ts
 │   ├── sessionAuthorization.ts
 │   ├── playerAuthorization.ts
 │   ├── gameplayAuthorization.ts
 │   └── ...
-├── distribution/           # Distribution rules by domain
-│   ├── index.ts           # Combined distribution rules
+├── distribution/             # Distribution rules by domain
+│   ├── index.ts              # Combined distribution rules
 │   ├── tenantDistribution.ts
 │   ├── sessionDistribution.ts
 │   ├── playerDistribution.ts
 │   └── ...
-├── services/              # Business logic and helper functions
-│   ├── index.ts          # Service exports
-│   └── gameAllocations.ts # Game allocation algorithms
-└── test/                 # Dual module system testing
-    ├── package.json      # CJS test configuration
-    ├── package-esm.json  # ESM test configuration
-    └── test-*.js         # Test files for both module systems
-```
-
-### Package.json Configuration
-
-The model package supports dual build targets for maximum compatibility:
-
-```json
-{
-  "name": "gamehub-model",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "require": {
-        "types": "./dist/types/index.d.ts",
-        "default": "./dist/cjs/index.js"
-      }
-    },
-    "./authorization": {
-      "import": "./dist/esm/authorization/index.js",
-      "require": "./dist/cjs/authorization/index.js"
-    },
-    "./distribution": {
-      "import": "./dist/esm/distribution/index.js",
-      "require": "./dist/cjs/distribution/index.js"
-    },
-    "./model": {
-      "import": "./dist/esm/model/index.js",
-      "require": "./dist/cjs/model/index.js"
-    }
-  },
-  "scripts": {
-    "build": "npm run clean && npm run build:esm && npm run build:cjs && npm run build:types",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:types": "tsc -p tsconfig.types.json",
-    "generate-policies": "npm run build:cjs && node --enable-source-maps ./dist/cjs --generate-policies > ../../mesh/front-end/policies/gamehub.policy"
-  }
-}
-```
-
-### TypeScript Configuration
-
-**Base Configuration (`tsconfig.base.json`)**:
-```json
-{
-  "compilerOptions": {
-    "target": "ES2020",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true
-  },
-  "include": ["**/*.ts"],
-  "exclude": ["node_modules", "dist", "test"]
-}
-```
-
-**ESM Build (`tsconfig.json`)**:
-```json
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "module": "NodeNext",
-    "outDir": "./dist/esm"
-  }
-}
-```
-
-**CommonJS Build (`tsconfig.cjs.json`)**:
-```json
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "module": "CommonJS",
-    "outDir": "./dist/cjs"
-  }
-}
+├── services/                 # Business logic and helper functions
+│   ├── index.ts              # Service exports
+│   └── gameAllocations.ts    # Game allocation algorithms
+└── test/                     # Dual module system testing
+    ├── package.json          # CJS test configuration
+    ├── package-esm.json      # ESM test configuration
+    └── test-*.js             # Test files for both module systems
 ```
 
 ## Data Model Architecture
@@ -191,7 +116,7 @@ export class TenantName {
     constructor(
         public tenant: Tenant,
         public name: string,
-        public prior: TenantName[]  // For mutable data using succession
+        public prior: TenantName[]  // For mutable data, references to immediately previous versions
     ) { }
 
     // Helper method to get current name
@@ -202,59 +127,9 @@ export class TenantName {
 }
 ```
 
-### Model Organization by Domain
+### Model Composition
 
-#### Core Platform (gamehub.ts)
-```typescript
-// Tenant management
-export class Tenant { /* ... */ }
-export class Administrator { /* ... */ }
-
-// Session management
-export class GameSession { /* ... */ }
-export class SessionDate { /* ... */ }
-export class SessionName { /* ... */ }
-
-// Player management
-export class Player { /* ... */ }
-export class PlayerInformation { /* ... */ }
-export class PlayerSession { /* ... */ }
-
-// Gameplay basics
-export class GamePlayer { /* ... */ }
-export class GameWinner { /* ... */ }
-```
-
-#### Gameplay System (gameplay.ts)
-```typescript
-// Game mechanics
-export class GameAction { /* ... */ }
-export class ActionAllocation { /* ... */ }
-
-// Game phases
-export class GamePhase { /* ... */ }
-export class PhaseTransition { /* ... */ }
-```
-
-#### Financial Tracking (bookkeeping.ts)
-```typescript
-// Financial records
-export class Transaction { /* ... */ }
-export class Account { /* ... */ }
-export class Allocation { /* ... */ }
-```
-
-#### Access Control (invitation.ts)
-```typescript
-// Invitation system
-export class Invitation { /* ... */ }
-export class InvitationAcceptance { /* ... */ }
-export class AccessToken { /* ... */ }
-```
-
-### Relationship Modeling
-
-Jinaga uses predecessor relationships to model entity connections:
+Jinaga uses predecessor relationships to model entity connections. Compose a model to represent the predecessor relationships between entities:
 
 ```typescript
 export const gameHubModel = (b: ModelBuilder) => b
@@ -272,12 +147,17 @@ export const gameHubModel = (b: ModelBuilder) => b
     .type(PlayerSession, m => m
         .predecessor("player", Player)
         .predecessor("session", GameSession)
-    );
+    )
+    ;
+
+export const model = (b: ModelBuilder) => b
+    .with(gameHubModel)
+    ;
 ```
 
-### Immutable Data Patterns
+### Mutable Property Pattern
 
-For mutable data, Jinaga uses the "prior" pattern:
+For mutable data, Jinaga uses the mutable pattern. It stores the immediate previous version of the fact in a `prior` array:
 
 ```typescript
 export class SessionName {
@@ -294,13 +174,26 @@ export class SessionName {
     }
 }
 
+// Usage: Display the current session name
+const sessionNameSpec = model.given(GameSession).match(session =>
+    SessionName.current(session)
+);
+const { data } = useSpecification(jinagaClient, sessionNameSpec, gameSession);
+const sessionName =
+    data === null ? "Loading" :
+    data.length === 0 ? "Unnamed session" :
+    data[0].value;      // Ignoring concurrent edits
+
 // Usage: Update session name
-const newSessionName = await jinaga.fact({
-    type: SessionName.Type,
-    session: existingSession,
-    value: "Updated Session Name",
-    prior: [currentSessionName]  // Supersede the current name
-});
+const updateSessionName = async (newSessionName: string) => {
+    if (data === null) {
+        return;  // Still loading
+    }
+    if (data.length === 1 && data[0].value === newSessionName) {
+        return;  // No change needed
+    }
+    await jinagaClient.fact(new SessionName(gameSession, newSessionName, data));    
+}
 ```
 
 ### Static Helper Methods
@@ -362,16 +255,6 @@ export const tenantAuthorization = (a: AuthorizationRules) => a
 .type(PlayerInformation, info => info.player.user.predecessor())
 ```
 
-#### Conditional Authorization
-```typescript
-.type(GameAction, action =>
-    PlayerSession.usersOf(action.player.session)
-        .join(user => user, action.player.user.predecessor())
-        .join(playerSession => playerSession.session, action.player.session.predecessor())
-        .where(playerSession => /* game is active */)
-)
-```
-
 ### Service Principal Authorization
 
 For backend services that need elevated permissions:
@@ -395,34 +278,17 @@ export class ServicePrincipal {
 )
 ```
 
-### Multi-tenant Authorization
-
-Authorization rules automatically enforce tenant boundaries:
-
-```typescript
-.type(GameSession, session =>
-    Administrator.usersOf(session.tenant)  // Only tenant admins
-)
-
-.type(PlayerSession, playerSession =>
-    playerSession.player.user.predecessor()  // Only the player
-        .join(user => Player.by(user), playerSession.player.predecessor())
-        .where(player => player.tenant === playerSession.session.tenant)  // Same tenant
-)
-```
-
 ## Distribution Rules
 
-Distribution rules determine which facts are synchronized to which clients, optimizing network usage and ensuring data privacy.
+Distribution rules determine which users can execute a specification, ensuring that only authorized data is synchronized to clients.
 
-### Distribution Structure
+### Distribution Rules Structure
 
 ```typescript
 export const tenantDistribution = (r: DistributionRules) => r
     // Share tenant administrators with other administrators
     .share(model.given(Tenant, User).match((tenant, user) =>
         Administrator.of(tenant)
-            .join(admin => admin.user, user)
     ))
     .with(model.given(Tenant, User).match((tenant, user) =>
         Administrator.usersOf(tenant)
@@ -436,78 +302,11 @@ export const tenantDistribution = (r: DistributionRules) => r
     .with(model.given(User).match(user => user.predecessor()));
 ```
 
-### Data Synchronization Policies
-
-#### Admin-only Data
-```typescript
-.share(model.given(GameSession, User).match((session, user) =>
-    ActionAllocation.for(session)  // Sensitive game data
-))
-.with(model.given(GameSession, User).match((session, user) =>
-    Administrator.usersOf(session.tenant)  // Only admins
-))
-```
-
-#### Player-specific Data
-```typescript
-.share(model.given(Player, User).match((player, user) =>
-    PlayerInformation.current(player)
-        .join(info => info.player.user, user)  // Only their own info
-))
-.with(model.given(Player, User).match((player, user) =>
-    user.predecessor()
-))
-```
-
-#### Public Session Data
-```typescript
-.share(model.given(GameSession, User).match((session, user) =>
-    SessionName.current(session)  // Public session information
-))
-.with(model.given(GameSession, User).match((session, user) =>
-    PlayerSession.usersOf(session)  // All session players
-))
-```
-
-### Performance Optimization
-
-Distribution rules optimize data transfer by:
-
-1. **Selective Sharing**: Only relevant facts are distributed
-2. **User-specific Filtering**: Each user receives only their authorized data
-3. **Lazy Loading**: Facts are distributed on-demand
-4. **Incremental Updates**: Only changes are synchronized
-
-### Real-time Update Patterns
-
-```typescript
-// Real-time session updates for players
-.share(model.given(GameSession, User).match((session, user) =>
-    SessionDate.of(session)
-        .join(date => PlayerSession.usersOf(date.session), user)
-))
-.with(model.given(GameSession, User).match((session, user) =>
-    PlayerSession.usersOf(session)
-))
-```
-
 ## Security Policy Generation
 
 The model package includes automated policy generation for the replicator service.
 
-### Policy Generation Script
-
-```typescript
-// In index.ts
-if (process.argv.includes("--generate-policies")) {
-    const authorizationRules = describeAuthorizationRules(model, authorization);
-    const distributionRules = describeDistributionRules(distribution);
-    console.log(authorizationRules);
-    console.log(distributionRules);
-}
-```
-
-### Build Pipeline Integration
+The `generate-policies` script compiles the model to CommonJS and generates security policies based on the defined authorization and distribution rules. It outputs the policies to a directory mounted to the replicator in the Docker Compose mesh.
 
 ```json
 {
@@ -517,189 +316,19 @@ if (process.argv.includes("--generate-policies")) {
 }
 ```
 
-### Policy Deployment
-
-1. **Build**: Compile the model to CommonJS
-2. **Generate**: Extract policies from authorization and distribution rules
-3. **Deploy**: Write policies to the mesh configuration
-4. **Validate**: Replicator service validates policies on startup
-
-### Rollback Mechanisms
+Run this script after making changes to the model or rules to ensure the replicator has the latest policies. Then restart the replicator service to apply the new policies.
 
 ```bash
-# Backup current policies
-cp mesh/front-end/policies/gamehub.policy mesh/front-end/policies/gamehub.policy.backup
-
-# Generate new policies
+cd app/gamehub-model
 npm run generate-policies
 
-# Test deployment
-docker-compose restart jinaga-replicator
-
-# Rollback if needed
-cp mesh/front-end/policies/gamehub.policy.backup mesh/front-end/policies/gamehub.policy
-```
-
-## Development Workflow
-
-### Setting Up a New Project
-
-1. **Create Model Package**:
-```bash
-mkdir my-app-model
-cd my-app-model
-npm init -y
-npm install jinaga
-npm install -D typescript @types/node rimraf
-```
-
-2. **Configure Package Structure**:
-```json
-{
-  "type": "module",
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
-  "types": "./dist/types/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
-    },
-    "./authorization": {
-      "import": "./dist/esm/authorization/index.js",
-      "require": "./dist/cjs/authorization/index.js"
-    },
-    "./distribution": {
-      "import": "./dist/esm/distribution/index.js",
-      "require": "./dist/cjs/distribution/index.js"
-    }
-  }
-}
-```
-
-3. **Create Directory Structure**:
-```bash
-mkdir -p model authorization distribution services test
-```
-
-4. **Set Up TypeScript Configurations**:
-- Copy `tsconfig.base.json`, `tsconfig.json`, `tsconfig.cjs.json`, `tsconfig.types.json`
-- Adjust paths and settings as needed
-
-### Integration with React Applications
-
-#### Vite Configuration
-```typescript
-// vite.config.ts
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@model': process.env.DOCKER_BUILD === 'true'
-        ? path.resolve(__dirname, 'node_modules/my-app-model')
-        : path.resolve(__dirname, '../my-app-model')
-    }
-  }
-});
-```
-
-#### React Hook Integration
-```typescript
-import { useJinaga } from 'jinaga-react';
-import { GameSession, SessionName } from '@model/model';
-
-export function useSessionName(session: GameSession) {
-    const jinaga = useJinaga();
-    
-    return jinaga.watch(SessionName.current(session), sessionName => ({
-        name: sessionName?.value || 'Unnamed Session'
-    }));
-}
-```
-
-#### Component Usage
-```typescript
-import { useSessionName } from './hooks/useSessionName';
-
-export function SessionDisplay({ session }: { session: GameSession }) {
-    const { name } = useSessionName(session);
-    
-    return <h1>{name}</h1>;
-}
-```
-
-## Testing Strategies
-
-### Dual Module System Testing
-
-The model package includes tests for both ESM and CommonJS:
-
-```bash
-# Test directory structure
-test/
-├── package.json          # CJS configuration
-├── package-esm.json      # ESM configuration  
-├── test-cjs.js          # CommonJS tests
-└── test-esm.js          # ESM tests
-```
-
-### Model Testing Patterns
-
-```typescript
-// test-model.ts
-import { buildModel } from 'jinaga';
-import { model, Tenant, Administrator } from '../model';
-
-describe('Tenant Model', () => {
-    it('should create tenant with creator', () => {
-        const user = { type: 'User' };
-        const tenant = new Tenant(user);
-        
-        expect(tenant.creator).toBe(user);
-        expect(tenant.type).toBe('GameHub.Tenant');
-    });
-    
-    it('should find administrators of tenant', () => {
-        const specification = Administrator.of(tenant);
-        expect(specification).toBeDefined();
-    });
-});
-```
-
-### Authorization Testing
-
-```typescript
-// test-authorization.ts
-import { describeAuthorizationRules } from 'jinaga';
-import { model, authorization } from '../index';
-
-describe('Authorization Rules', () => {
-    it('should generate valid authorization rules', () => {
-        const rules = describeAuthorizationRules(model, authorization);
-        expect(rules).toContain('GameHub.Tenant');
-        expect(rules).toContain('GameHub.Administrator');
-    });
-});
-```
-
-### Distribution Testing
-
-```typescript
-// test-distribution.ts
-import { describeDistributionRules } from 'jinaga';
-import { distribution } from '../distribution';
-
-describe('Distribution Rules', () => {
-    it('should generate valid distribution rules', () => {
-        const rules = describeDistributionRules(distribution);
-        expect(rules).toBeDefined();
-        expect(rules.length).toBeGreaterThan(0);
-    });
-});
+cd ../../mesh
+docker-compose restart front-end-replicator
 ```
 
 ## Migration Patterns
 
-### Adding New Facts
+### Adding New Fact Types
 
 1. **Define the Fact**:
 ```typescript
@@ -720,13 +349,15 @@ export const gameHubModel = (b: ModelBuilder) => b
     // ... existing types
     .type(NewFeature, m => m
         .predecessor("tenant", Tenant)
-    );
+    )
+    ;
 ```
 
 3. **Add Authorization**:
 ```typescript
 export const newFeatureAuthorization = (a: AuthorizationRules) => a
-    .type(NewFeature, feature => Administrator.usersOf(feature.tenant));
+    .type(NewFeature, feature => Administrator.usersOf(feature.tenant))
+    ;
 ```
 
 4. **Add Distribution**:
@@ -737,103 +368,17 @@ export const newFeatureDistribution = (r: DistributionRules) => r
     ))
     .with(model.given(Tenant, User).match((tenant, user) =>
         Administrator.usersOf(tenant)
-    ));
+    ))
+    ;
 ```
 
-### Modifying Existing Facts
+### Modifying Existing Fact Types
 
-For breaking changes, use versioned fact types:
+If the structure of a fact changes, the old instances of facts will be loaded as JSON objects into the new structure. The new structure should be backward compatible to avoid breaking existing applications.
 
-```typescript
-// Old version (keep for compatibility)
-export class GameSessionV1 {
-    static Type = "GameHub.GameSession" as const;
-    // ... existing structure
-}
+To add a field to a fact type, declare that field as optional. The field will be `undefined` for existing facts, allowing the application to handle it gracefully.
 
-// New version
-export class GameSession {
-    static Type = "GameHub.GameSession.V2" as const;
-    // ... new structure
-}
-
-// Migration helper
-export class SessionMigration {
-    static Type = "GameHub.GameSession.Migration" as const;
-    
-    constructor(
-        public oldSession: GameSessionV1,
-        public newSession: GameSession
-    ) { }
-}
-```
-
-### Deprecation Strategy
-
-1. **Phase 1**: Add new facts alongside old ones
-2. **Phase 2**: Migrate data using migration facts
-3. **Phase 3**: Update applications to use new facts
-4. **Phase 4**: Remove old fact types (major version bump)
-
-## Integration Examples
-
-### Backend Service Integration
-
-```typescript
-// service.ts
-import { JinagaBrowser } from 'jinaga';
-import { model, authorization, distribution } from 'my-app-model';
-
-const jinaga = JinagaBrowser.create({
-    httpEndpoint: process.env.JINAGA_ENDPOINT,
-    model,
-    authorization,
-    distribution
-});
-
-export { jinaga };
-```
-
-### Frontend Application Integration
-
-```typescript
-// App.tsx
-import { JinagaProvider } from 'jinaga-react';
-import { jinaga } from './services/jinaga';
-
-export function App() {
-    return (
-        <JinagaProvider jinaga={jinaga}>
-            <Router>
-                <Routes>
-                    {/* Your routes */}
-                </Routes>
-            </Router>
-        </JinagaProvider>
-    );
-}
-```
-
-### Docker Integration
-
-```dockerfile
-# Dockerfile
-FROM node:18-alpine
-
-# Copy model package
-COPY ../my-app-model /app/my-app-model
-WORKDIR /app/my-app-model
-RUN npm ci && npm run build
-
-# Copy and build application
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-CMD ["npm", "start"]
-```
+To remove a field from a fact type, drop the field. While the field will still be loaded for existing facts, the application will not be able to access it.
 
 ## Next Steps
 

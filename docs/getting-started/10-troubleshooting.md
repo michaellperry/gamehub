@@ -4,14 +4,73 @@ This guide provides solutions to common issues encountered when setting up, deve
 
 ## Table of Contents
 
-- [Setup Issues](#setup-issues)
-- [Development Environment](#development-environment)
-- [Docker and Containerization](#docker-and-containerization)
-- [Database Issues](#database-issues)
-- [Authentication Problems](#authentication-problems)
-- [Frontend Issues](#frontend-issues)
-- [Backend Service Issues](#backend-service-issues)
-- [Deployment Problems](#deployment-problems)
+- [Troubleshooting](#troubleshooting)
+  - [Table of Contents](#table-of-contents)
+  - [Setup Issues](#setup-issues)
+    - [Node.js and npm Issues](#nodejs-and-npm-issues)
+      - [Problem: Node.js version compatibility](#problem-nodejs-version-compatibility)
+      - [Problem: npm install fails with permission errors](#problem-npm-install-fails-with-permission-errors)
+      - [Problem: Package lock conflicts](#problem-package-lock-conflicts)
+    - [Git Configuration Issues](#git-configuration-issues)
+      - [Problem: Git authentication failures](#problem-git-authentication-failures)
+      - [Problem: Line ending issues (Windows)](#problem-line-ending-issues-windows)
+  - [Development Environment](#development-environment)
+    - [Port Conflicts](#port-conflicts)
+      - [Problem: Port already in use](#problem-port-already-in-use)
+    - [Environment Variables](#environment-variables)
+      - [Problem: Environment variables not loading](#problem-environment-variables-not-loading)
+    - [Hot Reload Issues](#hot-reload-issues)
+      - [Problem: Hot reload not working](#problem-hot-reload-not-working)
+  - [Docker and Containerization](#docker-and-containerization)
+    - [Docker Desktop Issues](#docker-desktop-issues)
+      - [Problem: Docker daemon not running](#problem-docker-daemon-not-running)
+      - [Problem: Docker build fails with memory issues](#problem-docker-build-fails-with-memory-issues)
+    - [Docker Compose Issues](#docker-compose-issues)
+      - [Problem: Services can't communicate](#problem-services-cant-communicate)
+      - [Problem: Volume mounting issues](#problem-volume-mounting-issues)
+  - [Authentication Problems](#authentication-problems)
+    - [OAuth Configuration Issues](#oauth-configuration-issues)
+      - [Problem: Invalid redirect URI](#problem-invalid-redirect-uri)
+      - [Problem: Token validation fails](#problem-token-validation-fails)
+    - [CORS Issues](#cors-issues)
+      - [Problem: CORS policy blocks requests](#problem-cors-policy-blocks-requests)
+  - [Frontend Issues](#frontend-issues)
+    - [React Build Issues](#react-build-issues)
+      - [Problem: Build fails with TypeScript errors](#problem-build-fails-with-typescript-errors)
+      - [Problem: Memory issues during build](#problem-memory-issues-during-build)
+    - [Runtime Issues](#runtime-issues)
+      - [Problem: White screen of death](#problem-white-screen-of-death)
+  - [Backend Service Issues](#backend-service-issues)
+    - [API Endpoint Issues](#api-endpoint-issues)
+      - [Problem: 404 Not Found for API routes](#problem-404-not-found-for-api-routes)
+      - [Problem: 500 Internal Server Error](#problem-500-internal-server-error)
+    - [Jinaga Issues](#jinaga-issues)
+      - [Problem: Jinaga replicator connection fails](#problem-jinaga-replicator-connection-fails)
+      - [Problem: Authorization policies not working](#problem-authorization-policies-not-working)
+      - [Problem: Jinaga model build fails](#problem-jinaga-model-build-fails)
+  - [Deployment Problems](#deployment-problems)
+    - [FusionAuth Issues](#fusionauth-issues)
+      - [Problem: FusionAuth fails to start](#problem-fusionauth-fails-to-start)
+      - [Problem: FusionAuth database connection fails](#problem-fusionauth-database-connection-fails)
+    - [Azure Deployment Issues](#azure-deployment-issues)
+      - [Problem: Container deployment fails](#problem-container-deployment-fails)
+      - [Problem: Environment variables not set in production](#problem-environment-variables-not-set-in-production)
+    - [CI/CD Pipeline Issues](#cicd-pipeline-issues)
+      - [Problem: Build pipeline fails](#problem-build-pipeline-fails)
+    - [Performance Issues](#performance-issues)
+      - [Problem: Slow application response](#problem-slow-application-response)
+    - [Static File Serving Issues](#static-file-serving-issues)
+      - [Problem: React apps show 404 or blank page](#problem-react-apps-show-404-or-blank-page)
+      - [Problem: API calls fail from frontend](#problem-api-calls-fail-from-frontend)
+  - [Getting Help](#getting-help)
+    - [Debug Information Collection](#debug-information-collection)
+    - [Service-Specific Debugging](#service-specific-debugging)
+      - [Jinaga Model Issues](#jinaga-model-issues)
+      - [Frontend Build Issues](#frontend-build-issues)
+      - [Backend Service Issues](#backend-service-issues-1)
+    - [Support Resources](#support-resources)
+    - [Creating Bug Reports](#creating-bug-reports)
+    - [Quick Diagnostic Commands](#quick-diagnostic-commands)
 
 ## Setup Issues
 
@@ -309,79 +368,6 @@ volumes:
 # Debug volume mounts
 docker-compose exec service ls -la /app
 docker inspect <container-name>
-```
-
-## Database Issues
-
-### PostgreSQL Connection Issues
-
-#### Problem: Connection refused
-```bash
-Error: connect ECONNREFUSED 127.0.0.1:5432
-```
-
-**Solution:**
-```bash
-# Check if PostgreSQL is running
-docker-compose ps postgres
-
-# Check PostgreSQL logs
-docker-compose logs postgres
-
-# Verify connection parameters
-# Use container name instead of localhost in Docker
-POSTGRES_HOST=postgres  # Not localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=gamehub
-POSTGRES_USER=gamehub_user
-
-# Test connection manually
-docker-compose exec postgres psql -U gamehub_user -d gamehub -c "SELECT 1;"
-```
-
-#### Problem: Authentication failed
-```bash
-Error: password authentication failed for user
-```
-
-**Solution:**
-```bash
-# Check environment variables match
-# docker-compose.yml
-environment:
-  - POSTGRES_USER=gamehub_user
-  - POSTGRES_PASSWORD=secure_password
-  - POSTGRES_DB=gamehub
-
-# Reset PostgreSQL data if needed
-docker-compose down -v  # Removes volumes
-docker-compose up -d postgres
-
-# Check PostgreSQL logs for details
-docker-compose logs postgres
-```
-
-### Database Migration Issues
-
-#### Problem: Migration fails
-```bash
-Error: relation "users" does not exist
-```
-
-**Solution:**
-```bash
-# Run migrations manually
-docker-compose exec game-service npm run migrate
-
-# Check migration status
-docker-compose exec game-service npm run migrate:status
-
-# Reset database if needed (development only)
-docker-compose exec game-service npm run migrate:reset
-docker-compose exec game-service npm run migrate
-
-# Verify database schema
-docker-compose exec postgres psql -U gamehub_user -d gamehub -c "\dt"
 ```
 
 ## Authentication Problems
