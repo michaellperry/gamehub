@@ -31,22 +31,25 @@ This guide walks you through the initial project setup, directory structure unde
 
 ### Clone the Repository
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd gamehub
-
-# Verify the clone
 ls -la
 ```
 
+**Steps:**
+1. Clone the repository to your local machine
+2. Navigate to the project directory
+3. Verify the repository was cloned correctly
+
 ### Git Configuration
 ```bash
-# Set up Git user information
 git config user.name "Your Name"
 git config user.email "your.email@company.com"
+```
 
-# Set up Git hooks (if available)
-# ./scripts/setup-git-hooks.sh
+**Optional:** Set up Git hooks if available:
+```bash
+./scripts/setup-git-hooks.sh
 ```
 
 ## Directory Structure
@@ -104,20 +107,24 @@ scripts/
 ## Environment Configuration
 
 ### Service Authentication Setup
-Backend services require client credentials for inter-service communication:
+Backend services require client credentials for inter-service communication.
+
+Run these commands to generate and configure the shared secrets:
 
 ```bash
-# Generate a random 32-bit shared secret encoded in base-64
 SHARED_SECRET=$(openssl rand -base64 32)
-
-# Create service IP client credentials
 mkdir -p mesh/secrets/service-ip/clients
 echo "player-ip:$SHARED_SECRET" > mesh/secrets/service-ip/clients/player-ip
-
-# Create player IP service credentials (using the same shared secret)
 mkdir -p mesh/secrets/player-ip
 echo "$SHARED_SECRET" > mesh/secrets/player-ip/service-ip-client
 ```
+
+**What these commands do:**
+1. Generate a random 32-bit shared secret encoded in base-64
+2. Create service IP client credentials directory
+3. Store the player-ip client credentials with the shared secret
+4. Create player IP service credentials directory  
+5. Store the service IP client credentials (using the same shared secret)
 
 ## Initial Setup Scripts
 
@@ -125,18 +132,17 @@ echo "$SHARED_SECRET" > mesh/secrets/player-ip/service-ip-client
 The project includes setup scripts for streamlined initialization:
 
 ```bash
-# Navigate to setup scripts
 cd scripts/setup
-
-# Install setup application dependencies
 npm install
-
-# Build the setup application
 npm run build
-
-# Run automated setup
 npm start -- --api-key <your-fusionauth-api-key>
 ```
+
+**Steps:**
+1. Navigate to setup scripts directory
+2. Install setup application dependencies
+3. Build the setup application
+4. Run automated setup with your FusionAuth API key
 
 ### Manual Setup Steps
 
@@ -145,10 +151,7 @@ npm start -- --api-key <your-fusionauth-api-key>
 The monorepo uses npm workspaces, so you can install all dependencies from the root:
 
 ```bash
-# Navigate to the app directory (monorepo root)
 cd app
-
-# Install dependencies for all workspace packages
 npm install
 ```
 
@@ -162,12 +165,11 @@ This single command installs dependencies for all packages in the monorepo:
 The Jinaga model must be built before other services can use it:
 
 ```bash
-# From the app directory (monorepo root)
 npm run build:model
-
-# Generate authorization policies
 npm run generate-policies
 ```
+
+**Note:** Run these commands from the app directory (monorepo root)
 
 ## Development Workflow
 
@@ -178,19 +180,14 @@ The monorepo supports both local development and production-like environments.
 For active development, use the monorepo's development scripts:
 
 ```bash
-# Navigate to the app directory (monorepo root)
 cd app
-
-# Install dependencies for all packages
 npm install
-
-# Build the shared model (required first)
 npm run build:model
+npm run dev:admin
+```
 
-# Start development mode for admin application
-npm run dev:admin  # Usually runs on http://localhost:5173
-
-# OR start development mode for player-ip console application
+**Or for player-ip console application:**
+```bash
 npm run dev:player-ip
 ```
 
@@ -205,18 +202,17 @@ npm run dev:player-ip
 Start all services using Docker Compose for a production-like environment:
 
 ```bash
-# Navigate to mesh directory
 cd mesh/
-
-# Start all services
 docker compose up -d
-
-# View service status
 docker compose ps
-
-# View logs
 docker compose logs -f [service-name]
 ```
+
+**Commands explained:**
+1. Navigate to mesh directory
+2. Start all services in detached mode
+3. View service status
+4. View logs (replace `[service-name]` with actual service name)
 
 #### Development URLs (Production Mode)
 - **Main Application**: http://localhost (Nginx routes to appropriate apps)
@@ -227,11 +223,8 @@ docker compose logs -f [service-name]
 When you make changes to the model or authorization rules:
 
 ```bash
-# From the app directory (monorepo root)
 npm run build:model
 npm run generate-policies
-
-# Restart the replicator service to apply changes
 cd ../mesh
 docker compose restart front-end-replicator
 ```
@@ -239,10 +232,11 @@ docker compose restart front-end-replicator
 When you make changes to the admin application:
 
 ```bash
-# From the app directory (monorepo root)
 npm run build:admin
+```
 
-# Or build and deploy to container
+**Or build and deploy to container:**
+```bash
 cd gamehub-admin
 npm run build:container
 ```
