@@ -15,8 +15,8 @@ router.get('/health', (req: Request, res: Response) => {
 // Root endpoint
 router.get('/', (req: Request, res: Response) => {
   res.status(200).json({
-    name: 'attendee-ip',
-    description: 'Identity provider for the LaunchKings Attendee app',
+    name: 'player-ip',
+    description: 'GameHub Player Identity Provider - OAuth 2.0 identity provider for players',
     version: '1.0.0'
   });
 });

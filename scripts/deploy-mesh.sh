@@ -42,10 +42,22 @@ else
     exit 1
 fi
 
+# Test player-ip health endpoint
+echo "Testing player-ip health..."
+if curl -f http://localhost:8082/health > /dev/null 2>&1; then
+    echo "✅ player-ip is healthy"
+else
+    echo "❌ player-ip health check failed"
+    echo "Checking logs..."
+    docker-compose logs player-ip
+    exit 1
+fi
+
 echo "🎉 Deployment completed successfully!"
 echo ""
 echo "Services available at:"
 echo "  - service-ip: http://localhost:8083"
+echo "  - player-ip: http://localhost:8082"
 echo ""
 echo "To view logs: docker-compose logs -f"
 echo "To stop services: docker-compose down"

@@ -4,10 +4,10 @@
 
 import fs from 'fs';
 import { promisify } from 'util';
+import { SERVICE_IP_URL } from '../config/environment';
 
 // Environment variables
-const SERVICE_IP_URL = process.env.SERVICE_IP_URL || 'http://service-ip:8083';
-const SERVICE_IP_CLIENT_ID = process.env.SERVICE_IP_CLIENT_ID || 'attendee-ip';
+const SERVICE_IP_CLIENT_ID = process.env.SERVICE_IP_CLIENT_ID || 'player-ip';
 const SERVICE_IP_CLIENT_SECRET_FILE = process.env.SERVICE_IP_CLIENT_SECRET_FILE || '';
 
 // Token cache
@@ -68,7 +68,7 @@ export const getServiceToken = async (): Promise<string> => {
     }
     
     // Parse JSON response
-    const data = await response.json();
+    const data = await response.json() as { access_token: string; expires_in: number };
     
     // Extract token and expiration
     const { access_token, expires_in } = data;

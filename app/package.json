@@ -21,6 +21,7 @@
     "dev:player-ip": "npm run build:model && npm run dev --workspace=player-ip",
     "dev:admin": "npm run build:model && npm run dev --workspace=gamehub-admin",
     "dev:service-ip": "npm run dev --workspace=service-ip",
+    "start:player-ip": "npm run start --workspace=player-ip",
     "start:service-ip": "npm run start --workspace=service-ip",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
