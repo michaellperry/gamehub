@@ -3,16 +3,24 @@ import path from 'path';
 import fs from 'fs';
 import { SQLITE_DB_PATH } from './environment.js';
 
+// Determine the actual database path to use
+let dbPath = SQLITE_DB_PATH;
+
+// For tests, always use memory database unless explicitly overridden
+if (process.env.NODE_ENV === 'test' && !process.env.SQLITE_DB_PATH) {
+  dbPath = ':memory:';
+}
+
 // Ensure the directory exists (only for file-based databases)
-if (SQLITE_DB_PATH !== ':memory:') {
-  const dbDir = path.dirname(SQLITE_DB_PATH);
+if (dbPath !== ':memory:') {
+  const dbDir = path.dirname(dbPath);
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 }
 
 // Create database connection
-const db: Database = new BetterSqlite3(SQLITE_DB_PATH, {
+const db: Database = new BetterSqlite3(dbPath, {
   verbose: process.env.NODE_ENV !== 'production' ? console.log : undefined,
   fileMustExist: false
 });
@@ -75,6 +83,7 @@ const initializeDatabase = () => {
       user_id TEXT NOT NULL,
       event_id TEXT NOT NULL,
       scope TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
@@ -89,6 +98,7 @@ const initializeDatabase = () => {
       event_id TEXT NOT NULL,
       expires_at TEXT NOT NULL,
       revoked BOOLEAN DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);

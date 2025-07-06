@@ -1,5 +1,5 @@
 import { AuthenticationProvider, HttpHeaders, Trace } from 'jinaga';
-import { getServiceToken } from '../utils';
+import { getServiceToken } from '../utils/index.js';
 
 export class ServiceAuthenticationProvider implements AuthenticationProvider {
   private cachedToken: string | null = null;

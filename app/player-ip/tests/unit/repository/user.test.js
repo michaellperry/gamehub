@@ -13,38 +13,21 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Test configuration
-const TEST_DB_PATH = path.join(__dirname, '../../test-data/user-repo-test.db');
-
 // Set test environment variables
 process.env.NODE_ENV = 'test';
-process.env.SQLITE_DB_PATH = TEST_DB_PATH;
+process.env.SQLITE_DB_PATH = ':memory:';
 process.env.SKIP_JINAGA_SUBSCRIPTION = 'true';
 
 describe('User Repository', () => {
   let userRepo;
 
   beforeEach(async () => {
-    // Ensure test data directory exists
-    const testDataDir = path.dirname(TEST_DB_PATH);
-    if (!fs.existsSync(testDataDir)) {
-      fs.mkdirSync(testDataDir, { recursive: true });
-    }
-
-    // Remove existing test database
-    if (fs.existsSync(TEST_DB_PATH)) {
-      fs.unlinkSync(TEST_DB_PATH);
-    }
-
     // Import repository functions after setting up environment
     userRepo = await import('../../../dist/repository/index.js');
   });
 
   afterEach(() => {
-    // Clean up test database
-    if (fs.existsSync(TEST_DB_PATH)) {
-      fs.unlinkSync(TEST_DB_PATH);
-    }
+    // No cleanup needed for memory database
   });
 
   describe('createUser', () => {

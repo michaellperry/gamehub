@@ -1,8 +1,8 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
-import { startSubscription } from "./gap/index.js";
-import { CORS_ORIGIN, SERVER_PORT } from './config/environment';
+import { startSubscription } from './gap/index.js';
+import { CORS_ORIGIN, SERVER_PORT } from './config/environment.js';
 import routes from './routes/index.js';
 // Import database to ensure it's initialized
 import './config/database.js';
@@ -33,7 +33,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 async function run() {
   let stopSubscription: () => void;
-  
+
   // Skip Jinaga subscription during testing
   if (process.env.SKIP_JINAGA_SUBSCRIPTION === 'true') {
     console.log('Skipping Jinaga subscription for testing');

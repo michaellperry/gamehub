@@ -1,5 +1,5 @@
 import { JinagaClient } from 'jinaga';
-import { ServiceAuthenticationProvider } from './provider';
+import { ServiceAuthenticationProvider } from './provider.js';
 
 const serviceAuthenticationProvider = new ServiceAuthenticationProvider();
 

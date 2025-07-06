@@ -1,1 +1,1 @@
-export { startSubscription } from './subscription';
+export { startSubscription } from './subscription.js';

@@ -87,29 +87,39 @@ export const updateUser = (user: User): User => {
  * Store user identity
  */
 export const storeUserIdentity = (userId: string, cookieValue: string): UserIdentity => {
+  if (!userId || !cookieValue) {
+    throw new Error('User ID and cookie value are required');
+  }
+
+  // Check if user exists
+  const user = getUserById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
   // Begin transaction
   const transaction = db.transaction(() => {
     // Store mapping from cookie to user ID
     storeUserIdentityStmt.run(cookieValue, userId);
-    
+
     // Update the user with the identity cookie
-    const user = getUserById(userId);
-    if (user) {
-      user.identityCookie = cookieValue;
-      updateUser(user);
-    }
+    user.identityCookie = cookieValue;
+    updateUser(user);
   });
-  
+
   // Execute transaction
   transaction();
-  
+
   return { userId, cookieValue };
 };
 
 /**
  * Get user ID by cookie
  */
-export const getUserIdByCookie = (cookieValue: string): string | undefined => {
+export const getUserIdByCookie = (cookieValue: string): string | null => {
+  if (!cookieValue) {
+    return null;
+  }
   const row = getUserIdByCookieStmt.get(cookieValue) as any;
-  return row ? row.user_id : undefined;
+  return row ? row.user_id : null;
 };

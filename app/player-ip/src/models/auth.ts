@@ -41,6 +41,7 @@ export interface AuthorizationCode {
   user_id: string;
   event_id: string;
   scope: string;
+  created_at?: Date;
 }
 
 export interface RefreshToken {
@@ -51,6 +52,7 @@ export interface RefreshToken {
   event_id: string;
   expires_at: Date;
   revoked: boolean;
+  created_at?: Date;
 }
 
 export interface JwtPayload {
