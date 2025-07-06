@@ -102,7 +102,7 @@ jobs:
     - name: Create test secrets
       run: |
         mkdir -p mesh/secrets/service-ip/clients
-        echo '{"client_id":"test-client","client_secret":"test-secret-123","name":"Test Client","description":"CI Test Client"}' > mesh/secrets/service-ip/clients/test-client.json
+        echo 'test-secret-123' > mesh/secrets/service-ip/clients/test-client
         
     - name: Set up environment
       working-directory: mesh
