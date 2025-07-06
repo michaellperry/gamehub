@@ -1,0 +1,24 @@
+{
+  "name": "content-store",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [],
+  "author": "Jinaga LLC",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "chardet": "^2.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-fileupload": "^1.5.1",
+    "iconv-lite": "^0.6.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
