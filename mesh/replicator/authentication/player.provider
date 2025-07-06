@@ -1,0 +1,6 @@
+{
+  "provider": "Player",
+  "issuer": "player-ip",
+  "audience": "gamehub-players",
+  "key_id": "player-ip-key"
+}

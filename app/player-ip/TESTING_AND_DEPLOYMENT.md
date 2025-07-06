@@ -316,7 +316,7 @@ docker images | grep gamehub-player-ip
 curl -f http://localhost:8082/health
 
 # Check service logs
-docker-compose logs player-ip
+docker compose logs player-ip
 
 # Verify database
 sqlite3 data/player-ip.db ".tables"

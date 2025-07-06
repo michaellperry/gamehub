@@ -80,7 +80,7 @@ npm --version
 
 # Verify Docker and Docker Compose
 docker --version
-docker-compose --version
+docker compose --version
 
 # Verify Git configuration
 git --version

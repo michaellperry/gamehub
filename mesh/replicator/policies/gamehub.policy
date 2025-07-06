@@ -1,0 +1,89 @@
+authorization {
+    (p1: GameHub.Tenant) {
+        u1: Jinaga.User [
+            u1 = p1->creator: Jinaga.User
+        ]
+    } => u1
+    (p1: GameHub.Tenant.Administrator) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    (p1: GameHub.GameSession) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    (p1: GameHub.GameSession.Name) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    (p1: GameHub.GameSession.Date) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    (p1: GameHub.GameAccessPath) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    (p1: GameHub.GameSession.State) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+}
+
+distribution {
+    share (p1: GameHub.Tenant, p2: Jinaga.User) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1
+            u1->user: Jinaga.User = p2
+        ]
+    } => u1
+    with (p1: GameHub.Tenant, p2: Jinaga.User) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    share (p1: Jinaga.User) {
+        u1: GameHub.Tenant.Administrator [
+            u1->user: Jinaga.User = p1
+        ]
+        u2: GameHub.Tenant [
+            u2 = u1->tenant: GameHub.Tenant
+        ]
+        u3: Jinaga.User [
+            u3 = u2->creator: Jinaga.User
+        ]
+    } => u3
+    with (p1: Jinaga.User) {
+        u1: Jinaga.User [
+            u1 = p1
+        ]
+    } => u1
+}
+

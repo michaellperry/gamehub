@@ -1,342 +1,216 @@
-# GameHub Mesh Deployment
+# GameHub Mesh Infrastructure
 
-This directory contains the Docker Compose configuration and deployment scripts for the GameHub mesh services, including the service-ip identity provider.
+This directory contains the infrastructure setup for GameHub, implementing a comprehensive mesh architecture with PostgreSQL, FusionAuth, Jinaga replicator, and NGINX reverse proxy.
+
+## Architecture Overview
+
+The GameHub mesh consists of the following services:
+
+### Core Services
+- **PostgreSQL**: Shared database for FusionAuth and Jinaga replicator
+- **FusionAuth**: Identity and access management
+- **Jinaga Replicator**: Real-time data synchronization with authorization policies
+- **NGINX**: Reverse proxy with SSL termination and routing
+
+### Application Services
+- **Service-IP**: JWT token service for service-to-service authentication
+- **Player-IP**: Player authentication and session management
+- **Content-Store**: File storage service with authentication integration
+
+## Network Architecture
+
+The infrastructure uses three segregated networks:
+
+- **gamehub-network**: Core application services
+- **gamehub-db-network**: Database access (PostgreSQL)
+- **gamehub-auth-network**: Authentication services (FusionAuth, NGINX)
 
 ## Quick Start
 
-1. **Setup Environment**:
+1. **Copy environment configuration:**
    ```bash
-   # Copy environment template
    cp .env.example .env
-   
-   # Edit .env with your production values
-   nano .env
    ```
 
-2. **Deploy Services**:
+2. **Update environment variables:**
+   Edit `.env` and update the following critical values:
+   - `POSTGRES_PASSWORD`: Strong database password
+   - `JWT_SECRET`: Secure JWT signing key
+   - `PLAYER_JWT_SECRET`: Secure player JWT signing key
+   - `FUSIONAUTH_APPLICATION_ID`: FusionAuth application ID
+   - `FUSIONAUTH_KEY_ID`: FusionAuth key ID
+
+3. **Start the infrastructure:**
    ```bash
-   # From project root
-   ./scripts/deploy-mesh.sh
+   docker compose up -d
    ```
 
-3. **Verify Deployment**:
+4. **Verify services:**
    ```bash
-   # Check service health
-   curl http://localhost:8083/health  # service-ip
-   curl http://localhost:8082/health  # player-ip
-   curl http://localhost:8081/health  # content-store
+   docker compose ps
    ```
 
-## Services
+## Service Endpoints
 
-### service-ip
-- **Port**: 8083
-- **Purpose**: OAuth 2.0 Client Credentials identity provider for service-to-service authentication
-- **Health Check**: `http://localhost:8083/health`
-- **Token Endpoint**: `http://localhost:8083/token`
+When running locally, services are available at:
 
-### player-ip
-- **Port**: 8082
-- **Purpose**: Player identity provider with OAuth 2.0 and JWT authentication
-- **Health Check**: `http://localhost:8082/health`
-- **Database**: SQLite for local storage
+- **Main Gateway**: http://localhost (NGINX)
+- **Admin Panel**: http://localhost/admin/
+- **FusionAuth**: http://localhost/auth/
+- **Replicator**: http://localhost/replicator/
+- **Player API**: http://localhost/player-ip/
+- **Service API**: http://localhost/service-ip/
+- **Content Store**: http://localhost/content/
 
-### content-store
-- **Port**: 8081
-- **Purpose**: Content storage service for file uploads and retrieval with JWT authentication
-- **Health Check**: `http://localhost:8081/health`
-- **Upload Endpoint**: `http://localhost:8081/upload` (requires authentication)
-- **Content Retrieval**: `http://localhost:8081/content/{hash}` (public access)
-- **Storage**: Persistent volume for file storage
-- **Authentication**: Accepts JWT tokens from both service-ip and player-ip
+## Configuration Files
 
-## Configuration
+### NGINX Configuration
+- `nginx/nginx.conf`: Main reverse proxy configuration
+- `nginx/html/`: Static HTML files
+- `nginx/ssl/`: SSL certificates (for production)
 
-### Environment Variables
-
-The following environment variables can be configured in `.env`:
-
-#### Service IP Configuration
-- `JWT_SECRET`: Secret key for JWT signing (change in production!)
-- `JWT_EXPIRES_IN`: Token expiration time (default: 1h)
-- `JWT_ISSUER`: JWT issuer claim (default: service-ip)
-- `JWT_AUDIENCE`: JWT audience claim (default: service-clients)
-- `JWT_KEY_ID`: JWT key ID claim (default: service-ip-key)
-- `CORS_ORIGIN`: CORS origin configuration (default: *)
-- `LOG_LEVEL`: Logging level (default: info)
-
-#### Player IP Configuration
-- `PLAYER_JWT_SECRET`: Secret key for player JWT signing (change in production!)
-- `PLAYER_JWT_EXPIRES_IN`: Player token expiration time (default: 1h)
-- `PLAYER_JWT_ISSUER`: Player JWT issuer claim (default: player-ip)
-- `PLAYER_JWT_AUDIENCE`: Player JWT audience claim (default: gamehub-players)
-- `PLAYER_JWT_KEY_ID`: Player JWT key ID claim (default: player-ip-key)
-- `PLAYER_CORS_ORIGIN`: Player service CORS origin configuration (default: *)
-- `REFRESH_TOKEN_EXPIRES_IN`: Refresh token expiration time (default: 14d)
-- `ROTATE_REFRESH_TOKENS`: Whether to rotate refresh tokens (default: false)
-
-#### Content Store Configuration
-- `CONTENT_STORE_CORS_ORIGIN`: Content store CORS origin configuration (default: *)
+### Replicator Configuration
+- `replicator/authentication/`: Authentication provider configurations
+- `replicator/policies/`: Authorization policies for GameHub domain model
+- `replicator/subscriptions/`: Real-time subscription configurations
 
 ### Secrets Management
+- `secrets/shared/`: Shared secrets across services
+- `secrets/service-ip/`: Service-IP specific secrets
+- `secrets/player-ip/`: Player-IP specific secrets
+- `secrets/content-store/`: Content-Store specific secrets
+- `secrets/fusionauth/`: FusionAuth configuration secrets
 
-Service credentials and authentication configurations are stored in the `secrets/` directory:
+## Health Checks
 
-```
-mesh/
-├── secrets/
-│   ├── service-ip/
-│   │   └── clients/
-│   │       └── [client-files]
-│   ├── player-ip/
-│   │   └── [player-secrets]
-│   ├── content-store/
-│   │   ├── service-ip.provider
-│   │   └── player-ip.provider
-│   └── shared/
-│       └── [shared-secrets]
-```
+All services include comprehensive health checks:
 
-#### Service IP Clients
-Each client file has the name of the client ID and contains the client secret in plain text.
+- **PostgreSQL**: Database connectivity check
+- **FusionAuth**: API status endpoint
+- **Replicator**: Health endpoint check
+- **Service-IP**: HTTP health endpoint
+- **Player-IP**: HTTP health endpoint
+- **Content-Store**: HTTP health endpoint
+- **NGINX**: Basic HTTP check
 
-#### Content Store Authentication
-The content-store service uses JWT provider configuration files:
-- `service-ip.provider`: Configuration for accepting service-ip JWT tokens
-- `player-ip.provider`: Configuration for accepting player-ip JWT tokens
+## Development vs Production
 
-Each provider file contains JWT validation parameters including issuer, audience, key ID, and signing key.
+### Development Setup
+- Uses HTTP (port 80)
+- Relaxed CORS policies
+- Debug logging enabled
+- Volume mounts for rapid development
 
-All secret directories should be mounted as read-only volumes in Docker containers.
+### Production Setup
+- Enable HTTPS configuration in `nginx/nginx.conf`
+- Add SSL certificates to `nginx/ssl/`
+- Update environment variables for production values
+- Implement proper secret management
+- Configure monitoring and logging
 
-## Docker Compose Commands
+## Monitoring
 
-### Basic Operations
+Check service status:
 ```bash
-# Start services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
+# View all service logs
+docker compose logs -f
 
 # View specific service logs
-docker-compose logs -f service-ip
-docker-compose logs -f player-ip
-docker-compose logs -f content-store
+docker compose logs -f postgres
+docker compose logs -f fusionauth
+docker compose logs -f gamehub-replicator
 
-# Stop services
-docker-compose down
-
-# Rebuild and restart
-docker-compose up --build -d
-```
-
-### Development
-```bash
-# Build without cache
-docker-compose build --no-cache
-
-# Scale services (if needed)
-docker-compose up -d --scale service-ip=2
-
-# Execute commands in container
-docker-compose exec service-ip sh
-```
-
-## Health Monitoring
-
-### Health Checks
-All services include health checks that can be monitored:
-
-```bash
-# Check service status
-docker-compose ps
-
-# Check health status
-curl http://localhost:8083/health  # service-ip
-curl http://localhost:8082/health  # player-ip
-curl http://localhost:8081/health  # content-store
-```
-
-### Logs
-```bash
-# View all logs
-docker-compose logs
-
-# Follow logs in real-time
-docker-compose logs -f
-
-# View logs for specific service
-docker-compose logs service-ip
-
-# View last N lines
-docker-compose logs --tail=50 service-ip
-```
-
-## Testing
-
-### Service Verification
-```bash
 # Check service health
-curl http://localhost:8083/health
-
-# Check service status
-docker-compose ps service-ip
+docker compose ps
 ```
-
-### Manual Testing
-
-1. **Health Checks**:
-   ```bash
-   curl http://localhost:8083/health  # service-ip
-   curl http://localhost:8082/health  # player-ip
-   curl http://localhost:8081/health  # content-store
-   ```
-
-2. **Get Access Token (Service-to-Service)**:
-   ```bash
-   curl -X POST http://localhost:8083/token \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "grant_type=client_credentials&client_id=your-client-id&client_secret=your-client-secret"
-   ```
-
-3. **Test Content Store Upload** (requires JWT token):
-   ```bash
-   # First get a token from service-ip or player-ip
-   TOKEN="your-jwt-token-here"
-   
-   # Upload a file
-   curl -X POST http://localhost:8081/upload \
-     -H "Authorization: Bearer $TOKEN" \
-     -F "file=@/path/to/your/file.jpg"
-   ```
-
-4. **Test Content Retrieval** (public access):
-   ```bash
-   # Use the hash returned from upload
-   curl http://localhost:8081/content/your-content-hash
-   ```
-
-5. **Test Invalid Credentials**:
-   ```bash
-   curl -X POST http://localhost:8083/token \
-     -H "Content-Type: application/x-www-form-urlencoded" \
-     -d "grant_type=client_credentials&client_id=invalid&client_secret=invalid"
-   ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Port Already in Use**:
-   ```bash
-   # Check what's using the ports
-   lsof -i :8083  # service-ip
-   lsof -i :8082  # player-ip
-   lsof -i :8081  # content-store
-   
-   # Kill the process or change the port in docker-compose.yml
-   ```
+1. **Database Connection Issues**
+   - Verify PostgreSQL is healthy: `docker compose ps postgres`
+   - Check database logs: `docker compose logs postgres`
+   - Ensure environment variables are correct
 
-2. **Permission Denied on Secrets**:
-   ```bash
-   # Check file permissions
-   ls -la secrets/service-ip/clients/
-   
-   # Fix permissions if needed
-   chmod 644 secrets/service-ip/clients/*.json
-   ```
+2. **FusionAuth Startup Issues**
+   - FusionAuth requires PostgreSQL to be fully ready
+   - Check dependency order in docker-compose.yml
+   - Verify database credentials
 
-3. **Container Won't Start**:
-   ```bash
-   # Check logs for errors
-   docker-compose logs service-ip
-   
-   # Check container status
-   docker-compose ps
-   
-   # Rebuild container
-   docker-compose build --no-cache service-ip
-   ```
+3. **Replicator Connection Issues**
+   - Ensure authentication providers are correctly configured
+   - Check policy syntax in `replicator/policies/`
+   - Verify database connection string
 
-4. **Health Check Failing**:
-   ```bash
-   # Check if service is responding
-   curl -v http://localhost:8083/health
-   
-   # Check container logs
-   docker-compose logs service-ip
-   
-   # Check container resource usage
-   docker stats
-   ```
+4. **NGINX Routing Issues**
+   - Check nginx configuration syntax: `docker compose exec nginx nginx -t`
+   - Verify upstream service availability
+   - Check CORS configuration for browser requests
 
-### Debug Mode
+### Reset Infrastructure
 
-To run services in debug mode:
+To completely reset the infrastructure:
+```bash
+# Stop all services
+docker compose down
 
-1. Update `docker-compose.yml` to add debug environment:
-   ```yaml
-   environment:
-     - LOG_LEVEL=debug
-     - NODE_ENV=development
-   ```
+# Remove volumes (WARNING: This deletes all data)
+docker compose down -v
 
-2. Restart services:
-   ```bash
-   docker-compose up -d
-   ```
+# Remove networks
+docker network prune
+
+# Start fresh
+docker compose up -d
+```
 
 ## Security Considerations
 
-### Production Deployment
+### Production Checklist
+- [ ] Change all default passwords
+- [ ] Generate secure JWT secrets
+- [ ] Configure SSL certificates
+- [ ] Restrict CORS origins
+- [ ] Enable proper logging
+- [ ] Set up monitoring
+- [ ] Configure backup strategies
+- [ ] Review network security groups
+- [ ] Implement secret rotation
 
-1. **Change Default Secrets**:
-   - Update `JWT_SECRET` to a strong, unique value
-   - Use secure client credentials
-   - Rotate secrets regularly
+### Network Security
+- Services are isolated in separate networks
+- Database access is restricted to authorized services
+- Authentication services are segregated
+- NGINX acts as the only public-facing service
 
-2. **Network Security**:
-   - Use internal networks for service communication
-   - Expose only necessary ports
-   - Configure proper CORS origins
+## Migration from Phase 2
 
-3. **Container Security**:
-   - Services run as non-root users
-   - Use read-only volume mounts for secrets
-   - Regular security updates
+This setup builds upon the existing services:
+- Service-IP, Player-IP, and Content-Store are integrated
+- Database migration from SQLite to PostgreSQL (optional for Player-IP)
+- Enhanced authentication with FusionAuth integration
+- Real-time capabilities with Jinaga replicator
 
-### Monitoring
+## Next Steps
 
-Consider adding monitoring and alerting:
-- Health check endpoints
-- Log aggregation
-- Metrics collection
-- Security scanning
+1. **Configure FusionAuth Application**
+   - Set up GameHub application in FusionAuth
+   - Configure OAuth2 flows
+   - Update authentication provider configurations
 
-## Integration with Other Services
+2. **Test Integration**
+   - Verify service-to-service communication
+   - Test authentication flows
+   - Validate real-time synchronization
 
-The service-ip is designed to integrate with other GameHub services:
+3. **Deploy Frontend Applications**
+   - Build and deploy admin interface
+   - Configure static file serving
+   - Set up CI/CD pipelines
 
-1. **Service Discovery**: Uses Docker network for service communication
-2. **Shared Secrets**: Mounts shared secrets directory
-3. **Network**: Connects to `gamehub-network` for inter-service communication
-
-To add new services to the mesh:
-
-1. Add service definition to `docker-compose.yml`
-2. Connect to `gamehub-network`
-3. Mount necessary secrets
-4. Update environment configuration
-5. Add health checks and monitoring
-
-## Support
-
-For issues and questions:
-1. Check the logs: `docker-compose logs`
-2. Review this documentation
-3. Check the main project README
-4. Review the service source code:
-   - Service IP: `../app/service-ip/`
-   - Player IP: `../app/player-ip/`
-   - Content Store: `../app/content-store/`
+4. **Production Deployment**
+   - Configure SSL certificates
+   - Set up monitoring and alerting
+   - Implement backup strategies
+   - Configure load balancing
