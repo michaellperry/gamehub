@@ -1,264 +1,89 @@
 authorization {
-    // Tenant creators can manage their tenants
     (p1: GameHub.Tenant) {
         u1: Jinaga.User [
             u1 = p1->creator: Jinaga.User
         ]
     } => u1
-
-    // Administrators can manage tenant resources
     (p1: GameHub.Tenant.Administrator) {
-        u1: Jinaga.User [
-            u1 = p1->user: Jinaga.User
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->tenant: GameHub.Tenant
         ]
-    } => u1
-
-    // Tenant creators can see administrators of their tenants
-    (p1: GameHub.Tenant.Administrator) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
         ]
-    } => u1
-
-    // Players can manage their own data
-    (p1: GameHub.Player) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    // Administrators can manage players in their tenant
-    (p1: GameHub.Player) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Player names - accessible by tenant creators and administrators
-    (p1: GameHub.Player.Name) {
-        u1: Jinaga.User [
-            pl1: GameHub.Player = p1->player: GameHub.Player
-            t1: GameHub.Tenant = pl1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    (p1: GameHub.Player.Name) {
-        u1: Jinaga.User [
-            pl1: GameHub.Player = p1->player: GameHub.Player
-            t1: GameHub.Tenant = pl1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Player logos - accessible by tenant creators and administrators
-    (p1: GameHub.Player.Logo) {
-        u1: Jinaga.User [
-            pl1: GameHub.Player = p1->player: GameHub.Player
-            t1: GameHub.Tenant = pl1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    (p1: GameHub.Player.Logo) {
-        u1: Jinaga.User [
-            pl1: GameHub.Player = p1->player: GameHub.Player
-            t1: GameHub.Tenant = pl1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Game sessions - accessible by tenant creators and administrators
+    } => u2
     (p1: GameHub.GameSession) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->tenant: GameHub.Tenant
         ]
-    } => u1
-
-    (p1: GameHub.GameSession) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
         ]
-    } => u1
-
-    // Game session dates - accessible by tenant creators and administrators
-    (p1: GameHub.GameSession.Date) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    (p1: GameHub.GameSession.Date) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Game session names - accessible by tenant creators and administrators
+    } => u2
     (p1: GameHub.GameSession.Name) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
         ]
-    } => u1
-
-    (p1: GameHub.GameSession.Name) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
         ]
-    } => u1
-
-    // Game access paths - accessible by tenant creators and administrators
+    } => u2
+    (p1: GameHub.GameSession.Date) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
     (p1: GameHub.GameAccessPath) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+    (p1: GameHub.GameSession.State) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->session: GameHub.GameSession->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
+}
+
+distribution {
+    share (p1: GameHub.Tenant, p2: Jinaga.User) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1
+            u1->user: Jinaga.User = p2
         ]
     } => u1
-
-    (p1: GameHub.GameAccessPath) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
+    with (p1: GameHub.Tenant, p2: Jinaga.User) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1
         ]
-    } => u1
-
-    // Participants can manage their own data
-    (p1: GameHub.Participant) {
-        u1: Jinaga.User [
-            u1 = p1->user: Jinaga.User
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
         ]
-    } => u1
-
-    // Tenant creators can see participants in their tenant
-    (p1: GameHub.Participant) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
+    } => u2
+    share (p1: Jinaga.User) {
+        u1: GameHub.Tenant.Administrator [
+            u1->user: Jinaga.User = p1
         ]
-    } => u1
-
-    // Administrators can see participants in their tenant
-    (p1: GameHub.Participant) {
-        u1: Jinaga.User [
-            t1: GameHub.Tenant = p1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
+        u2: GameHub.Tenant [
+            u2 = u1->tenant: GameHub.Tenant
         ]
-    } => u1
-
-    // Participant information - accessible by the participant themselves
-    (p1: GameHub.Participant.Information) {
-        u1: Jinaga.User [
-            part1: GameHub.Participant = p1->participant: GameHub.Participant
-            u1 = part1->user: Jinaga.User
+        u3: Jinaga.User [
+            u3 = u2->creator: Jinaga.User
         ]
-    } => u1
-
-    // Participant information - accessible by tenant creators
-    (p1: GameHub.Participant.Information) {
+    } => u3
+    with (p1: Jinaga.User) {
         u1: Jinaga.User [
-            part1: GameHub.Participant = p1->participant: GameHub.Participant
-            t1: GameHub.Tenant = part1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    // Participant information - accessible by administrators
-    (p1: GameHub.Participant.Information) {
-        u1: Jinaga.User [
-            part1: GameHub.Participant = p1->participant: GameHub.Participant
-            t1: GameHub.Tenant = part1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Participant sessions - accessible by the participant themselves
-    (p1: GameHub.Participant.Session) {
-        u1: Jinaga.User [
-            part1: GameHub.Participant = p1->participant: GameHub.Participant
-            u1 = part1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Participant sessions - accessible by tenant creators
-    (p1: GameHub.Participant.Session) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    // Participant sessions - accessible by administrators
-    (p1: GameHub.Participant.Session) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
-        ]
-    } => u1
-
-    // Winners - accessible by tenant creators and administrators
-    (p1: GameHub.Winner) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            u1 = t1->creator: Jinaga.User
-        ]
-    } => u1
-
-    (p1: GameHub.Winner) {
-        u1: Jinaga.User [
-            s1: GameHub.GameSession = p1->session: GameHub.GameSession
-            t1: GameHub.Tenant = s1->tenant: GameHub.Tenant
-            a1: GameHub.Tenant.Administrator [
-                a1->tenant: GameHub.Tenant = t1
-            ]
-            u1 = a1->user: Jinaga.User
+            u1 = p1
         ]
     } => u1
 }
+
