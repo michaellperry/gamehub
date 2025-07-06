@@ -1,0 +1,123 @@
+{
+  "name": "GameHub Subscriptions",
+  "subscriptions": [
+    {
+      "name": "tenant-data",
+      "description": "Subscribe to tenant and related data",
+      "specification": {
+        "given": [
+          {
+            "type": "GameHub.Tenant",
+            "label": "tenant"
+          }
+        ],
+        "matches": [
+          {
+            "type": "GameHub.Tenant.Administrator",
+            "where": "administrator.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Player",
+            "where": "player.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Player.Name",
+            "where": "name.player.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Player.Logo",
+            "where": "logo.player.tenant = tenant"
+          },
+          {
+            "type": "GameHub.GameSession",
+            "where": "session.tenant = tenant"
+          },
+          {
+            "type": "GameHub.GameSession.Date",
+            "where": "date.session.tenant = tenant"
+          },
+          {
+            "type": "GameHub.GameSession.Name",
+            "where": "name.session.tenant = tenant"
+          },
+          {
+            "type": "GameHub.GameAccessPath",
+            "where": "accessPath.session.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Participant",
+            "where": "participant.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Participant.Information",
+            "where": "info.participant.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Participant.Session",
+            "where": "participantSession.session.tenant = tenant"
+          },
+          {
+            "type": "GameHub.Winner",
+            "where": "winner.session.tenant = tenant"
+          }
+        ]
+      }
+    },
+    {
+      "name": "game-session-data",
+      "description": "Subscribe to specific game session data",
+      "specification": {
+        "given": [
+          {
+            "type": "GameHub.GameSession",
+            "label": "session"
+          }
+        ],
+        "matches": [
+          {
+            "type": "GameHub.GameSession.Date",
+            "where": "date.session = session"
+          },
+          {
+            "type": "GameHub.GameSession.Name",
+            "where": "name.session = session"
+          },
+          {
+            "type": "GameHub.GameAccessPath",
+            "where": "accessPath.session = session"
+          },
+          {
+            "type": "GameHub.Participant.Session",
+            "where": "participantSession.session = session"
+          },
+          {
+            "type": "GameHub.Winner",
+            "where": "winner.session = session"
+          }
+        ]
+      }
+    },
+    {
+      "name": "participant-data",
+      "description": "Subscribe to participant-specific data",
+      "specification": {
+        "given": [
+          {
+            "type": "GameHub.Participant",
+            "label": "participant"
+          }
+        ],
+        "matches": [
+          {
+            "type": "GameHub.Participant.Information",
+            "where": "info.participant = participant"
+          },
+          {
+            "type": "GameHub.Participant.Session",
+            "where": "participantSession.participant = participant"
+          }
+        ]
+      }
+    }
+  ]
+}

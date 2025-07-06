@@ -1,0 +1,6 @@
+{
+  "provider": "FusionAuth",
+  "issuer": "localhost:9011",
+  "audience": "${FUSIONAUTH_APPLICATION_ID}",
+  "key_id": "${FUSIONAUTH_KEY_ID}"
+}

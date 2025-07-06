@@ -1,4 +1,80 @@
+name: gamehub
+
 services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:16.0-bookworm
+    container_name: gamehub-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gamehub}
+      POSTGRES_USER: ${POSTGRES_USER:-gamehub_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_in_production}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - gamehub-db-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gamehub_admin} -d ${POSTGRES_DB:-gamehub}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # FusionAuth Service
+  fusionauth:
+    image: fusionauth/fusionauth-app:latest
+    container_name: gamehub-fusionauth
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-gamehub}
+      DATABASE_ROOT_USERNAME: ${POSTGRES_USER:-gamehub_admin}
+      DATABASE_ROOT_PASSWORD: ${POSTGRES_PASSWORD:-secure_password_change_in_production}
+      FUSIONAUTH_APP_MEMORY: ${FUSIONAUTH_APP_MEMORY:-512M}
+      FUSIONAUTH_APP_RUNTIME_MODE: ${FUSIONAUTH_APP_RUNTIME_MODE:-production}
+      SEARCH_TYPE: ${FUSIONAUTH_SEARCH_ENGINE_TYPE:-database}
+    volumes:
+      - fusionauth-config:/usr/local/fusionauth/config
+      - ./secrets/fusionauth:/usr/local/fusionauth/secrets:ro
+    networks:
+      - gamehub-auth-network
+      - gamehub-db-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:9011/api/status", "-o", "/dev/null", "-w", "%{http_code}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Jinaga Replicator Service
+  gamehub-replicator:
+    image: jinaga/jinaga-replicator:3.5.2
+    container_name: gamehub-replicator
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-gamehub_admin}:${POSTGRES_PASSWORD:-secure_password_change_in_production}@postgres:5432/${POSTGRES_DB:-gamehub}
+    volumes:
+      - ./replicator/policies:/var/lib/replicator/policies:ro
+      - ./replicator/authentication:/var/lib/replicator/authentication:ro
+      - ./replicator/subscriptions:/var/lib/replicator/subscriptions:ro
+    networks:
+      - gamehub-network
+      - gamehub-db-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8080/health", "-o", "/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Service IP (existing service)
   service-ip:
     build:
       context: ../app/service-ip
@@ -29,8 +105,8 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on: []
 
+  # Player IP (existing service with PostgreSQL integration)
   player-ip:
     build:
       context: ../app/player-ip
@@ -49,17 +125,20 @@ services:
       - CORS_ORIGIN=${PLAYER_CORS_ORIGIN:-*}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - SQLITE_DB_PATH=/app/data/player-ip.db
+      - DATABASE_URL=${PLAYER_DATABASE_URL:-postgresql://${POSTGRES_USER:-gamehub_admin}:${POSTGRES_PASSWORD:-secure_password_change_in_production}@postgres:5432/${POSTGRES_DB:-gamehub}}
       - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN:-14d}
       - ROTATE_REFRESH_TOKENS=${ROTATE_REFRESH_TOKENS:-false}
       - SERVICE_IP_URL=http://service-ip:8083
       - SERVICE_IP_CLIENT_ID=player-ip
       - SERVICE_IP_CLIENT_SECRET_FILE=/app/secrets/player-ip-client-secret
+      - REPLICATOR_URL=http://gamehub-replicator:8080/jinaga
     volumes:
       - player-ip-data:/app/data
       - ./secrets/player-ip:/app/secrets:ro
       - ./secrets/shared:/app/secrets/shared:ro
     networks:
       - gamehub-network
+      - gamehub-db-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:8082/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
@@ -69,7 +148,10 @@ services:
       start_period: 40s
     depends_on:
       - service-ip
+      - postgres
+      - gamehub-replicator
 
+  # Content Store (existing service)
   content-store:
     build:
       context: ../app/content-store
@@ -101,15 +183,65 @@ services:
       - service-ip
       - player-ip
 
+  # NGINX Reverse Proxy
+  nginx:
+    image: nginx:stable-alpine
+    container_name: gamehub-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - gamehub-admin-dist:/usr/share/nginx/html/admin:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    networks:
+      - gamehub-network
+      - gamehub-auth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    depends_on:
+      - service-ip
+      - player-ip
+      - content-store
+      - gamehub-replicator
+      - fusionauth
+
+# Network Configuration
 networks:
   gamehub-network:
     driver: bridge
     name: gamehub-network
+  gamehub-db-network:
+    driver: bridge
+    name: gamehub-db-network
+  gamehub-auth-network:
+    driver: bridge
+    name: gamehub-auth-network
 
+# Volume Configuration
 volumes:
+  # Database volumes
+  postgres-data:
+    name: gamehub-postgres-data
+  
+  # FusionAuth volumes
+  fusionauth-config:
+    name: gamehub-fusionauth-config
+  
+  # Application data volumes
   service-ip-data:
     name: gamehub-service-ip-data
   player-ip-data:
     name: gamehub-player-ip-data
   content-store-data:
     name: gamehub-content-store-data
+  
+  # Frontend application volumes
+  gamehub-admin-dist:
+    name: gamehub-admin-dist
