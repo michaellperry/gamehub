@@ -1,6 +1,6 @@
 # GameHub Mesh Infrastructure
 
-This directory contains the Phase 3 infrastructure setup for GameHub, implementing a comprehensive mesh architecture with PostgreSQL, FusionAuth, Jinaga replicator, and NGINX reverse proxy.
+This directory contains the infrastructure setup for GameHub, implementing a comprehensive mesh architecture with PostgreSQL, FusionAuth, Jinaga replicator, and NGINX reverse proxy.
 
 ## Architecture Overview
 
@@ -186,7 +186,7 @@ docker-compose up -d
 
 ## Migration from Phase 2
 
-This Phase 3 setup builds upon the completed Phase 2 services:
+This setup builds upon the existing services:
 - Service-IP, Player-IP, and Content-Store are integrated
 - Database migration from SQLite to PostgreSQL (optional for Player-IP)
 - Enhanced authentication with FusionAuth integration

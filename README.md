@@ -48,6 +48,8 @@ GameHub is a **starter template** that provides everything you need to build you
 4. **Launch full environment**:
    ```bash
    cd ../mesh
+   cp .env.example .env
+   # Update .env with your configuration
    docker-compose up -d
    ```
 
@@ -69,13 +71,30 @@ Follow our comprehensive getting started guides:
 ## 🏗️ Architecture
 
 ```
-Frontend (React + Vite)     Backend Services (Node.js)     Data Layer (Jinaga)
+Frontend (React + Vite)     Backend Services (Node.js)     Data & Auth Layer
 ┌─────────────────────┐    ┌─────────────────────────┐    ┌─────────────────────┐
-│  Admin Portal       │    │  Player IP Service      │    │  Jinaga Replicator  │
-│  Player Interface   │───▶│  Service IP Provider    │───▶│  PostgreSQL         │
-│  Real-time Updates  │    │  Content Store          │    │  Real-time Sync     │
+│  Admin Portal       │    │  Player IP Service      │    │  PostgreSQL         │
+│  Player Interface   │───▶│  Service IP Provider    │───▶│  FusionAuth         │
+│  Real-time Updates  │    │  Content Store          │    │  Jinaga Replicator  │
 └─────────────────────┘    └─────────────────────────┘    └─────────────────────┘
+                                        │                           │
+                                        └───────────────────────────┘
+                                           NGINX Reverse Proxy
 ```
+
+### Service Endpoints
+
+When running locally with Docker Compose:
+
+| Service | Endpoint | Description |
+|---------|----------|-------------|
+| Main Gateway | http://localhost | NGINX reverse proxy |
+| Admin Panel | http://localhost/admin/ | GameHub admin interface |
+| FusionAuth | http://localhost/auth/ | Identity management |
+| Replicator | http://localhost/replicator/ | Real-time data sync |
+| Player API | http://localhost/player-ip/ | Player authentication |
+| Service API | http://localhost/service-ip/ | Service authentication |
+| Content Store | http://localhost/content/ | File storage |
 
 ### Repository Structure
 
@@ -91,17 +110,18 @@ Frontend (React + Vite)     Backend Services (Node.js)     Data Layer (Jinaga)
 - **📱 React Admin Portal** - Manage games, players, and sessions
 - **🎯 Player Console** - Demonstrate game participation
 - **🔄 Real-time Synchronization** - Jinaga's conflict-free data sync
-- **🔐 OAuth Authentication** - Secure user and service authentication
-- **🐳 Docker Orchestration** - Production-ready container setup
+- **🔐 OAuth Authentication** - Secure user and service authentication with FusionAuth
+- **🐳 Docker Orchestration** - Production-ready container setup with PostgreSQL
 - **📊 Multi-tenant Support** - Isolate data by organization
 - **🚀 Auto-deployment** - CI/CD with Azure DevOps integration
+- **🔒 Network Segmentation** - Isolated networks for security
 
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18, TypeScript, Vite, TailwindCSS
 - **Backend**: Node.js, Express, TypeScript
 - **Data Layer**: Jinaga (distributed facts), PostgreSQL
-- **Authentication**: OAuth 2.0 + PKCE, JWT tokens
+- **Authentication**: FusionAuth, OAuth 2.0 + PKCE, JWT tokens
 - **Orchestration**: Docker Compose, Nginx reverse proxy
 - **Deployment**: Azure Container Apps, GitHub Actions
 
@@ -174,6 +194,8 @@ npm run type-check        # TypeScript checking
 ```bash
 # Start full development environment
 cd mesh
+cp .env.example .env
+# Update .env with your configuration
 docker-compose up -d
 
 # View logs
@@ -185,21 +207,41 @@ docker-compose down
 
 ## 🚀 Deployment
 
-### Development
+### Development Environment
+
 ```bash
 cd mesh
+cp .env.example .env
+# Update environment variables as needed
 docker-compose up -d
 ```
 
-### Production
-```bash
-# Build all components
-cd app
-npm run build
+### Production Environment
 
-# Deploy to Azure
-az containerapp up --source .
-```
+1. **Configure environment variables**:
+   ```bash
+   cd mesh
+   cp .env.example .env
+   # Update all production values in .env
+   ```
+
+2. **Set up secrets**:
+   ```bash
+   # Generate shared secrets for service authentication
+   SHARED_SECRET=$(openssl rand -base64 32)
+   echo "$SHARED_SECRET" > secrets/service-ip/clients/player-ip
+   echo "$SHARED_SECRET" > secrets/player-ip/player-ip-client-secret
+   ```
+
+3. **Deploy services**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Configure FusionAuth**:
+   - Access http://localhost/auth/
+   - Create GameHub application
+   - Update authentication provider configurations
 
 See [Deployment Guide](docs/getting-started/09-deployment.md) for detailed instructions.
 

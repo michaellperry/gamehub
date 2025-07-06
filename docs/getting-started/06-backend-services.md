@@ -85,17 +85,19 @@ GameHub uses a microservices architecture with three specialized backend service
 
 ### Service Purpose and Functionality
 
-The player-ip service is a comprehensive OAuth 2.0 identity provider that handles player authentication and authorization for the GameHub platform. It runs on **Port 8082** and provides secure authentication flows for frontend applications.
+The player-ip service is a comprehensive OAuth 2.0 identity provider that handles player authentication and authorization for the GameHub platform. It runs on **Port 8082** and provides secure authentication flows for frontend applications with current infrastructure integration.
 
 **Key Features:**
 - OAuth 2.0 Authorization Code Flow with PKCE for secure authentication
 - SQLite database for user and session management
 - JWT token issuance with refresh token rotation
 - Integration with Service IP for backend service authentication
+- Integration with Jinaga replicator for real-time data synchronization
 - Cookie-based session management
 - QR code authentication support
-- Docker containerization support
+- Docker containerization with health checks
 - TypeScript implementation with Express.js
+- Network segmentation support (gamehub-network, gamehub-db-network)
 
 ### Directory Structure
 
@@ -149,9 +151,12 @@ Player-ip uses standard environment configuration. See [Deployment - Environment
 **Key Variables:**
 - `PORT=8082` - Service port
 - `JWT_SECRET` - Shared secret for token signing
-- `DATABASE_URL` - SQLite database path
+- `SQLITE_DB_PATH` - SQLite database path
 - `SERVICE_IP_URL` - Service IP endpoint for backend authentication
+- `REPLICATOR_URL` - Jinaga replicator endpoint for data sync
 - `CORS_ORIGIN` - Allowed origins for CORS
+- `REFRESH_TOKEN_EXPIRES_IN` - Refresh token expiration time
+- `ROTATE_REFRESH_TOKENS` - Enable refresh token rotation
 
 ### API Endpoints
 
@@ -440,7 +445,13 @@ const contentUrl = `/content-store/content/${contentHash}`;
 
 ### Database Issues
 
-**Problem**: SQLite database locked errors
+**Problem**: Database connection errors
+**Solution**:
+- Check SQLite database file permissions
+- Ensure database directory exists and is writable
+- Verify SQLite database path in environment variables
+
+**Problem**: SQLite database locked errors (fallback mode)
 **Solution**:
 - Enable WAL mode: `db.pragma('journal_mode = WAL')`
 - Check for unclosed database connections
@@ -451,6 +462,7 @@ const contentUrl = `/content-store/content/${contentHash}`;
 - Add appropriate database indexes
 - Use prepared statements
 - Implement pagination for large result sets
+- Consider PostgreSQL for better performance (current)
 
 ### File Upload Issues
 

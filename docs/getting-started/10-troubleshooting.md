@@ -66,6 +66,18 @@ This guide provides solutions to common issues encountered when setting up, deve
       - [Problem: Jinaga replicator connection fails](#problem-jinaga-replicator-connection-fails)
       - [Problem: Authorization policies not working](#problem-authorization-policies-not-working)
       - [Problem: Jinaga model build fails](#problem-jinaga-model-build-fails)
+  - [Infrastructure Issues](#infrastructure-issues)
+    - [PostgreSQL Database Issues](#postgresql-database-issues)
+      - [Problem: PostgreSQL container fails to start](#problem-postgresql-container-fails-to-start)
+      - [Problem: Database connection refused](#problem-database-connection-refused)
+      - [Problem: Database migration fails](#problem-database-migration-fails)
+    - [NGINX Reverse Proxy Issues](#nginx-reverse-proxy-issues)
+      - [Problem: NGINX fails to start](#problem-nginx-fails-to-start)
+      - [Problem: Service routing not working](#problem-service-routing-not-working)
+      - [Problem: SSL certificate issues](#problem-ssl-certificate-issues)
+    - [Network Connectivity Issues](#network-connectivity-issues)
+      - [Problem: Services can't communicate across networks](#problem-services-cant-communicate-across-networks)
+      - [Problem: Health checks failing](#problem-health-checks-failing)
   - [Deployment Problems](#deployment-problems)
     - [FusionAuth Issues](#fusionauth-issues)
       - [Problem: FusionAuth fails to start](#problem-fusionauth-fails-to-start)
@@ -1050,6 +1062,214 @@ npm run build:types
 # import { ... } from 'gamehub-model'
 # import { ... } from 'gamehub-model/authorization'
 ```
+## Infrastructure Issues
+
+### PostgreSQL Database Issues
+
+#### Problem: PostgreSQL container fails to start
+```bash
+Error: database system is shut down
+Error: could not connect to server
+```
+
+**Solution:**
+```bash
+# Check PostgreSQL container logs
+docker-compose logs postgres
+
+# Verify environment variables
+grep POSTGRES_ .env
+
+# Check disk space
+df -h
+
+# Remove corrupted volume and restart
+docker-compose down
+docker volume rm gamehub-postgres-data
+docker-compose up -d postgres
+
+# Wait for database to initialize
+docker-compose logs -f postgres
+```
+
+#### Problem: Database connection refused
+```bash
+Error: connection to server at "postgres" (172.x.x.x), port 5432 failed
+```
+
+**Solution:**
+```bash
+# Check if PostgreSQL is running
+docker-compose ps postgres
+
+# Verify network connectivity
+docker-compose exec player-ip ping postgres
+
+# Check PostgreSQL health
+docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+
+# Restart PostgreSQL service
+docker-compose restart postgres
+
+# Check database logs for errors
+docker-compose logs postgres | grep ERROR
+```
+
+#### Problem: Database migration fails
+```bash
+Error: relation "users" does not exist
+Error: permission denied for database
+```
+
+**Solution:**
+```bash
+# Run database migrations manually
+docker-compose exec player-ip npm run migrate
+
+# Check database permissions
+docker-compose exec postgres psql -U gamehub_admin -d gamehub -c "\du"
+
+# Reset database if needed
+docker-compose down
+docker volume rm gamehub-postgres-data
+docker-compose up -d postgres
+# Wait for initialization, then run migrations
+```
+
+### NGINX Reverse Proxy Issues
+
+#### Problem: NGINX fails to start
+```bash
+Error: nginx: [emerg] cannot load certificate
+Error: nginx: [emerg] bind() to 0.0.0.0:80 failed
+```
+
+**Solution:**
+```bash
+# Check NGINX configuration syntax
+docker-compose exec nginx nginx -t
+
+# Check if port 80/443 is already in use
+sudo lsof -i :80
+sudo lsof -i :443
+
+# Verify SSL certificates exist (if using SSL)
+ls -la mesh/nginx/ssl/
+
+# Check NGINX logs
+docker-compose logs nginx
+
+# Restart NGINX
+docker-compose restart nginx
+```
+
+#### Problem: Service routing not working
+```bash
+Error: 502 Bad Gateway
+Error: upstream connect error
+```
+
+**Solution:**
+```bash
+# Check if backend services are running
+docker-compose ps
+
+# Verify service health endpoints
+curl http://localhost/player-ip/health
+curl http://localhost/service-ip/health
+curl http://localhost/replicator/health
+
+# Check NGINX upstream configuration
+docker-compose exec nginx cat /etc/nginx/conf.d/default.conf
+
+# Test internal service connectivity
+docker-compose exec nginx wget -qO- http://player-ip:8082/health
+docker-compose exec nginx wget -qO- http://service-ip:8083/health
+
+# Restart NGINX and dependent services
+docker-compose restart nginx player-ip service-ip
+```
+
+#### Problem: SSL certificate issues
+```bash
+Error: SSL certificate problem: self signed certificate
+Error: certificate verify failed
+```
+
+**Solution:**
+```bash
+# For development, use self-signed certificates
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout mesh/nginx/ssl/key.pem \
+  -out mesh/nginx/ssl/cert.pem \
+  -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
+
+# Set proper permissions
+chmod 600 mesh/nginx/ssl/key.pem
+chmod 644 mesh/nginx/ssl/cert.pem
+
+# For production, use Let's Encrypt or proper CA certificates
+# Update NGINX configuration to use SSL
+# Restart NGINX
+docker-compose restart nginx
+```
+
+### Network Connectivity Issues
+
+#### Problem: Services can't communicate across networks
+```bash
+Error: getaddrinfo ENOTFOUND service-name
+Error: connect ECONNREFUSED
+```
+
+**Solution:**
+```bash
+# Check Docker networks
+docker network ls | grep gamehub
+
+# Verify service network assignments
+docker-compose config | grep -A 5 networks
+
+# Test network connectivity between services
+docker-compose exec player-ip ping postgres
+docker-compose exec player-ip ping service-ip
+docker-compose exec nginx ping fusionauth
+
+# Recreate networks if needed
+docker-compose down
+docker network prune
+docker-compose up -d
+
+# Check service dependencies
+docker-compose ps
+```
+
+#### Problem: Health checks failing
+```bash
+Warning: Health check failed
+Error: service unhealthy
+```
+
+**Solution:**
+```bash
+# Check individual service health
+docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+docker-compose exec player-ip curl -f http://localhost:8082/health
+docker-compose exec service-ip curl -f http://localhost:8083/health
+docker-compose exec fusionauth curl -f http://localhost:9011/api/status
+
+# Check health check configuration
+docker-compose config | grep -A 10 healthcheck
+
+# View health check logs
+docker inspect $(docker-compose ps -q postgres) | grep Health -A 20
+
+# Adjust health check intervals if needed
+# Edit docker-compose.yml health check settings
+# Restart services
+docker-compose up -d
+```
+
 
 ## Deployment Problems
 

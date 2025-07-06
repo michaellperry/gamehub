@@ -1,6 +1,6 @@
 # Project Setup
 
-This guide walks you through the initial project setup, directory structure understanding, and basic configuration needed to start development.
+This guide walks you through the initial project setup, directory structure understanding, and basic configuration needed to start development with the infrastructure.
 
 ## Table of Contents
 
@@ -16,15 +16,20 @@ This guide walks you through the initial project setup, directory structure unde
     - [Scripts Structure (`/scripts`)](#scripts-structure-scripts)
   - [Environment Configuration](#environment-configuration)
     - [Service Authentication Setup](#service-authentication-setup)
+    - [Database Configuration](#database-configuration)
+    - [FusionAuth Configuration](#fusionauth-configuration)
   - [Initial Setup Scripts](#initial-setup-scripts)
     - [Automated Setup](#automated-setup)
     - [Manual Setup Steps](#manual-setup-steps)
       - [1. Install Application Dependencies](#1-install-application-dependencies)
       - [2. Build Shared Model](#2-build-shared-model)
+      - [3. Configure Environment](#3-configure-environment)
+      - [4. Set Up Secrets](#4-set-up-secrets)
   - [Development Workflow](#development-workflow)
     - [Local Development Mode (Recommended for Development)](#local-development-mode-recommended-for-development)
     - [Production-like Environment](#production-like-environment)
       - [Development URLs (Production Mode)](#development-urls-production-mode)
+      - [Service Health Checks](#service-health-checks)
   - [Next Steps](#next-steps)
 
 ## Repository Setup
@@ -78,6 +83,7 @@ app/
 ├── gamehub-model/          # Shared TypeScript library with Jinaga domain model
 ├── service-ip/             # OAuth 2.0 Client Credentials service (Port 8083)
 ├── player-ip/              # OAuth 2.0 identity provider for player authentication (Port 8082)
+├── content-store/          # File storage service (Port 8081)
 ├── gamehub-admin/          # Vite-based web application for administration
 └── [other legacy services] # Additional services (being migrated)
 ```
@@ -86,15 +92,28 @@ app/
 - **gamehub-model** - Shared TypeScript library with dual ESM/CJS builds
 - **service-ip** - OAuth 2.0 Client Credentials service for service-to-service authentication
 - **player-ip** - OAuth 2.0 identity provider for player authentication with PKCE flow
+- **content-store** - File storage service with authentication integration
 - **gamehub-admin** - Vite-based web application for administration
 
 ### Infrastructure Structure (`/mesh`)
 ```
 mesh/
-├── nginx/                  # Reverse proxy configuration
-├── front-end/              # Frontend routing and policies
-├── secrets/                # Secret management
-└── docker compose files    # Service orchestration
+├── docker-compose.yml      # Main orchestration file
+├── .env.example           # Environment configuration template
+├── nginx/                 # Reverse proxy configuration
+│   ├── nginx.conf         # NGINX routing configuration
+│   ├── html/              # Static HTML pages
+│   └── ssl/               # SSL certificates (production)
+├── replicator/            # Jinaga replicator configuration
+│   ├── authentication/    # Authentication providers
+│   ├── policies/          # Authorization policies
+│   └── subscriptions/     # Real-time subscriptions
+└── secrets/               # Secret management
+    ├── player-ip/         # Player-IP service secrets
+    ├── service-ip/        # Service-IP client configurations
+    ├── content-store/     # Content-Store authentication providers
+    ├── fusionauth/        # FusionAuth configuration secrets
+    └── shared/            # Shared secrets across services
 ```
 
 ### Scripts Structure (`/scripts`)
@@ -114,11 +133,16 @@ Backend services require client credentials for inter-service communication.
 Run these commands to generate and configure the shared secrets:
 
 ```bash
+# Generate shared secret for service authentication
 SHARED_SECRET=$(openssl rand -base64 32)
+
+# Set up service-ip client credentials
 mkdir -p mesh/secrets/service-ip/clients
 echo "$SHARED_SECRET" > mesh/secrets/service-ip/clients/player-ip
+
+# Set up player-ip service credentials
 mkdir -p mesh/secrets/player-ip
-echo "$SHARED_SECRET" > mesh/secrets/player-ip/service-ip-client
+echo "$SHARED_SECRET" > mesh/secrets/player-ip/player-ip-client-secret
 ```
 
 **What these commands do:**
@@ -127,6 +151,32 @@ echo "$SHARED_SECRET" > mesh/secrets/player-ip/service-ip-client
 3. Store the player-ip client credentials with the shared secret
 4. Create player IP service credentials directory  
 5. Store the service IP client credentials (using the same shared secret)
+
+### Database Configuration
+
+The infrastructure uses PostgreSQL as the database for FusionAuth:
+
+```bash
+cd mesh
+cp .env.example .env
+```
+
+**Key database environment variables:**
+```env
+POSTGRES_DB=gamehub
+POSTGRES_USER=gamehub_admin
+POSTGRES_PASSWORD=secure_password_change_in_production
+```
+
+### FusionAuth Configuration
+
+FusionAuth provides OAuth2 authentication for web applications:
+
+```env
+FUSIONAUTH_APP_MEMORY=512M
+FUSIONAUTH_APP_RUNTIME_MODE=production
+FUSIONAUTH_SEARCH_ENGINE_TYPE=database
+```
 
 ## Initial Setup Scripts
 
@@ -161,6 +211,7 @@ This single command installs dependencies for all packages in the monorepo:
 - gamehub-model
 - service-ip
 - player-ip
+- content-store
 - gamehub-admin
 
 #### 2. Build Shared Model
@@ -173,6 +224,37 @@ npm run generate-policies
 ```
 
 **Note:** Run these commands from the app directory (monorepo root)
+
+#### 3. Configure Environment
+
+Set up the environment configuration for the mesh infrastructure:
+
+```bash
+cd ../mesh
+cp .env.example .env
+# Edit .env file with your specific configuration
+```
+
+#### 4. Set Up Secrets
+
+Generate and configure the required secrets:
+
+```bash
+# Generate service authentication secrets
+SHARED_SECRET=$(openssl rand -base64 32)
+mkdir -p secrets/service-ip/clients
+echo "$SHARED_SECRET" > secrets/service-ip/clients/player-ip
+mkdir -p secrets/player-ip
+echo "$SHARED_SECRET" > secrets/player-ip/player-ip-client-secret
+
+# Generate JWT secrets for production
+JWT_SECRET=$(openssl rand -base64 32)
+PLAYER_JWT_SECRET=$(openssl rand -base64 32)
+
+# Update .env file with generated secrets
+sed -i "s/JWT_SECRET=.*/JWT_SECRET=$JWT_SECRET/" .env
+sed -i "s/PLAYER_JWT_SECRET=.*/PLAYER_JWT_SECRET=$PLAYER_JWT_SECRET/" .env
+```
 
 ## Development Workflow
 
@@ -207,13 +289,14 @@ npm run dev:player-ip
 - `npm run generate-policies` - Generate Jinaga policies from gamehub-model
 
 ### Production-like Environment
-Start all services using Docker Compose for a production-like environment:
+
+Start all services using Docker Compose for a production-like environment with the new infrastructure:
 
 ```bash
 cd mesh/
-docker compose up -d
-docker compose ps
-docker compose logs -f [service-name]
+docker-compose up -d
+docker-compose ps
+docker-compose logs -f [service-name]
 ```
 
 **Commands explained:**
@@ -223,35 +306,82 @@ docker compose logs -f [service-name]
 4. View logs (replace `[service-name]` with actual service name)
 
 #### Development URLs (Production Mode)
-- **Main Application**: http://localhost (Nginx routes to appropriate apps)
-- **Admin Portal**: http://localhost/admin
-- **FusionAuth Admin**: http://localhost:9011
-- **Jinaga Replicator**: http://localhost:8080 (internal)
+
+The new infrastructure provides the following endpoints through NGINX reverse proxy:
+
+| Service | Endpoint | Description |
+|---------|----------|-------------|
+| **Main Gateway** | http://localhost | NGINX reverse proxy |
+| **Admin Portal** | http://localhost/admin/ | GameHub admin interface |
+| **FusionAuth** | http://localhost/auth/ | Identity management |
+| **Replicator** | http://localhost/replicator/ | Real-time data sync |
+| **Player API** | http://localhost/player-ip/ | Player authentication |
+| **Service API** | http://localhost/service-ip/ | Service authentication |
+| **Content Store** | http://localhost/content/ | File storage |
+
+#### Service Health Checks
+
+All services include comprehensive health checks:
+
+```bash
+# Check overall system health
+curl http://localhost/health
+
+# Check individual service health
+curl http://localhost/player-ip/health
+curl http://localhost/service-ip/health
+curl http://localhost/content/health
+curl http://localhost/replicator/health
+curl http://localhost/auth/api/status
+```
+
+**Database and Infrastructure Health:**
+```bash
+# Check PostgreSQL
+docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+
+# Check service logs
+docker-compose logs -f postgres
+docker-compose logs -f fusionauth
+docker-compose logs -f gamehub-replicator
+```
 
 When you make changes to the model or authorization rules:
 
 ```bash
+cd app
 npm run build:model
 npm run generate-policies
 cd ../mesh
-docker compose restart front-end-replicator
+docker-compose restart gamehub-replicator
 ```
 
 When you make changes to the admin application:
 
 ```bash
+cd app
 npm run build:admin
+cd ../mesh
+docker-compose restart nginx
 ```
 
 **Or build and deploy to container:**
 ```bash
-cd gamehub-admin
+cd app/gamehub-admin
 npm run build:container
 ```
 
 ## Next Steps
 
-With the project set up successfully, proceed to [Jinaga Data Model](./04-jinaga-model.md) to understand and configure the data layer.
+With the infrastructure set up successfully, proceed to [Jinaga Data Model](./04-jinaga-model.md) to understand and configure the data layer.
+
+**Key current Features Now Available:**
+- PostgreSQL database for FusionAuth
+- FusionAuth OAuth2 provider
+- Jinaga replicator with real-time sync
+- NGINX reverse proxy with SSL support
+- Network segmentation for security
+- Comprehensive health monitoring
 
 ---
 
