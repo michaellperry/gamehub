@@ -224,14 +224,14 @@ get_deployment_status() {
     
     # Check if services are running
     local running_services
-    running_services=$(docker-compose ps --services --filter "status=running" 2>/dev/null || echo "")
+    running_services=$(docker compose ps --services --filter "status=running" 2>/dev/null || echo "")
     
     if [[ -n "$running_services" ]]; then
         log_info "Currently running services:"
         echo "$running_services" | while read -r service; do
             if [[ -n "$service" ]]; then
                 local container_info
-                container_info=$(docker-compose ps "$service" 2>/dev/null || echo "")
+                container_info=$(docker compose ps "$service" 2>/dev/null || echo "")
                 log_info "  - $service: $container_info"
             fi
         done
@@ -240,9 +240,9 @@ get_deployment_status() {
     fi
     
     # Get image information
-    if docker-compose ps player-ip &> /dev/null; then
+    if docker compose ps player-ip &> /dev/null; then
         local image_info
-        image_info=$(docker inspect "$(docker-compose ps -q player-ip)" --format '{{.Config.Image}}' 2>/dev/null || echo "unknown")
+        image_info=$(docker inspect "$(docker compose ps -q player-ip)" --format '{{.Config.Image}}' 2>/dev/null || echo "unknown")
         log_info "Current player-ip image: $image_info"
     fi
 }
@@ -253,9 +253,9 @@ show_deployment_logs() {
     
     cd "$MESH_DIR"
     
-    if docker-compose ps player-ip &> /dev/null; then
+    if docker compose ps player-ip &> /dev/null; then
         log_info "Player-IP service logs:"
-        docker-compose logs --tail=50 player-ip
+        docker compose logs --tail=50 player-ip
     else
         log_warning "Player-IP service is not running"
     fi
@@ -278,10 +278,10 @@ backup_current_deployment() {
     
     # Export current container information
     cd "$MESH_DIR"
-    docker-compose config > "$backup_dir/resolved-compose.yml" 2>/dev/null || true
+    docker compose config > "$backup_dir/resolved-compose.yml" 2>/dev/null || true
     
     # Save current image tags
-    docker-compose images > "$backup_dir/current-images.txt" 2>/dev/null || true
+    docker compose images > "$backup_dir/current-images.txt" 2>/dev/null || true
     
     log_success "Backup created: $backup_dir"
     echo "$backup_dir" > "$MESH_DIR/.last-backup"
@@ -360,14 +360,14 @@ deploy_services() {
     cd "$MESH_DIR"
     
     if [[ "$DRY_RUN" == "true" ]]; then
-        log_info "[DRY RUN] Would deploy services with docker-compose"
-        docker-compose -f docker-compose.deploy.yml config
+        log_info "[DRY RUN] Would deploy services with docker compose"
+        docker compose -f docker-compose.deploy.yml config
         return
     fi
     
     # Pull latest images
     log_info "Pulling latest images..."
-    if ! docker-compose -f docker-compose.deploy.yml pull player-ip; then
+    if ! docker compose -f docker-compose.deploy.yml pull player-ip; then
         log_error "Failed to pull player-ip image"
         exit 1
     fi
@@ -376,10 +376,10 @@ deploy_services() {
     log_info "Starting deployment..."
     
     # Stop old container gracefully
-    docker-compose stop player-ip || true
+    docker compose stop player-ip || true
     
     # Start new container
-    if docker-compose -f docker-compose.deploy.yml up -d player-ip; then
+    if docker compose -f docker-compose.deploy.yml up -d player-ip; then
         log_success "Player-IP service deployed"
     else
         log_error "Failed to deploy player-ip service"
@@ -461,7 +461,7 @@ rollback_deployment() {
     fi
     
     # Redeploy with old configuration
-    docker-compose up -d player-ip
+    docker compose up -d player-ip
     
     log_success "Rollback completed"
 }

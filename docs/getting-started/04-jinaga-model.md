@@ -334,7 +334,7 @@ npm run generate-policies
 
 # Navigate to mesh and restart the replicator
 cd ../mesh
-docker-compose restart front-end-replicator
+docker compose restart front-end-replicator
 ```
 
 ## Migration Patterns

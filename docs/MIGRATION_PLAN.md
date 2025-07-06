@@ -173,7 +173,7 @@ With Phase 3 infrastructure fully implemented, frontend applications can now be 
 ```bash
 # Start complete infrastructure
 cd mesh
-docker-compose up -d
+docker compose up -d
 
 # Frontend development can begin with all services available:
 # - http://localhost/auth/ (FusionAuth)
@@ -357,10 +357,10 @@ The GameHub infrastructure transformation is complete with all services integrat
 cd mesh
 cp .env.example .env
 # Update .env with your configuration
-docker-compose up -d
+docker compose up -d
 
 # Verify all services are running
-docker-compose ps
+docker compose ps
 curl http://localhost/health  # NGINX health check
 ```
 
@@ -390,7 +390,7 @@ curl http://localhost/health  # NGINX health check
 
 Before proceeding with frontend development, verify:
 
-- [ ] **All services start successfully**: `docker-compose up -d`
+- [ ] **All services start successfully**: `docker compose up -d`
 - [ ] **Health checks pass**: All containers show healthy status
 - [ ] **Network connectivity**: Services can communicate through networks
 - [ ] **Authentication flows**: JWT tokens can be issued and validated

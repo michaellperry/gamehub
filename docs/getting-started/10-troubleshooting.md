@@ -376,7 +376,7 @@ services:
 # Use: http://game-service:3002
 
 # Debug network connectivity
-docker-compose exec service-a ping service-b
+docker compose exec service-a ping service-b
 docker network ls
 docker network inspect <network-name>
 ```
@@ -397,7 +397,7 @@ volumes:
 # Docker Desktop > Settings > Resources > File Sharing
 
 # Debug volume mounts
-docker-compose exec service ls -la /app
+docker compose exec service ls -la /app
 docker inspect <container-name>
 ```
 
@@ -616,7 +616,7 @@ Error: Internal Server Error
 **Solution:**
 ```bash
 # Check server logs
-docker-compose logs game-service
+docker compose logs game-service
 
 # Add error handling middleware
 app.use((err, req, res, next) => {
@@ -1000,8 +1000,8 @@ Error: Failed to connect to Jinaga replicator
 ```bash
 # Check front-end-replicator service status
 cd mesh/
-docker-compose ps front-end-replicator
-docker-compose logs front-end-replicator
+docker compose ps front-end-replicator
+docker compose logs front-end-replicator
 
 # Verify connection configuration in services
 # Should use: http://front-end-replicator:8080/jinaga
@@ -1010,10 +1010,10 @@ docker-compose logs front-end-replicator
 curl http://localhost:8080/jinaga
 
 # Check network connectivity
-docker-compose exec player-service ping front-end-replicator
+docker compose exec player-service ping front-end-replicator
 
 # Verify policies are loaded
-docker-compose exec front-end-replicator ls -la /var/lib/replicator/policies/
+docker compose exec front-end-replicator ls -la /var/lib/replicator/policies/
 ```
 
 #### Problem: Authorization policies not working
@@ -1033,10 +1033,10 @@ cat ../../mesh/front-end/policies/gamehub.policy
 
 # Restart replicator to reload policies
 cd ../../mesh
-docker-compose restart front-end-replicator
+docker compose restart front-end-replicator
 
 # Check replicator logs for policy loading
-docker-compose logs front-end-replicator | grep -i policy
+docker compose logs front-end-replicator | grep -i policy
 ```
 
 #### Problem: Jinaga model build fails
@@ -1075,7 +1075,7 @@ Error: could not connect to server
 **Solution:**
 ```bash
 # Check PostgreSQL container logs
-docker-compose logs postgres
+docker compose logs postgres
 
 # Verify environment variables
 grep POSTGRES_ .env
@@ -1084,12 +1084,12 @@ grep POSTGRES_ .env
 df -h
 
 # Remove corrupted volume and restart
-docker-compose down
+docker compose down
 docker volume rm gamehub-postgres-data
-docker-compose up -d postgres
+docker compose up -d postgres
 
 # Wait for database to initialize
-docker-compose logs -f postgres
+docker compose logs -f postgres
 ```
 
 #### Problem: Database connection refused
@@ -1100,19 +1100,19 @@ Error: connection to server at "postgres" (172.x.x.x), port 5432 failed
 **Solution:**
 ```bash
 # Check if PostgreSQL is running
-docker-compose ps postgres
+docker compose ps postgres
 
 # Verify network connectivity
-docker-compose exec player-ip ping postgres
+docker compose exec player-ip ping postgres
 
 # Check PostgreSQL health
-docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+docker compose exec postgres pg_isready -U gamehub_admin -d gamehub
 
 # Restart PostgreSQL service
-docker-compose restart postgres
+docker compose restart postgres
 
 # Check database logs for errors
-docker-compose logs postgres | grep ERROR
+docker compose logs postgres | grep ERROR
 ```
 
 #### Problem: Database migration fails
@@ -1124,15 +1124,15 @@ Error: permission denied for database
 **Solution:**
 ```bash
 # Run database migrations manually
-docker-compose exec player-ip npm run migrate
+docker compose exec player-ip npm run migrate
 
 # Check database permissions
-docker-compose exec postgres psql -U gamehub_admin -d gamehub -c "\du"
+docker compose exec postgres psql -U gamehub_admin -d gamehub -c "\du"
 
 # Reset database if needed
-docker-compose down
+docker compose down
 docker volume rm gamehub-postgres-data
-docker-compose up -d postgres
+docker compose up -d postgres
 # Wait for initialization, then run migrations
 ```
 
@@ -1147,7 +1147,7 @@ Error: nginx: [emerg] bind() to 0.0.0.0:80 failed
 **Solution:**
 ```bash
 # Check NGINX configuration syntax
-docker-compose exec nginx nginx -t
+docker compose exec nginx nginx -t
 
 # Check if port 80/443 is already in use
 sudo lsof -i :80
@@ -1157,10 +1157,10 @@ sudo lsof -i :443
 ls -la mesh/nginx/ssl/
 
 # Check NGINX logs
-docker-compose logs nginx
+docker compose logs nginx
 
 # Restart NGINX
-docker-compose restart nginx
+docker compose restart nginx
 ```
 
 #### Problem: Service routing not working
@@ -1172,7 +1172,7 @@ Error: upstream connect error
 **Solution:**
 ```bash
 # Check if backend services are running
-docker-compose ps
+docker compose ps
 
 # Verify service health endpoints
 curl http://localhost/player-ip/health
@@ -1180,14 +1180,14 @@ curl http://localhost/service-ip/health
 curl http://localhost/replicator/health
 
 # Check NGINX upstream configuration
-docker-compose exec nginx cat /etc/nginx/conf.d/default.conf
+docker compose exec nginx cat /etc/nginx/conf.d/default.conf
 
 # Test internal service connectivity
-docker-compose exec nginx wget -qO- http://player-ip:8082/health
-docker-compose exec nginx wget -qO- http://service-ip:8083/health
+docker compose exec nginx wget -qO- http://player-ip:8082/health
+docker compose exec nginx wget -qO- http://service-ip:8083/health
 
 # Restart NGINX and dependent services
-docker-compose restart nginx player-ip service-ip
+docker compose restart nginx player-ip service-ip
 ```
 
 #### Problem: SSL certificate issues
@@ -1211,7 +1211,7 @@ chmod 644 mesh/nginx/ssl/cert.pem
 # For production, use Let's Encrypt or proper CA certificates
 # Update NGINX configuration to use SSL
 # Restart NGINX
-docker-compose restart nginx
+docker compose restart nginx
 ```
 
 ### Network Connectivity Issues
@@ -1228,20 +1228,20 @@ Error: connect ECONNREFUSED
 docker network ls | grep gamehub
 
 # Verify service network assignments
-docker-compose config | grep -A 5 networks
+docker compose config | grep -A 5 networks
 
 # Test network connectivity between services
-docker-compose exec player-ip ping postgres
-docker-compose exec player-ip ping service-ip
-docker-compose exec nginx ping fusionauth
+docker compose exec player-ip ping postgres
+docker compose exec player-ip ping service-ip
+docker compose exec nginx ping fusionauth
 
 # Recreate networks if needed
-docker-compose down
+docker compose down
 docker network prune
-docker-compose up -d
+docker compose up -d
 
 # Check service dependencies
-docker-compose ps
+docker compose ps
 ```
 
 #### Problem: Health checks failing
@@ -1253,21 +1253,21 @@ Error: service unhealthy
 **Solution:**
 ```bash
 # Check individual service health
-docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
-docker-compose exec player-ip curl -f http://localhost:8082/health
-docker-compose exec service-ip curl -f http://localhost:8083/health
-docker-compose exec fusionauth curl -f http://localhost:9011/api/status
+docker compose exec postgres pg_isready -U gamehub_admin -d gamehub
+docker compose exec player-ip curl -f http://localhost:8082/health
+docker compose exec service-ip curl -f http://localhost:8083/health
+docker compose exec fusionauth curl -f http://localhost:9011/api/status
 
 # Check health check configuration
-docker-compose config | grep -A 10 healthcheck
+docker compose config | grep -A 10 healthcheck
 
 # View health check logs
-docker inspect $(docker-compose ps -q postgres) | grep Health -A 20
+docker inspect $(docker compose ps -q postgres) | grep Health -A 20
 
 # Adjust health check intervals if needed
 # Edit docker-compose.yml health check settings
 # Restart services
-docker-compose up -d
+docker compose up -d
 ```
 
 
@@ -1284,8 +1284,8 @@ Error: FusionAuth container exits with code 1
 ```bash
 # Check database is running first
 cd mesh/
-docker-compose ps db
-docker-compose logs db
+docker compose ps db
+docker compose logs db
 
 # Verify database credentials match
 # Check .env file has matching credentials for:
@@ -1293,12 +1293,12 @@ docker-compose logs db
 # DATABASE_USERNAME, DATABASE_PASSWORD
 
 # Check FusionAuth logs for specific errors
-docker-compose logs fusionauth
+docker compose logs fusionauth
 
 # Reset FusionAuth if needed (development only)
-docker-compose down -v fusionauth
+docker compose down -v fusionauth
 docker volume rm gamehub_fusionauth_config
-docker-compose up -d fusionauth
+docker compose up -d fusionauth
 ```
 
 #### Problem: FusionAuth database connection fails
@@ -1309,16 +1309,16 @@ Error: Unable to connect to database
 **Solution:**
 ```bash
 # Verify PostgreSQL is accessible
-docker-compose exec fusionauth ping db
+docker compose exec fusionauth ping db
 
 # Check database URL configuration
 # Should be: jdbc:postgresql://db:5432/fusionauth
 
 # Test database connection manually
-docker-compose exec db psql -U $POSTGRES_USER -c "SELECT 1;"
+docker compose exec db psql -U $POSTGRES_USER -c "SELECT 1;"
 
 # Check if fusionauth database exists
-docker-compose exec db psql -U $POSTGRES_USER -l | grep fusionauth
+docker compose exec db psql -U $POSTGRES_USER -l | grep fusionauth
 ```
 
 ### Azure Deployment Issues
@@ -1451,10 +1451,10 @@ cp -r dist/* ../../mesh/nginx/app/gamehub-player/
 
 # Restart nginx to pick up new files
 cd ../../mesh
-docker-compose restart nginx
+docker compose restart nginx
 
 # Check nginx configuration
-docker-compose exec nginx cat /etc/nginx/conf.d/default.conf
+docker compose exec nginx cat /etc/nginx/conf.d/default.conf
 ```
 
 #### Problem: API calls fail from frontend
@@ -1473,8 +1473,8 @@ curl http://localhost/content/health
 
 # Check service connectivity
 cd mesh/
-docker-compose exec nginx ping player-service
-docker-compose exec nginx ping game-service
+docker compose exec nginx ping player-service
+docker compose exec nginx ping game-service
 
 # Verify CORS configuration in services
 # Should allow origin: http://localhost
@@ -1488,12 +1488,12 @@ docker-compose exec nginx ping game-service
 node --version
 npm --version
 docker --version
-docker-compose --version
+docker compose --version
 
 # Project-specific information
 cd mesh/
-docker-compose ps
-docker-compose logs --tail=50
+docker compose ps
+docker compose logs --tail=50
 
 # Network information
 docker network ls
@@ -1534,10 +1534,10 @@ npm run build 2>&1 | tee player-build.log
 #### Backend Service Issues
 ```bash
 cd mesh/
-docker-compose logs service-ip > service-ip.log
-docker-compose logs player-ip > player-ip.log
-docker-compose logs content-store > content-store.log
-docker-compose logs front-end-replicator > replicator.log
+docker compose logs service-ip > service-ip.log
+docker compose logs player-ip > player-ip.log
+docker compose logs content-store > content-store.log
+docker compose logs front-end-replicator > replicator.log
 ```
 
 #### Service IP Debugging
@@ -1553,8 +1553,8 @@ ls -la mesh/secrets/service-ip/clients/
 cat mesh/secrets/service-ip/clients/your-client-id.json
 
 # Check service-ip logs and environment
-docker-compose exec service-ip env | grep -E "(PORT|JWT_SECRET|CLIENTS_DIR|NODE_ENV)"
-docker-compose logs service-ip --tail=50
+docker compose exec service-ip env | grep -E "(PORT|JWT_SECRET|CLIENTS_DIR|NODE_ENV)"
+docker compose logs service-ip --tail=50
 
 # Test JWT token validation
 TOKEN=$(curl -s -X POST http://localhost:8083/oauth/token \
@@ -1566,7 +1566,7 @@ echo $TOKEN | cut -d. -f2 | base64 -d | jq .
 
 ### Support Resources
 - **Documentation**: Check the other getting-started guides
-- **Logs**: Always check service logs first (`docker-compose logs [service]`)
+- **Logs**: Always check service logs first (`docker compose logs [service]`)
 - **Model Documentation**: `app/gamehub-model/README.md`
 - **Distribution Rules**: `app/gamehub-model/DISTRIBUTION.md`
 - **Jinaga Documentation**: [jinaga.com](https://jinaga.com)
@@ -1580,15 +1580,15 @@ When reporting issues, include:
 4. **Actual behavior**: What actually happens
 5. **Logs**: Relevant error messages and service logs
 6. **Configuration**: Sanitized environment variables and config files
-7. **Service Status**: Output of `docker-compose ps`
+7. **Service Status**: Output of `docker compose ps`
 8. **Network Info**: Docker network configuration if networking issues
 
 ### Quick Diagnostic Commands
 ```bash
 # Full system check
 cd mesh/
-echo "=== Service Status ===" && docker-compose ps
-echo "=== Recent Logs ===" && docker-compose logs --tail=10
+echo "=== Service Status ===" && docker compose ps
+echo "=== Recent Logs ===" && docker compose logs --tail=10
 echo "=== Network Test ===" && curl -I http://localhost
 echo "=== FusionAuth Test ===" && curl -I http://localhost:9011
 echo "=== Jinaga Test ===" && curl -I http://localhost:8080

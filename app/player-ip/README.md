@@ -203,10 +203,10 @@ npm run dev
 ### Container Logs
 ```bash
 # View logs
-docker-compose logs player-ip
+docker compose logs player-ip
 
 # Follow logs
-docker-compose logs -f player-ip
+docker compose logs -f player-ip
 ```
 
 ## Contributing

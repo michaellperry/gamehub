@@ -91,10 +91,10 @@ postgres:
 **Health Check:**
 ```bash
 # Verify PostgreSQL is running
-docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+docker compose exec postgres pg_isready -U gamehub_admin -d gamehub
 
 # Check database connections
-docker-compose logs postgres
+docker compose logs postgres
 ```
 
 ### FusionAuth Authentication
@@ -191,7 +191,7 @@ REPLICATOR_URL=http://gamehub-replicator:8080/jinaga
 **Database Migration:**
 ```bash
 # Run database migrations
-docker-compose exec player-ip npm run migrate
+docker compose exec player-ip npm run migrate
 ```
 
 ### Content Store Deployment
@@ -344,13 +344,13 @@ curl http://localhost/auth/api/status
 
 ```bash
 # PostgreSQL health
-docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+docker compose exec postgres pg_isready -U gamehub_admin -d gamehub
 
 # Database connections
-docker-compose exec postgres psql -U gamehub_admin -d gamehub -c "SELECT count(*) FROM pg_stat_activity;"
+docker compose exec postgres psql -U gamehub_admin -d gamehub -c "SELECT count(*) FROM pg_stat_activity;"
 
 # Database size
-docker-compose exec postgres psql -U gamehub_admin -d gamehub -c "SELECT pg_size_pretty(pg_database_size('gamehub'));"
+docker compose exec postgres psql -U gamehub_admin -d gamehub -c "SELECT pg_size_pretty(pg_database_size('gamehub'));"
 ```
 
 ### Authentication Monitoring
@@ -360,8 +360,8 @@ docker-compose exec postgres psql -U gamehub_admin -d gamehub -c "SELECT pg_size
 curl http://localhost/auth/api/status
 
 # Authentication logs
-docker-compose logs fusionauth | grep -i auth
-docker-compose logs player-ip | grep -i auth
+docker compose logs fusionauth | grep -i auth
+docker compose logs player-ip | grep -i auth
 ```
 
 ## Deployment Procedures
@@ -384,27 +384,27 @@ docker-compose logs player-ip | grep -i auth
 3. **Deploy Infrastructure:**
    ```bash
    # Start core infrastructure
-   docker-compose up -d postgres
-   docker-compose up -d fusionauth
-   docker-compose up -d gamehub-replicator
+   docker compose up -d postgres
+   docker compose up -d fusionauth
+   docker compose up -d gamehub-replicator
    ```
 
 4. **Deploy Application Services:**
    ```bash
    # Start application services
-   docker-compose up -d service-ip player-ip content-store
+   docker compose up -d service-ip player-ip content-store
    ```
 
 5. **Deploy Frontend:**
    ```bash
    # Start NGINX proxy
-   docker-compose up -d nginx
+   docker compose up -d nginx
    ```
 
 6. **Verify Deployment:**
    ```bash
    # Check all services
-   docker-compose ps
+   docker compose ps
    curl http://localhost/health
    ```
 
@@ -413,35 +413,35 @@ docker-compose logs player-ip | grep -i auth
 **Rolling Updates:**
 ```bash
 # Update specific service
-docker-compose pull service-name
-docker-compose up -d --no-deps service-name
+docker compose pull service-name
+docker compose up -d --no-deps service-name
 
 # Update all services
-docker-compose pull
-docker-compose up -d
+docker compose pull
+docker compose up -d
 ```
 
 **Database Maintenance:**
 ```bash
 # Backup database
-docker-compose exec postgres pg_dump -U gamehub_admin gamehub > backup.sql
+docker compose exec postgres pg_dump -U gamehub_admin gamehub > backup.sql
 
 # Restore database
-docker-compose exec -T postgres psql -U gamehub_admin gamehub < backup.sql
+docker compose exec -T postgres psql -U gamehub_admin gamehub < backup.sql
 ```
 
 ### Rollback Procedures
 
 ```bash
 # Rollback to previous version
-docker-compose down
+docker compose down
 git checkout previous-version
-docker-compose up -d
+docker compose up -d
 
 # Rollback specific service
-docker-compose stop service-name
-docker-compose rm service-name
-docker-compose up -d service-name
+docker compose stop service-name
+docker compose rm service-name
+docker compose up -d service-name
 ```
 
 ## Next Steps

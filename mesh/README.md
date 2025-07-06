@@ -42,12 +42,12 @@ The infrastructure uses three segregated networks:
 
 3. **Start the infrastructure:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 4. **Verify services:**
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
 
 ## Service Endpoints
@@ -113,15 +113,15 @@ All services include comprehensive health checks:
 Check service status:
 ```bash
 # View all service logs
-docker-compose logs -f
+docker compose logs -f
 
 # View specific service logs
-docker-compose logs -f postgres
-docker-compose logs -f fusionauth
-docker-compose logs -f gamehub-replicator
+docker compose logs -f postgres
+docker compose logs -f fusionauth
+docker compose logs -f gamehub-replicator
 
 # Check service health
-docker-compose ps
+docker compose ps
 ```
 
 ## Troubleshooting
@@ -129,8 +129,8 @@ docker-compose ps
 ### Common Issues
 
 1. **Database Connection Issues**
-   - Verify PostgreSQL is healthy: `docker-compose ps postgres`
-   - Check database logs: `docker-compose logs postgres`
+   - Verify PostgreSQL is healthy: `docker compose ps postgres`
+   - Check database logs: `docker compose logs postgres`
    - Ensure environment variables are correct
 
 2. **FusionAuth Startup Issues**
@@ -144,7 +144,7 @@ docker-compose ps
    - Verify database connection string
 
 4. **NGINX Routing Issues**
-   - Check nginx configuration syntax: `docker-compose exec nginx nginx -t`
+   - Check nginx configuration syntax: `docker compose exec nginx nginx -t`
    - Verify upstream service availability
    - Check CORS configuration for browser requests
 
@@ -153,16 +153,16 @@ docker-compose ps
 To completely reset the infrastructure:
 ```bash
 # Stop all services
-docker-compose down
+docker compose down
 
 # Remove volumes (WARNING: This deletes all data)
-docker-compose down -v
+docker compose down -v
 
 # Remove networks
 docker network prune
 
 # Start fresh
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Security Considerations

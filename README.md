@@ -50,7 +50,7 @@ GameHub is a **starter template** that provides everything you need to build you
    cd ../mesh
    cp .env.example .env
    # Update .env with your configuration
-   docker-compose up -d
+   docker compose up -d
    ```
 
 Visit `http://localhost` to see your game platform running!
@@ -196,13 +196,13 @@ npm run type-check        # TypeScript checking
 cd mesh
 cp .env.example .env
 # Update .env with your configuration
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop environment
-docker-compose down
+docker compose down
 ```
 
 ## 🚀 Deployment
@@ -213,7 +213,7 @@ docker-compose down
 cd mesh
 cp .env.example .env
 # Update environment variables as needed
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Production Environment
@@ -235,7 +235,7 @@ docker-compose up -d
 
 3. **Deploy services**:
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 4. **Configure FusionAuth**:

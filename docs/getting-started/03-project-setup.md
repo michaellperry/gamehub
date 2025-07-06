@@ -292,9 +292,9 @@ Start all services using Docker Compose for a production-like environment with t
 
 ```bash
 cd mesh/
-docker-compose up -d
-docker-compose ps
-docker-compose logs -f [service-name]
+docker compose up -d
+docker compose ps
+docker compose logs -f [service-name]
 ```
 
 **Commands explained:**
@@ -336,12 +336,12 @@ curl http://localhost/auth/api/status
 **Database and Infrastructure Health:**
 ```bash
 # Check PostgreSQL
-docker-compose exec postgres pg_isready -U gamehub_admin -d gamehub
+docker compose exec postgres pg_isready -U gamehub_admin -d gamehub
 
 # Check service logs
-docker-compose logs -f postgres
-docker-compose logs -f fusionauth
-docker-compose logs -f gamehub-replicator
+docker compose logs -f postgres
+docker compose logs -f fusionauth
+docker compose logs -f gamehub-replicator
 ```
 
 When you make changes to the model or authorization rules:
@@ -351,7 +351,7 @@ cd app
 npm run build:model
 npm run generate-policies
 cd ../mesh
-docker-compose restart gamehub-replicator
+docker compose restart gamehub-replicator
 ```
 
 When you make changes to the admin application:
@@ -360,7 +360,7 @@ When you make changes to the admin application:
 cd app
 npm run build:admin
 cd ../mesh
-docker-compose restart nginx
+docker compose restart nginx
 ```
 
 **Or build and deploy to container:**
