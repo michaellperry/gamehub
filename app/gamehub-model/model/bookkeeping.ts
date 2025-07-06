@@ -1,5 +1,5 @@
 import { LabelOf, ModelBuilder, User } from "jinaga";
-import { ParticipantAccessPath, Tenant } from "./gamehub.js";
+import { GameAccessPath, Tenant } from "./gamehub.js";
 
 export class ServicePrincipal {
     static Type = "GameHub.ServicePrincipal" as const;
@@ -21,17 +21,17 @@ export class ServicePrincipal {
     }
 }
 
-export class ParticipantAccessPathConfigured {
-    static Type = "GameHub.Participant.AccessPath.Configured" as const;
-    public type = ParticipantAccessPathConfigured.Type;
+export class GameAccessPathConfigured {
+    static Type = "GameHub.GameAccessPath.Configured" as const;
+    public type = GameAccessPathConfigured.Type;
 
     constructor(
-        public accessPath: ParticipantAccessPath,
+        public accessPath: GameAccessPath,
         public configuredAt: Date | string
     ) { }
 
-    static for(accessPath: LabelOf<ParticipantAccessPath>) {
-        return accessPath.successors(ParticipantAccessPathConfigured, configured => configured.accessPath);
+    static for(accessPath: LabelOf<GameAccessPath>) {
+        return accessPath.successors(GameAccessPathConfigured, configured => configured.accessPath);
     }
 }
 
@@ -40,7 +40,7 @@ export const bookkeepingModel = (b: ModelBuilder) => b
         .predecessor("tenant", Tenant)
         .predecessor("user", User)
     )
-    .type(ParticipantAccessPathConfigured, x => x
-        .predecessor("accessPath", ParticipantAccessPath)
+    .type(GameAccessPathConfigured, x => x
+        .predecessor("accessPath", GameAccessPath)
     )
     ;
