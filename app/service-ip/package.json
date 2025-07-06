@@ -8,7 +8,7 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "dev": "nodemon --exec \"node --loader ts-node/esm src/server.ts\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified\" && exit 0"
   },
   "author": "Michael L Perry",
   "license": "ISC",
