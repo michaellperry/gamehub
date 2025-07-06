@@ -139,16 +139,16 @@ describe('JWT Utilities', () => {
         const userId = crypto.randomUUID();
         const eventId = crypto.randomUUID();
         
-        // Clear module cache to force re-import with new environment
-        delete require.cache[require.resolve('../../../dist/utils/jwt.js')];
+        // Note: ES modules don't have require.cache, so we can't clear the cache
+        // This test will skip the cache clearing step
         const { generateAccessToken: generateWithDifferentSecret } = await import('../../../dist/utils/jwt.js');
         const token = generateWithDifferentSecret(userId, eventId);
         
         // Restore original secret
         process.env.JWT_SECRET = originalSecret;
         
-        // Clear module cache again to use original secret
-        delete require.cache[require.resolve('../../../dist/utils/jwt.js')];
+        // Note: ES modules don't have require.cache, so we can't clear the cache
+        // This test will skip the cache clearing step
         
         // This should throw because the token was signed with a different secret
         assert.throws(() => verifyJwt(token), /Invalid JWT token/);

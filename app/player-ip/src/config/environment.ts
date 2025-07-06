@@ -3,7 +3,12 @@
 // Load environment variables from .env file if present
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
 dotenv.config();
+
+// Get current directory in ES module context
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Server configuration
 export const SERVER_PORT = process.env.SERVER_PORT || process.env.PORT || 8082;
@@ -23,7 +28,11 @@ export const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 export const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 
 // SQLite configuration
-export const SQLITE_DB_PATH = process.env.SQLITE_DB_PATH || path.join(__dirname, '../../../data/player-ip.db');
+// Use memory database for tests, temp directory for CI, or default path for development
+export const SQLITE_DB_PATH = process.env.SQLITE_DB_PATH ||
+  (NODE_ENV === 'test' ? ':memory:' :
+    (process.env.CI ? path.join(process.env.RUNNER_TEMP || '/tmp', 'player-ip.db') :
+      path.join(__dirname, '../../../data/player-ip.db')));
 
 // Refresh token configuration
 export const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '14d';

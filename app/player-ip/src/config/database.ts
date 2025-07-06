@@ -3,10 +3,12 @@ import path from 'path';
 import fs from 'fs';
 import { SQLITE_DB_PATH } from './environment.js';
 
-// Ensure the directory exists
-const dbDir = path.dirname(SQLITE_DB_PATH);
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+// Ensure the directory exists (only for file-based databases)
+if (SQLITE_DB_PATH !== ':memory:') {
+  const dbDir = path.dirname(SQLITE_DB_PATH);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
 }
 
 // Create database connection

@@ -4,7 +4,7 @@
  */
 
 import { strict as assert } from 'assert';
-import { test, describe } from 'node:test';
+import { test, describe, beforeEach } from 'node:test';
 
 // Set test environment variables
 process.env.NODE_ENV = 'test';
