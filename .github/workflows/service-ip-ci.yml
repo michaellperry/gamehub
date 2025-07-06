@@ -113,7 +113,7 @@ jobs:
     - name: Start services
       working-directory: mesh
       run: |
-        docker-compose up -d
+        docker compose up -d
         sleep 30
         
     - name: Wait for service to be healthy
@@ -141,13 +141,13 @@ jobs:
       if: failure()
       working-directory: mesh
       run: |
-        docker-compose logs service-ip
+        docker compose logs service-ip
         
     - name: Cleanup
       if: always()
       working-directory: mesh
       run: |
-        docker-compose down -v
+        docker compose down -v
         
   deploy-staging:
     needs: [test, build, integration-test]
@@ -163,7 +163,7 @@ jobs:
         # This could involve:
         # - SSH to staging server
         # - Pull latest images
-        # - Update docker-compose configuration
+        # - Update docker compose configuration
         # - Restart services
         
   deploy-production:
@@ -180,7 +180,7 @@ jobs:
         # This should include:
         # - SSH to production server
         # - Pull latest images
-        # - Update docker-compose configuration
+        # - Update docker compose configuration
         # - Restart services with zero downtime
         # - Run health checks
         # - Rollback on failure
