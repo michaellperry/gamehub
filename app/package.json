@@ -21,12 +21,14 @@
     "dev:player-ip": "npm run build:model && npm run dev --workspace=player-ip",
     "dev:admin": "npm run build:model && npm run dev --workspace=gamehub-admin",
     "dev:service-ip": "npm run dev --workspace=service-ip",
+    "start:player-ip": "npm run start --workspace=player-ip",
     "start:service-ip": "npm run start --workspace=service-ip",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",
     "install-all": "npm install",
-    "generate-policies": "npm run generate-policies --workspace=gamehub-model"
+    "generate-policies": "npm run generate-policies --workspace=gamehub-model",
+    "validate-dependencies": "node ../scripts/validate-dependencies.js"
   },
   "devDependencies": {
     "@types/node": "^22.16.0",
@@ -38,5 +40,5 @@
     "npm": ">=9.0.0"
   },
   "author": "Michael L Perry",
-  "license": "ISC"
+  "license": "MIT"
 }

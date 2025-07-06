@@ -125,9 +125,9 @@ export class GameSessionName {
     }
 }
 
-export class ParticipantAccessPath {
-    static Type = "GameHub.Participant.AccessPath" as const;
-    public type = ParticipantAccessPath.Type;
+export class GameAccessPath {
+    static Type = "GameHub.GameAccessPath" as const;
+    public type = GameAccessPath.Type;
 
     constructor(
         public session: GameSession,
@@ -136,12 +136,12 @@ export class ParticipantAccessPath {
     ) { }
 
     static for(session: LabelOf<GameSession>) {
-        return session.successors(ParticipantAccessPath, accessPath => accessPath.session);
+        return session.successors(GameAccessPath, accessPath => accessPath.session);
     }
 
     static in(tenant: LabelOf<Tenant>) {
         return GameSession.in(tenant)
-            .selectMany(session => ParticipantAccessPath.for(session));
+            .selectMany(session => GameAccessPath.for(session));
     }
 }
 
@@ -239,7 +239,7 @@ export const gameHubModel = (b: ModelBuilder) => b
         .predecessor("session", GameSession)
         .predecessor("prior", GameSessionName)
     )
-    .type(ParticipantAccessPath, m => m
+    .type(GameAccessPath, m => m
         .predecessor("session", GameSession)
     )
     .type(Participant, m => m

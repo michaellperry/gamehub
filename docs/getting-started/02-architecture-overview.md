@@ -89,12 +89,13 @@ graph TD
 - **Integration**: Fully integrated with mesh infrastructure and Docker orchestration
 
 #### Player IP (Port 8082)
-- **Purpose**: Identity provider for players
+- **Purpose**: OAuth 2.0 identity provider for player authentication
 - **Technology**: Node.js + Express + TypeScript
-- **Responsibilities**: Generate cookies and issue tokens
-- **Data Access**: SQLite local storage + Jinaga replicator integration
-- **Authentication**: JWT with refresh token rotation
-- **External APIs**: Communicates with Service IP and FusionAuth
+- **Responsibilities**: OAuth 2.0 Authorization Code Flow with PKCE, JWT token issuance with refresh token rotation
+- **Data Access**: SQLite database for user and session management
+- **Authentication Flow**: Authorization Code + PKCE for frontend applications
+- **Integration**: Service IP for backend authentication, cookie-based session management
+- **Security Features**: QR code authentication, secure token storage, CORS protection
 
 #### Content Store (Port 8081)
 - **Purpose**: File and media management service

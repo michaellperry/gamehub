@@ -77,7 +77,7 @@ app/
 ├── tsconfig.json           # Root TypeScript configuration
 ├── gamehub-model/          # Shared TypeScript library with Jinaga domain model
 ├── service-ip/             # OAuth 2.0 Client Credentials service (Port 8083)
-├── player-ip/              # Node.js console application for player IP management
+├── player-ip/              # OAuth 2.0 identity provider for player authentication (Port 8082)
 ├── gamehub-admin/          # Vite-based web application for administration
 └── [other legacy services] # Additional services (being migrated)
 ```
@@ -85,7 +85,7 @@ app/
 **Key Components:**
 - **gamehub-model** - Shared TypeScript library with dual ESM/CJS builds
 - **service-ip** - OAuth 2.0 Client Credentials service for service-to-service authentication
-- **player-ip** - Node.js console application for player IP management
+- **player-ip** - OAuth 2.0 identity provider for player authentication with PKCE flow
 - **gamehub-admin** - Vite-based web application for administration
 
 ### Infrastructure Structure (`/mesh`)
@@ -159,6 +159,7 @@ npm install
 
 This single command installs dependencies for all packages in the monorepo:
 - gamehub-model
+- service-ip
 - player-ip
 - gamehub-admin
 
@@ -188,7 +189,7 @@ npm run build:model
 npm run dev:admin
 ```
 
-**Or for player-ip console application:**
+**Or for player-ip OAuth service:**
 ```bash
 npm run dev:player-ip
 ```
@@ -197,10 +198,12 @@ npm run dev:player-ip
 - `npm run build` - Build all packages
 - `npm run build:model` - Build only the gamehub-model package
 - `npm run build:service-ip` - Build only the service-ip package
+- `npm run build:player-ip` - Build only the player-ip package
 - `npm run dev:admin` - Start development mode for gamehub-admin
 - `npm run dev:service-ip` - Start development mode for service-ip
-- `npm run dev:player-ip` - Start development mode for player-ip
+- `npm run dev:player-ip` - Start development mode for player-ip OAuth service
 - `npm run start:service-ip` - Start production mode for service-ip
+- `npm run start:player-ip` - Start production mode for player-ip
 - `npm run generate-policies` - Generate Jinaga policies from gamehub-model
 
 ### Production-like Environment

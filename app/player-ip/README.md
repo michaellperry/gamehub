@@ -1,171 +1,222 @@
-# Player IP Console Application
+# GameHub Player Identity Provider
 
-A Node.js console application that demonstrates how to import and use the `gamehub-model` shared library.
+A complete OAuth 2.0 identity provider for GameHub players, built with Express.js, TypeScript, and Jinaga for real-time synchronization.
 
 ## Overview
 
-This application serves as an example of how to:
-- Import and use the gamehub-model workspace dependency
-- Utilize the model, authorization, and distribution modules
-- Create and work with GameHub entities like Tenants, Players, Game Sessions, and Participants
-- Demonstrate proper TypeScript integration with the shared model
+The Player Identity Provider (player-ip) is a web service that provides OAuth 2.0 authentication and authorization for GameHub players. It integrates with the GameHub mesh infrastructure and communicates with service-ip for service-to-service authentication.
 
 ## Features
 
-- **Model Integration**: Imports and demonstrates usage of all major GameHub model classes
-- **Sample Data Creation**: Creates sample entities to show relationships and usage patterns
-- **Module Demonstration**: Shows how to use model, authorization, and distribution modules
-- **TypeScript Support**: Full TypeScript integration with proper type checking
-- **Console Output**: Informative console output showing the application flow
+- **OAuth 2.0 Authorization Server**: Complete implementation supporting Authorization Code flow
+- **JWT Token Management**: Secure token generation and validation
+- **Refresh Token Support**: Long-lived refresh tokens with optional rotation
+- **Real-time Synchronization**: Jinaga integration for distributed state management
+- **SQLite Database**: Persistent storage for users, sessions, and tokens
+- **Docker Support**: Containerized deployment with health checks
+- **Service Discovery**: Integration with service-ip for inter-service communication
 
-## Prerequisites
+## Architecture Integration
 
-- Node.js (version compatible with ES2020)
-- npm or yarn
-- The gamehub-model package must be built first
+### Service Mesh
+- **Port**: 8082 (configurable via `SERVER_PORT`)
+- **Network**: `gamehub-network` Docker network
+- **Dependencies**: service-ip for client credentials authentication
+- **Health Check**: `/health` endpoint for container orchestration
 
-## Installation
+### Database
+- **Type**: SQLite
+- **Location**: `/app/data/player-ip.db` (in container)
+- **Persistence**: Docker volume `gamehub-player-ip-data`
 
-1. Ensure the gamehub-model dependency is built:
-   ```bash
-   cd ../gamehub-model
-   npm run build
-   ```
+### Security
+- **JWT Signing**: Configurable secret key
+- **CORS**: Configurable origins
+- **Client Secrets**: File-based secret management
+- **Non-root User**: Runs as `player-ip` user in container
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+## Configuration
 
-## Usage
+### Environment Variables
 
-### Development Mode
-Run with automatic rebuilding on changes:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NODE_ENV` | `development` | Runtime environment |
+| `SERVER_PORT` | `8082` | HTTP server port |
+| `JWT_SECRET` | `development-secret-key` | JWT signing secret |
+| `JWT_EXPIRES_IN` | `1h` | Access token expiration |
+| `JWT_ISSUER` | `player-ip` | JWT issuer claim |
+| `JWT_AUDIENCE` | `gamehub-players` | JWT audience claim |
+| `JWT_KEY_ID` | `player-ip-key` | JWT key identifier |
+| `CORS_ORIGIN` | `*` | CORS allowed origins |
+| `LOG_LEVEL` | `info` | Logging level |
+| `SQLITE_DB_PATH` | `./data/player-ip.db` | SQLite database path |
+| `REFRESH_TOKEN_EXPIRES_IN` | `14d` | Refresh token expiration |
+| `ROTATE_REFRESH_TOKENS` | `false` | Enable refresh token rotation |
+| `SERVICE_IP_URL` | `http://localhost:8083` | Service IP endpoint |
+| `SERVICE_IP_CLIENT_ID` | `player-ip` | Client ID for service-ip |
+| `SERVICE_IP_CLIENT_SECRET_FILE` | - | Path to client secret file |
+
+### Configuration Files
+
+- **`.env`**: Environment variables (create from `.env.example`)
+- **`secrets/player-ip-client-secret`**: Client secret for service-ip authentication
+- **`secrets/service-ip/clients/player-ip.json`**: Client registration in service-ip
+
+## Development
+
+### Prerequisites
+- Node.js 18+
+- npm 9+
+- TypeScript 5+
+
+### Setup
 ```bash
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Start development server
 npm run dev
-```
 
-### Production Mode
-Build and run the application:
-```bash
+# Start production server
 npm start
 ```
 
-### Manual Build
-Build TypeScript to JavaScript:
+### Monorepo Commands
 ```bash
-npm run build
+# From app/ directory
+npm run dev:player-ip          # Development mode
+npm run build:player-ip        # Build only
+npm run start:player-ip        # Production mode
 ```
 
-Then run the compiled JavaScript:
+## Docker Deployment
+
+### Standalone
 ```bash
-node dist/index.js
+# Build image
+docker build -t gamehub-player-ip .
+
+# Run container
+docker run -p 8082:8082 \
+  -e JWT_SECRET=your-secret \
+  -v player-ip-data:/app/data \
+  gamehub-player-ip
 ```
 
-### Clean Build
-Remove build artifacts and rebuild:
+### Mesh Deployment
 ```bash
-npm run rebuild
+# Deploy entire mesh
+./scripts/deploy-mesh.sh
+
+# Build player-ip only
+./scripts/build-player-ip.sh
 ```
 
-## What the Application Demonstrates
+## API Endpoints
 
-### Model Usage
-- Creating Tenant entities
-- Creating Player entities with names
-- Creating Game Sessions with metadata
-- Creating Participants and linking them to sessions
-- Demonstrating entity relationships and hierarchies
+### Health Check
+- `GET /health` - Service health status
 
-### Module Integration
-- **Model Module**: Core domain entities and relationships
-- **Authorization Module**: Security rules for GameHub operations
-- **Distribution Module**: Data synchronization rules
+### OAuth 2.0 Endpoints
+- `GET /` - Service information
+- `GET /authorize` - Authorization endpoint
+- `POST /token` - Token endpoint
+- `POST /revoke` - Token revocation
+- `GET /userinfo` - User information
 
-### TypeScript Integration
-- Proper import statements for workspace dependencies
-- Type-safe entity creation and manipulation
-- Full IntelliSense support for GameHub model classes
+### Management
+- `POST /logout` - User logout
+- `GET /profile` - User profile
 
-## Sample Output
+## Service Integration
 
-When you run the application, you'll see output similar to:
+### With service-ip
+Player-ip authenticates with service-ip using client credentials flow:
 
-```
-🎮 GameHub Player IP Console Application
-=========================================
+```typescript
+import { getServiceToken } from './utils/service-client';
 
-📦 Model Information:
-Model contains X fact types
-Available fact types: GameHub.Tenant, GameHub.Player, ...
-
-🏗️  Creating sample GameHub entities...
-
-✅ Created sample user: [user-id]
-✅ Created tenant with creator: [creator-id]
-✅ Created player in tenant at: [timestamp]
-✅ Created player name: PlayerOne
-✅ Created game session with ID: session-[timestamp]
-✅ Created session name: Epic Battle Royale
-✅ Created session date: [timestamp]
-✅ Created participant for user: [user-id]
-✅ Created participant info: John Doe
-✅ Created participant session relationship
-
-🎯 Sample Data Creation Complete!
-
-🔐 Authorization Information:
-Authorization rules are available for securing GameHub operations
-
-📡 Distribution Information:
-Distribution rules are available for data synchronization
-
-✨ GameHub Model Integration Successful!
+// Get service token for inter-service communication
+const token = await getServiceToken();
 ```
 
-## Project Structure
+### With GameHub Model
+Integrates with the shared GameHub model for data synchronization:
 
-```
-app/player-ip/
-├── src/
-│   └── index.ts          # Main application entry point
-├── dist/                 # Compiled JavaScript output
-├── package.json          # Package configuration
-├── tsconfig.json         # TypeScript configuration
-└── README.md            # This file
+```typescript
+import { startSubscription } from './gap';
+
+// Start Jinaga subscription for real-time updates
+const stopSubscription = await startSubscription();
 ```
 
-## Dependencies
+## Monitoring
 
-- **gamehub-model**: The shared domain model (workspace dependency)
-- **jinaga**: Fact-based modeling framework
-- **typescript**: TypeScript compiler
-- **@types/node**: Node.js type definitions
+### Health Checks
+- **Container**: Built-in Docker health check
+- **Kubernetes**: Readiness and liveness probes supported
+- **Load Balancer**: `/health` endpoint returns 200 OK
 
-## Development Notes
+### Logging
+- **Level**: Configurable via `LOG_LEVEL`
+- **Format**: Structured JSON in production
+- **Destinations**: stdout/stderr for container logging
 
-- The application uses ES modules (`"type": "module"`)
-- TypeScript is configured to output to the `dist/` directory
-- The workspace dependency on gamehub-model uses `workspace:*` syntax
-- Source maps are enabled for debugging
-- The application demonstrates both named and default imports from gamehub-model
+### Metrics
+- **Health**: Service availability
+- **Performance**: Response times
+- **Security**: Authentication events
+
+## Security Considerations
+
+### Production Deployment
+1. **Change default secrets**: Update `JWT_SECRET` and client secrets
+2. **Restrict CORS**: Set specific origins instead of `*`
+3. **Use HTTPS**: Configure reverse proxy with TLS
+4. **Monitor logs**: Watch for authentication failures
+5. **Rotate secrets**: Implement secret rotation strategy
+
+### Client Secret Management
+- Store secrets in secure files outside the container
+- Use Docker secrets or Kubernetes secrets in orchestrated environments
+- Never commit secrets to version control
 
 ## Troubleshooting
 
-### Build Issues
-If you encounter build issues:
-1. Ensure gamehub-model is built first: `cd ../gamehub-model && npm run build`
-2. Clean and rebuild: `npm run rebuild`
-3. Check that all dependencies are installed: `npm install`
+### Common Issues
+1. **Port conflicts**: Ensure port 8082 is available
+2. **Database permissions**: Check SQLite file permissions
+3. **Service discovery**: Verify service-ip connectivity
+4. **JWT validation**: Check secret key consistency
 
-### Import Issues
-If imports fail:
-1. Verify the gamehub-model package has been built
-2. Check that the workspace dependency is properly configured
-3. Ensure TypeScript paths are correctly set in tsconfig.json
+### Debug Mode
+```bash
+# Enable debug logging
+export LOG_LEVEL=debug
+npm run dev
+```
 
-### Runtime Issues
-If the application fails at runtime:
-1. Check that all required dependencies are installed
-2. Verify Node.js version compatibility
-3. Ensure the compiled JavaScript is up to date: `npm run build`
+### Container Logs
+```bash
+# View logs
+docker-compose logs player-ip
+
+# Follow logs
+docker-compose logs -f player-ip
+```
+
+## Contributing
+
+1. Follow TypeScript best practices
+2. Add tests for new features
+3. Update documentation
+4. Ensure Docker builds succeed
+5. Test mesh integration
+
+## License
+
+MIT License - see LICENSE file for details.
