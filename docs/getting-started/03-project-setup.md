@@ -111,9 +111,7 @@ mesh/
 └── secrets/               # Secret management
     ├── player-ip/         # Player-IP service secrets
     ├── service-ip/        # Service-IP client configurations
-    ├── content-store/     # Content-Store authentication providers
-    ├── fusionauth/        # FusionAuth configuration secrets
-    └── shared/            # Shared secrets across services
+    └── content-store/     # Content-Store authentication providers
 ```
 
 ### Scripts Structure (`/scripts`)
