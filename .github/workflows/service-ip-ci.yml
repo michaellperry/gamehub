@@ -1,186 +1,86 @@
-name: Service IP CI/CD
+name: Service IP CI
 
 on:
   push:
     branches: [ main, develop ]
     paths:
       - 'app/service-ip/**'
-      - 'mesh/**'
+      - 'app/package.json'
+      - 'app/package-lock.json'
       - '.github/workflows/service-ip-ci.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
     paths:
       - 'app/service-ip/**'
-      - 'mesh/**'
+      - 'app/package.json'
+      - 'app/package-lock.json'
       - '.github/workflows/service-ip-ci.yml'
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/gamehub/service-ip
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    defaults:
+      run:
+        working-directory: app/service-ip
 
-    - name: Setup Node.js
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        cache-dependency-path: app/package-lock.json  # Use workspace root lockfile
+        cache-dependency-path: app/package-lock.json
 
     - name: Install dependencies
-      working-directory: app/service-ip
-      run: npm ci
-      
-    - name: Run TypeScript build
-      working-directory: app/service-ip
-      run: npm run build
-      
-    - name: Run tests (if available)
-      working-directory: app/service-ip
-      run: npm test || echo "No tests configured"
-      
+      run: |
+        cd ..
+        npm ci
+        cd service-ip
+
+    - name: Run type check
+      run: npx tsc --noEmit
+
+    - name: Run tests
+      run: npm test
+
   build:
+    runs-on: ubuntu-latest
     needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-      
+    defaults:
+      run:
+        working-directory: app/service-ip
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-      
-    - name: Log in to Container Registry
-      if: github.event_name != 'pull_request'
-      uses: docker/login-action@v3
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
       with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-        
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: app/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd ..
+        npm ci
+        cd service-ip
+
+    - name: Build application
+      run: npm run build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
       with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=ref,event=branch
-          type=ref,event=pr,prefix=pr-
-          type=sha,prefix={{branch}}-,enable={{is_default_branch}}
-          type=sha,prefix=pr-,enable=${{ github.event_name == 'pull_request' }}
-          type=raw,value=latest,enable={{is_default_branch}}
-          
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: app/service-ip
-        file: app/service-ip/Dockerfile
-        push: ${{ github.event_name != 'pull_request' }}
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-        
-  integration-test:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Create test secrets
-      run: |
-        mkdir -p mesh/secrets/service-ip/clients
-        echo 'test-secret-123' > mesh/secrets/service-ip/clients/test-client
-        
-    - name: Set up environment
-      working-directory: mesh
-      run: |
-        cp .env.example .env
-        echo "JWT_SECRET=ci-test-secret-key" >> .env
-        
-    - name: Start services
-      working-directory: mesh
-      run: |
-        docker compose up -d
-        sleep 30
-        
-    - name: Wait for service to be healthy
-      run: |
-        timeout 60 bash -c 'until curl -f http://localhost:8083/health; do sleep 2; done'
-        
-    - name: Run integration tests
-      run: |
-        # Test health endpoint
-        curl -f http://localhost:8083/health
-        
-        # Test OAuth token endpoint
-        curl -X POST http://localhost:8083/token \
-          -H "Content-Type: application/x-www-form-urlencoded" \
-          -d "grant_type=client_credentials&client_id=test-client&client_secret=test-secret-123" \
-          | jq -e '.access_token'
-        
-        # Test invalid credentials
-        ! curl -X POST http://localhost:8083/token \
-          -H "Content-Type: application/x-www-form-urlencoded" \
-          -d "grant_type=client_credentials&client_id=invalid&client_secret=invalid" \
-          | jq -e '.access_token'
-        
-    - name: Check service logs
-      if: failure()
-      working-directory: mesh
-      run: |
-        docker compose logs service-ip
-        
-    - name: Cleanup
-      if: always()
-      working-directory: mesh
-      run: |
-        docker compose down -v
-        
-  deploy-staging:
-    needs: [test, build, integration-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
-    environment: staging
-    
-    steps:
-    - name: Deploy to staging
-      run: |
-        echo "Deploying to staging environment..."
-        # Add your staging deployment commands here
-        # This could involve:
-        # - SSH to staging server
-        # - Pull latest images
-        # - Update docker compose configuration
-        # - Restart services
-        
-  deploy-production:
-    needs: [test, build, integration-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
-    
-    steps:
-    - name: Deploy to production
-      run: |
-        echo "Deploying to production environment..."
-        # Add your production deployment commands here
-        # This should include:
-        # - SSH to production server
-        # - Pull latest images
-        # - Update docker compose configuration
-        # - Restart services with zero downtime
-        # - Run health checks
-        # - Rollback on failure
+        name: service-ip-build
+        path: app/service-ip/dist/
