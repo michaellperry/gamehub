@@ -42,6 +42,7 @@ jobs:
         cd ..
         npm ci
         cd content-store
+        npm ci
 
     - name: Validate JavaScript syntax
       run: node -c src/server.js
@@ -82,6 +83,7 @@ jobs:
         cd ..
         npm ci
         cd content-store
+        npm ci
 
     - name: Prepare build artifacts
       run: |
@@ -124,6 +126,7 @@ jobs:
         cd ..
         npm ci
         cd content-store
+        npm ci
 
     - name: Download build artifacts
       uses: actions/download-artifact@v4
