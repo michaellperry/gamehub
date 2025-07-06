@@ -14,13 +14,15 @@ This guide covers the setup and configuration of the backend services that provi
     - [Service Purpose and Functionality](#service-purpose-and-functionality)
     - [Directory Structure](#directory-structure)
     - [Development Commands](#development-commands)
+    - [Environment Configuration](#environment-configuration)
+    - [API Endpoints](#api-endpoints)
   - [Service Identity Provider (service-ip)](#service-identity-provider-service-ip)
     - [OAuth 2.0 Client Credentials Flow Implementation](#oauth-20-client-credentials-flow-implementation)
     - [Directory Structure](#directory-structure-1)
     - [Development Commands](#development-commands-1)
-    - [Environment Configuration](#environment-configuration)
+    - [Environment Configuration](#environment-configuration-1)
     - [Client Management](#client-management)
-    - [API Endpoints](#api-endpoints)
+    - [API Endpoints](#api-endpoints-1)
   - [Content Store Service](#content-store-service)
     - [File Storage and Content Management](#file-storage-and-content-management)
     - [Directory Structure](#directory-structure-2)
@@ -78,48 +80,94 @@ GameHub uses a microservices architecture with three specialized backend service
 
 ### Service Purpose and Functionality
 
-The player-ip service is now a Node.js console application for player IP management rather than a web service. It handles player identity and IP address management operations.
+The player-ip service is a comprehensive OAuth 2.0 identity provider that handles player authentication and authorization for the GameHub platform. It runs on **Port 8082** and provides secure authentication flows for frontend applications.
 
 **Key Features:**
-- Node.js console application
-- Player IP address management
-- Integration with shared gamehub-model
-- TypeScript-based implementation
-- Part of the monorepo workspace
+- OAuth 2.0 Authorization Code Flow with PKCE for secure authentication
+- SQLite database for user and session management
+- JWT token issuance with refresh token rotation
+- Integration with Service IP for backend service authentication
+- Cookie-based session management
+- QR code authentication support
+- Docker containerization support
+- TypeScript implementation with Express.js
 
 ### Directory Structure
 
 ```
 app/player-ip/
 ├── src/
-│   └── index.ts              # Main console application entry point
+│   ├── config/
+│   │   ├── database.ts       # SQLite database configuration
+│   │   └── environment.ts    # Environment configuration and validation
+│   ├── models/
+│   │   ├── auth.ts           # Authentication model definitions
+│   │   ├── user.ts           # User model definitions
+│   │   └── index.ts          # Model exports
+│   ├── repository/
+│   │   ├── sqlite/
+│   │   │   ├── auth.repository.ts      # Authentication data access
+│   │   │   ├── user.repository.ts      # User data access
+│   │   │   └── refresh-token.repository.ts # Token management
+│   │   └── index.ts          # Repository exports
+│   ├── routes/
+│   │   ├── auth.ts           # OAuth 2.0 authentication endpoints
+│   │   └── index.ts          # Route exports
+│   ├── utils/
+│   │   ├── jwt.ts            # JWT utilities and validation
+│   │   ├── oauth.ts          # OAuth 2.0 flow utilities
+│   │   ├── cookie.ts         # Cookie management utilities
+│   │   └── index.ts          # Utility exports
+│   └── server.ts             # Express server setup
 ├── package.json              # Package configuration
 ├── tsconfig.json             # TypeScript configuration
+├── Dockerfile                # Docker container configuration
+├── .env.example              # Environment template
 └── README.md                 # Service documentation
 ```
 
-The player-ip application is a simple console application that depends on the shared `gamehub-model` package for data models and business logic.
-
 ### Development Commands
 
-Since player-ip is part of the monorepo, you can use the workspace commands:
+Player-ip uses the standard monorepo development workflow. See [Project Setup - Development Scripts](./03-project-setup.md#development-workflow) for complete command reference.
 
+**Service-specific commands:**
 ```bash
-# From the app directory (monorepo root)
-# Install dependencies for all packages
-npm install
-
-# Start development mode for player-ip
-npm run dev:player-ip
-
-# Build only the player-ip package
-npm run build:player-ip
-
-# Or work directly in the package directory
-cd app/player-ip
-npm run dev
-npm run build
+npm run dev:player-ip       # Development mode
+npm run build:player-ip     # Build only
+npm run start:player-ip     # Production mode
 ```
+
+### Environment Configuration
+
+Player-ip uses standard environment configuration. See [Deployment - Environment Variables](./09-deployment.md#environment-variables) for complete setup.
+
+**Key Variables:**
+- `PORT=8082` - Service port
+- `JWT_SECRET` - Shared secret for token signing
+- `DATABASE_URL` - SQLite database path
+- `SERVICE_IP_URL` - Service IP endpoint for backend authentication
+- `CORS_ORIGIN` - Allowed origins for CORS
+
+### API Endpoints
+
+**Primary Endpoints:**
+- `GET /auth/authorize` - OAuth 2.0 authorization endpoint
+- `POST /auth/token` - OAuth 2.0 token endpoint
+- `POST /auth/refresh` - Token refresh endpoint
+- `POST /auth/logout` - User logout endpoint
+- `GET /health` - Service health check
+
+**OAuth 2.0 Flow:**
+1. Frontend redirects to `/auth/authorize` with PKCE parameters
+2. User authenticates and grants consent
+3. Service redirects back with authorization code
+4. Frontend exchanges code for tokens at `/auth/token`
+5. Access tokens are used for API authentication
+6. Refresh tokens are used to obtain new access tokens
+
+For detailed API usage, testing procedures, and integration examples, see:
+- [Deployment - Service Testing](./09-deployment.md#health-checks-and-monitoring)
+- [Troubleshooting - Player IP Issues](./10-troubleshooting.md#player-ip-issues)
 
 ## Service Identity Provider (service-ip)
 
