@@ -23,7 +23,9 @@ import {
  */
 export const verifyJwt = (token: string): JwtPayload => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    // Use process.env.JWT_SECRET directly to allow dynamic changes in tests
+    const secret = process.env.JWT_SECRET || 'development-secret-key';
+    const decoded = jwt.verify(token, secret) as JwtPayload;
     return decoded;
   } catch (error) {
     throw new Error('Invalid JWT token');
@@ -36,7 +38,7 @@ export const verifyJwt = (token: string): JwtPayload => {
  * @returns Duration in seconds
  */
 export const parseDuration = (duration: string): number => {
-  const match = duration.match(/^(\d+)([dhms])$/);
+  const match = duration.match(/^(\d+)([a-zA-Z])$/);
   if (!match) {
     throw new Error(`Invalid duration format: ${duration}`);
   }
@@ -85,7 +87,9 @@ export const generateAccessToken = (userId: string, eventId: string): string => 
     exp: Math.floor(Date.now() / 1000) + getAccessTokenExpiration()
   };
 
-  return jwt.sign(payload, JWT_SECRET, {
+  // Use process.env.JWT_SECRET directly to allow dynamic changes in tests
+  const secret = process.env.JWT_SECRET || 'development-secret-key';
+  return jwt.sign(payload, secret, {
     keyid: JWT_KEY_ID,
     algorithm: 'HS256'
   });

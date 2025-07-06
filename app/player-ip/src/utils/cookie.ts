@@ -30,7 +30,10 @@ export const generateCookieValue = (): string => {
  * @param res Express response object
  * @param cookieValue Value to set in the cookie
  */
-export const setIdentityCookie = (res: Response, cookieValue: string): void => {
+export const setIdentityCookie = (res: Response | null, cookieValue: string | undefined): void => {
+  if (!res || cookieValue === undefined) {
+    return; // Handle null response or undefined cookie value gracefully
+  }
   res.cookie(IDENTITY_COOKIE_NAME, cookieValue, COOKIE_OPTIONS);
 };
 
