@@ -53,5 +53,5 @@
     "npm": ">=9.0.0"
   },
   "author": "Michael L Perry",
-  "license": "ISC"
+  "license": "MIT"
 }

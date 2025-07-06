@@ -61,7 +61,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Michael L Perry",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@types/node": "^22.15.17",
     "rimraf": "^5.0.5",

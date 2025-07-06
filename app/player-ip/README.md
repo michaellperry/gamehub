@@ -219,4 +219,4 @@ docker-compose logs -f player-ip
 
 ## License
 
-ISC License - see LICENSE file for details.
+MIT License - see LICENSE file for details.
