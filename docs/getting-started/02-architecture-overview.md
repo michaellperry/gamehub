@@ -98,11 +98,14 @@ graph TD
 - **Security Features**: QR code authentication, secure token storage, CORS protection
 
 #### Content Store (Port 8081)
-- **Purpose**: File and media management service
-- **Technology**: Node.js with file system integration
-- **Responsibilities**: Image uploads, document storage, asset serving
-- **Storage**: Docker volume mounting with persistent storage
-- **Authentication**: Provider-based authentication integration
+- **Purpose**: Content-addressable storage service for files and media
+- **Technology**: Node.js with Express and file system integration
+- **Storage Model**: SHA-256 hash-based content addressing for deduplication
+- **Authentication**: JWT-based authentication supporting both service-ip and player-ip tokens
+- **Authorization**: Provider-based authentication using same format as Jinaga replicator
+- **Upload Features**: Multipart file upload with 50MB size limit and idempotent operations
+- **Retrieval**: Public content access via content hash with proper MIME type handling
+- **Integration**: Fully integrated with mesh infrastructure and Docker orchestration
 
 #### Jinaga Replicator (Port 8080)
 - **Purpose**: Distributed data synchronization and event sourcing

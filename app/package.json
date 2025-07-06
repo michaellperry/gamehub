@@ -8,7 +8,8 @@
     "gamehub-model",
     "player-ip",
     "gamehub-admin",
-    "service-ip"
+    "service-ip",
+    "content-store"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -16,13 +17,16 @@
     "build:player-ip": "npm run build --workspace=player-ip",
     "build:admin": "npm run build --workspace=gamehub-admin",
     "build:service-ip": "npm run build --workspace=service-ip",
+    "build:content-store": "npm run build --workspace=content-store",
     "clean": "npm run clean --workspaces --if-present",
     "dev": "npm run dev --workspaces --if-present",
     "dev:player-ip": "npm run build:model && npm run dev --workspace=player-ip",
     "dev:admin": "npm run build:model && npm run dev --workspace=gamehub-admin",
     "dev:service-ip": "npm run dev --workspace=service-ip",
+    "dev:content-store": "npm run dev --workspace=content-store",
     "start:player-ip": "npm run start --workspace=player-ip",
     "start:service-ip": "npm run start --workspace=service-ip",
+    "start:content-store": "npm run start --workspace=content-store",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "type-check": "npm run type-check --workspaces --if-present",

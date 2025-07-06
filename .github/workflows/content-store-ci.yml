@@ -1,0 +1,147 @@
+name: Content Store CI
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'app/content-store/**'
+      - 'app/package.json'
+      - 'app/package-lock.json'
+      - '.github/workflows/content-store-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'app/content-store/**'
+      - 'app/package.json'
+      - 'app/package-lock.json'
+      - '.github/workflows/content-store-ci.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/content-store
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: app/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd ..
+        npm ci
+        cd content-store
+        npm ci
+
+    - name: Validate JavaScript syntax
+      run: node -c src/server.js
+
+    - name: Validate authentication module
+      run: node -c src/authenticate.js
+
+    # Note: Add linting and unit tests when scripts are available
+    # - name: Run linter
+    #   run: npm run lint
+    # 
+    # - name: Run unit tests
+    #   run: npm run test:unit
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    defaults:
+      run:
+        working-directory: app/content-store
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: app/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd ..
+        npm ci
+        cd content-store
+        npm ci
+
+    - name: Prepare build artifacts
+      run: |
+        mkdir -p build
+        cp -r src/ build/
+        cp package.json build/
+        cp package-lock.json build/
+        cp -r auth/ build/
+        mkdir -p build/storage
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: content-store-build
+        path: app/content-store/build/
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    defaults:
+      run:
+        working-directory: app/content-store
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: app/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd ..
+        npm ci
+        cd content-store
+        npm ci
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: content-store-build
+        path: app/content-store/build/
+
+    - name: Test server startup
+      run: |
+        timeout 10s node build/src/server.js || test $? = 124
+        echo "Server startup test completed"
+
+    # Note: Add integration and contract tests when scripts are available
+    # - name: Run integration tests
+    #   run: npm run test:integration
+    # 
+    # - name: Run contract tests
+    #   run: npm run test:contract

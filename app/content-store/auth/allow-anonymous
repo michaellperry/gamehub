@@ -1,0 +1,2 @@
+This file enables anonymous access to the content store.
+Delete this file to enforce authentication for all endpoints.

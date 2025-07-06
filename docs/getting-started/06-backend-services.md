@@ -23,9 +23,14 @@ This guide covers the setup and configuration of the backend services that provi
     - [Environment Configuration](#environment-configuration-1)
     - [Client Management](#client-management)
     - [API Endpoints](#api-endpoints-1)
-  - [Content Store Service](#content-store-service)
-    - [File Storage and Content Management](#file-storage-and-content-management)
+  - [Content Store Service (content-store)](#content-store-service-content-store)
+    - [Content-Addressable Storage and File Management](#content-addressable-storage-and-file-management)
     - [Directory Structure](#directory-structure-2)
+    - [Development Commands](#development-commands-2)
+    - [Environment Configuration](#environment-configuration-2)
+    - [Authorization Provider Setup](#authorization-provider-setup)
+    - [API Endpoints](#api-endpoints-2)
+    - [Integration Examples](#integration-examples)
   - [Troubleshooting Common Issues](#troubleshooting-common-issues)
     - [Authentication Issues](#authentication-issues)
     - [Database Issues](#database-issues)
@@ -269,34 +274,152 @@ For detailed API usage, testing procedures, and integration examples, see:
 - [Deployment - Service Testing](./09-deployment.md#health-checks-and-monitoring)
 - [Troubleshooting - Service IP Issues](./10-troubleshooting.md#service-ip-issues)
 
-## Content Store Service
+## Content Store Service (content-store)
 
-### File Storage and Content Management
+### Content-Addressable Storage and File Management
 
-The content-store service provides secure file upload, storage, and retrieval capabilities with content-based addressing and authentication integration.
+The content-store service provides secure, efficient file storage and retrieval using content-addressable storage with SHA-256 hashing. It runs on **Port 8081** and integrates seamlessly with the GameHub authentication infrastructure.
 
 **Key Features:**
-- Content-addressable storage using SHA-256 hashing
-- Multi-part file upload handling with size limits
-- Authentication integration with identity providers
-- Static file serving with proper content types
-- Idempotent upload operations
-- Storage volume management and persistence
+- Content-addressable storage using SHA-256 hashing for automatic deduplication
+- Multipart file upload with configurable size limits (default 50MB)
+- JWT-based authentication supporting tokens from both service-ip and player-ip
+- Authorization provider configuration compatible with Jinaga replicator format
+- Public content retrieval with proper MIME type handling
+- Idempotent upload operations (duplicate files return existing hash)
+- Docker containerization with persistent volume storage
+- CORS support for cross-origin requests
 
 ### Directory Structure
 
 ```
 app/content-store/
 ├── auth/                     # Authentication configurations
-│   ├── allow-anonymous       # Anonymous access flag
+│   ├── allow-anonymous       # Anonymous access flag (optional)
 │   ├── example.provider      # Example auth provider config
 │   └── README.md             # Authentication setup guide
 ├── src/
-│   ├── authenticate.js       # Authentication middleware
-│   └── server.js             # Express server (JavaScript)
-├── storage/                  # File storage directory
-├── package.json
-└── Dockerfile
+│   ├── authenticate.js       # JWT authentication middleware
+│   └── server.js             # Express server implementation
+├── storage/                  # File storage directory (Docker volume)
+├── package.json              # Package configuration
+└── Dockerfile                # Container configuration
+```
+
+### Development Commands
+
+Content-store uses the standard monorepo development workflow:
+
+```bash
+npm run dev:content-store     # Development mode with hot reload
+npm run build:content-store   # Build Docker image
+npm run start:content-store   # Production mode
+```
+
+### Environment Configuration
+
+**Key Environment Variables:**
+- `PORT=8081` - Service port
+- `STORAGE_DIR=/app/storage` - File storage directory path
+- `AUTH_DIR=/app/auth` - Authentication configuration directory
+- `NODE_ENV=production` - Runtime environment
+
+### Authorization Provider Setup
+
+The content store uses the same authorization provider format as the Jinaga replicator, supporting multiple authentication sources simultaneously.
+
+**Provider File Format** (`.provider` extension):
+```json
+{
+  "provider": "service-ip",
+  "issuer": "service-ip",
+  "audience": "service-clients",
+  "key_id": "service-ip-key",
+  "key": "shared-jwt-secret-key"
+}
+```
+
+**Required Fields:**
+- `provider`: Unique identifier for the authentication provider
+- `issuer`: JWT issuer claim (must match token issuer)
+- `audience`: JWT audience claim (must match token audience)
+- `key_id`: Key identifier for JWT verification
+- `key`: Shared secret or public key for JWT signature verification
+
+**Multiple Provider Support:**
+Place multiple `.provider` files in the auth directory to support authentication from different sources:
+- `service-ip.provider` - For service-to-service authentication
+- `player-ip.provider` - For player authentication
+- `external.provider` - For third-party authentication providers
+
+**Anonymous Access:**
+Create an `allow-anonymous` file (no extension) in the auth directory to allow unauthenticated access to upload endpoints (not recommended for production).
+
+### API Endpoints
+
+**Upload Endpoint:**
+- `POST /upload` - Protected file upload
+  - **Authentication**: Required (JWT Bearer token)
+  - **Content-Type**: `multipart/form-data`
+  - **File Field**: `file`
+  - **Optional Fields**: `contentType` (override MIME type)
+  - **Response**: `{ contentHash, contentType, size, message }`
+  - **Max Size**: 50MB (configurable)
+
+**Retrieval Endpoint:**
+- `GET /content/:hash` - Public content retrieval
+  - **Authentication**: Not required
+  - **Parameters**: `hash` - SHA-256 content hash (full or prefix)
+  - **Response**: File content with appropriate Content-Type header
+  - **Caching**: Content is immutable (aggressive caching recommended)
+
+**Health Check:**
+- `GET /health` - Service health status
+  - **Authentication**: Not required
+  - **Response**: `{ status, service, timestamp, version }`
+
+### Integration Examples
+
+**Upload from Frontend (with player authentication):**
+```javascript
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+
+const response = await fetch('/content-store/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${playerToken}`
+  },
+  body: formData
+});
+
+const result = await response.json();
+console.log('Content hash:', result.contentHash);
+```
+
+**Service-to-Service Upload:**
+```javascript
+const formData = new FormData();
+formData.append('file', buffer, { filename: 'document.pdf' });
+
+const response = await fetch('http://content-store:8081/upload', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${serviceToken}`
+  },
+  body: formData
+});
+```
+
+**Content Retrieval:**
+```html
+<!-- Direct image reference -->
+<img src="/content-store/content/a1b2c3d4e5f6..." alt="Uploaded image" />
+
+<!-- Or via JavaScript -->
+<script>
+const contentUrl = `/content-store/content/${contentHash}`;
+</script>
 ```
 
 ## Troubleshooting Common Issues
