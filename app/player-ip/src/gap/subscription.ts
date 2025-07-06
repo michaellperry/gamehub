@@ -1,7 +1,7 @@
 import { ConsoleTracer, Trace, User } from "jinaga";
 import { model } from "gamehub-model";
-import { GameAccessPathConfigured } from "gamehub-model/model/bookkeeping";
-import { GameAccessPath, Tenant } from "gamehub-model/model/gamehub";
+import { GameAccessPathConfigured } from "gamehub-model/model";
+import { GameAccessPath, Tenant } from "gamehub-model/model";
 import { OpenAccessPolicy } from "../models/index.js";
 import { createOpenAccessPath } from "../repository/index.js";
 import { jinagaClient } from "./jinaga-config.js";
