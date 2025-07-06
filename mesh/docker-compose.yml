@@ -54,15 +54,12 @@ services:
   gamehub-replicator:
     image: jinaga/jinaga-replicator:3.5.2
     container_name: gamehub-replicator
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-gamehub_admin}:${POSTGRES_PASSWORD:-secure_password_change_in_production}@postgres:5432/${POSTGRES_DB:-gamehub}
     volumes:
       - ./replicator/policies:/var/lib/replicator/policies:ro
       - ./replicator/authentication:/var/lib/replicator/authentication:ro
       - ./replicator/subscriptions:/var/lib/replicator/subscriptions:ro
     networks:
       - gamehub-network
-      - gamehub-db-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "--silent", "--fail", "http://localhost:8080/health", "-o", "/dev/null"]
@@ -70,9 +67,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   # Service IP (existing service)
   service-ip:
@@ -106,7 +100,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Player IP (existing service with PostgreSQL integration)
+  # Player IP (existing service with SQLite integration)
   player-ip:
     build:
       context: ../app/player-ip
@@ -125,7 +119,6 @@ services:
       - CORS_ORIGIN=${PLAYER_CORS_ORIGIN:-*}
       - LOG_LEVEL=${LOG_LEVEL:-info}
       - SQLITE_DB_PATH=/app/data/player-ip.db
-      - DATABASE_URL=${PLAYER_DATABASE_URL:-postgresql://${POSTGRES_USER:-gamehub_admin}:${POSTGRES_PASSWORD:-secure_password_change_in_production}@postgres:5432/${POSTGRES_DB:-gamehub}}
       - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN:-14d}
       - ROTATE_REFRESH_TOKENS=${ROTATE_REFRESH_TOKENS:-false}
       - SERVICE_IP_URL=http://service-ip:8083
@@ -138,7 +131,6 @@ services:
       - ./secrets/shared:/app/secrets/shared:ro
     networks:
       - gamehub-network
-      - gamehub-db-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:8082/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
@@ -148,7 +140,6 @@ services:
       start_period: 40s
     depends_on:
       - service-ip
-      - postgres
       - gamehub-replicator
 
   # Content Store (existing service)
