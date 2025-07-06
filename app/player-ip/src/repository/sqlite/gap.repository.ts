@@ -1,12 +1,12 @@
-import db from '../../config/database';
-import { 
-  GameAccessPath, 
-  GAPType, 
+import db from '../../config/database.js';
+import {
+  GameAccessPath,
+  GAPType,
   OpenAccessPolicy,
   OpenAccessPath,
   UserSpecificAccessPath,
   UserSpecificAccessPolicy
-} from '../../models';
+} from '../../models/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Prepare statements

@@ -1,5 +1,5 @@
-import db from '../../config/database';
-import { RefreshToken } from '../../models';
+import db from '../../config/database.js';
+import { RefreshToken } from '../../models/index.js';
 
 // Prepare statements
 const storeRefreshTokenStmt = db.prepare(`

@@ -10,11 +10,11 @@ import {
   JWT_KEY_ID,
   JWT_SECRET,
   REFRESH_TOKEN_EXPIRES_IN
-} from '../config/environment';
+} from '../config/environment.js';
 import {
   AccessTokenPayload,
   JwtPayload
-} from '../models';
+} from '../models/index.js';
 
 /**
  * Verify a JWT token and return the payload

@@ -14,19 +14,19 @@ import {
   getAccessTokenExpiration,
   getRefreshTokenExpiration,
   createRefreshToken
-} from '../utils';
-import { 
-  createUser, 
-  storeUserIdentity, 
-  getUserIdByCookie, 
+} from '../utils/index.js';
+import {
+  createUser,
+  storeUserIdentity,
+  getUserIdByCookie,
   getGAPById,
   getAuthorizationCode,
   deleteAuthorizationCode,
   getRefreshToken,
   revokeRefreshToken
-} from '../repository';
-import { GAPType, OpenAccessPolicy, TokenResponse, AuthRequest, TokenRequest } from '../models';
-import { ROTATE_REFRESH_TOKENS } from '../config/environment';
+} from '../repository/index.js';
+import { GAPType, OpenAccessPolicy, TokenResponse, AuthRequest, TokenRequest } from '../models/index.js';
+import { ROTATE_REFRESH_TOKENS } from '../config/environment.js';
 
 const router = Router();
 

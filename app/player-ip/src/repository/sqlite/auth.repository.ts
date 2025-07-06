@@ -1,5 +1,5 @@
-import db from '../../config/database';
-import { AuthorizationCode } from '../../models';
+import db from '../../config/database.js';
+import { AuthorizationCode } from '../../models/index.js';
 
 // Prepare statements
 const storeAuthCodeStmt = db.prepare(`

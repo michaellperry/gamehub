@@ -1,11 +1,11 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
-import { startSubscription } from "./gap";
+import { startSubscription } from "./gap/index.js";
 import { CORS_ORIGIN, SERVER_PORT } from './config/environment';
-import routes from './routes';
+import routes from './routes/index.js';
 // Import database to ensure it's initialized
-import './config/database';
+import './config/database.js';
 
 // Initialize express app
 const app = express();
@@ -33,13 +33,20 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 async function run() {
   let stopSubscription: () => void;
-  try {
-    stopSubscription = await startSubscription();
-  }
-  catch (error) {
-    console.error('Error starting subscription:', error);
-    console.error('Waiting for SIGINT or SIGTERM to shut down...');
+  
+  // Skip Jinaga subscription during testing
+  if (process.env.SKIP_JINAGA_SUBSCRIPTION === 'true') {
+    console.log('Skipping Jinaga subscription for testing');
     stopSubscription = () => {};
+  } else {
+    try {
+      stopSubscription = await startSubscription();
+    }
+    catch (error) {
+      console.error('Error starting subscription:', error);
+      console.error('Waiting for SIGINT or SIGTERM to shut down...');
+      stopSubscription = () => {};
+    }
   }
 
   // Start server

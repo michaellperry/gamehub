@@ -1,5 +1,5 @@
-import db from '../../config/database';
-import { User, UserIdentity } from '../../models';
+import db from '../../config/database.js';
+import { User, UserIdentity } from '../../models/index.js';
 import { v4 as uuidv4 } from 'uuid';
 
 // Prepare statements

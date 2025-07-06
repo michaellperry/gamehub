@@ -2,7 +2,7 @@
  * Export all utilities
  */
 
-export * from './jwt';
-export * from './oauth';
-export * from './cookie';
-export * from './service-client';
+export * from './jwt.js';
+export * from './oauth.js';
+export * from './cookie.js';
+export * from './service-client.js';

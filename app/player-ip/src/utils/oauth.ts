@@ -4,10 +4,10 @@
 
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
-import { AuthorizationCode, RefreshToken } from '../models';
-import { storeAuthorizationCode, storeRefreshToken, revokeUserRefreshTokens } from '../repository';
-import { ROTATE_REFRESH_TOKENS } from '../config/environment';
-import { getRefreshTokenExpiration } from './jwt';
+import { AuthorizationCode, RefreshToken } from '../models/index.js';
+import { storeAuthorizationCode, storeRefreshToken, revokeUserRefreshTokens } from '../repository/index.js';
+import { ROTATE_REFRESH_TOKENS } from '../config/environment.js';
+import { getRefreshTokenExpiration } from './jwt.js';
 
 /**
  * Generate a random authorization code

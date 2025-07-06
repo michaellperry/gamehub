@@ -4,7 +4,7 @@
 
 import fs from 'fs';
 import { promisify } from 'util';
-import { SERVICE_IP_URL } from '../config/environment';
+import { SERVICE_IP_URL } from '../config/environment.js';
 
 // Environment variables
 const SERVICE_IP_CLIENT_ID = process.env.SERVICE_IP_CLIENT_ID || 'player-ip';
