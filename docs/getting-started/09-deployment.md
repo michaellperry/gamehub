@@ -15,6 +15,12 @@ This guide covers the comprehensive deployment setup, CI/CD pipelines, and produ
       - [Production Environment Variables](#production-environment-variables)
       - [Secrets Management](#secrets-management)
       - [Health Checks and Monitoring](#health-checks-and-monitoring)
+    - [Content Store Deployment](#content-store-deployment)
+      - [Build and Deploy](#build-and-deploy-1)
+      - [Production Environment Variables](#production-environment-variables-1)
+      - [Authorization Provider Setup for Production](#authorization-provider-setup-for-production)
+      - [Docker Volume Configuration](#docker-volume-configuration)
+      - [Health Checks and Monitoring](#health-checks-and-monitoring-1)
   - [Frontend Application Deployment](#frontend-application-deployment)
     - [React Application Build Process](#react-application-build-process)
       - [Environment Configuration Management](#environment-configuration-management)
@@ -92,6 +98,101 @@ echo '{"clientId":"prod-client","clientSecret":"'$CLIENT_SECRET'","scopes":["rea
 - Token endpoint: `POST /oauth/token`
 
 For detailed service configuration and API usage, see [Backend Services - Service IP](./06-backend-services.md#service-identity-provider-service-ip).
+
+### Content Store Deployment
+
+The content-store service is deployed as part of the mesh infrastructure using Docker Compose with persistent volume storage.
+
+#### Build and Deploy
+
+```bash
+# Build content store image
+npm run build:content-store
+./scripts/build-content-store.sh
+
+# Deploy with mesh infrastructure
+./scripts/deploy-mesh.sh
+```
+
+#### Production Environment Variables
+
+```env
+NODE_ENV=production
+PORT=8081
+STORAGE_DIR=/app/storage
+AUTH_DIR=/app/auth
+```
+
+#### Authorization Provider Setup for Production
+
+Content store authorization providers must be configured in the mesh secrets directory:
+
+```bash
+# Create provider configuration for service-ip authentication
+cat > mesh/secrets/content-store/service-ip.provider << EOF
+{
+  "provider": "service-ip",
+  "issuer": "service-ip",
+  "audience": "service-clients",
+  "key_id": "service-ip-key",
+  "key": "${JWT_SECRET}"
+}
+EOF
+
+# Create provider configuration for player-ip authentication
+cat > mesh/secrets/content-store/player-ip.provider << EOF
+{
+  "provider": "player-ip",
+  "issuer": "player-ip",
+  "audience": "gamehub-players",
+  "key_id": "player-ip-key",
+  "key": "${JWT_SECRET}"
+}
+EOF
+```
+
+**Security Best Practices:**
+- Use the same JWT_SECRET across all services for token compatibility
+- Restrict file permissions on provider files (600)
+- Never commit provider files with production secrets to version control
+- Rotate JWT secrets regularly in production environments
+- Monitor authentication logs for suspicious activity
+
+#### Docker Volume Configuration
+
+Content store requires persistent storage for uploaded files:
+
+```yaml
+# docker-compose.yml
+services:
+  content-store:
+    volumes:
+      - content-store-storage:/app/storage
+      - ./mesh/secrets/content-store:/app/auth:ro
+
+volumes:
+  content-store-storage:
+    driver: local
+```
+
+#### Health Checks and Monitoring
+
+- Health endpoint: `GET /health`
+- Upload endpoint test: `POST /upload` (requires authentication)
+- Storage monitoring: Check disk usage of content-store volume
+- Authentication monitoring: Monitor failed authentication attempts
+
+**Monitoring Commands:**
+```bash
+# Check service health
+curl http://localhost:8081/health
+
+# Check storage usage
+docker exec content-store du -sh /app/storage
+
+# View authentication logs
+docker logs content-store | grep -i auth
+```
 
 ## Frontend Application Deployment
 

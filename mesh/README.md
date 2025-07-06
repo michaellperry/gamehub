@@ -22,7 +22,9 @@ This directory contains the Docker Compose configuration and deployment scripts 
 3. **Verify Deployment**:
    ```bash
    # Check service health
-   curl http://localhost:8083/health
+   curl http://localhost:8083/health  # service-ip
+   curl http://localhost:8082/health  # player-ip
+   curl http://localhost:8081/health  # content-store
    ```
 
 ## Services
@@ -32,6 +34,21 @@ This directory contains the Docker Compose configuration and deployment scripts 
 - **Purpose**: OAuth 2.0 Client Credentials identity provider for service-to-service authentication
 - **Health Check**: `http://localhost:8083/health`
 - **Token Endpoint**: `http://localhost:8083/token`
+
+### player-ip
+- **Port**: 8082
+- **Purpose**: Player identity provider with OAuth 2.0 and JWT authentication
+- **Health Check**: `http://localhost:8082/health`
+- **Database**: SQLite for local storage
+
+### content-store
+- **Port**: 8081
+- **Purpose**: Content storage service for file uploads and retrieval with JWT authentication
+- **Health Check**: `http://localhost:8081/health`
+- **Upload Endpoint**: `http://localhost:8081/upload` (requires authentication)
+- **Content Retrieval**: `http://localhost:8081/content/{hash}` (public access)
+- **Storage**: Persistent volume for file storage
+- **Authentication**: Accepts JWT tokens from both service-ip and player-ip
 
 ## Configuration
 
@@ -48,9 +65,22 @@ The following environment variables can be configured in `.env`:
 - `CORS_ORIGIN`: CORS origin configuration (default: *)
 - `LOG_LEVEL`: Logging level (default: info)
 
+#### Player IP Configuration
+- `PLAYER_JWT_SECRET`: Secret key for player JWT signing (change in production!)
+- `PLAYER_JWT_EXPIRES_IN`: Player token expiration time (default: 1h)
+- `PLAYER_JWT_ISSUER`: Player JWT issuer claim (default: player-ip)
+- `PLAYER_JWT_AUDIENCE`: Player JWT audience claim (default: gamehub-players)
+- `PLAYER_JWT_KEY_ID`: Player JWT key ID claim (default: player-ip-key)
+- `PLAYER_CORS_ORIGIN`: Player service CORS origin configuration (default: *)
+- `REFRESH_TOKEN_EXPIRES_IN`: Refresh token expiration time (default: 14d)
+- `ROTATE_REFRESH_TOKENS`: Whether to rotate refresh tokens (default: false)
+
+#### Content Store Configuration
+- `CONTENT_STORE_CORS_ORIGIN`: Content store CORS origin configuration (default: *)
+
 ### Secrets Management
 
-Client credentials are stored in the `secrets/service-ip/clients/` directory:
+Service credentials and authentication configurations are stored in the `secrets/` directory:
 
 ```
 mesh/
@@ -58,11 +88,26 @@ mesh/
 │   ├── service-ip/
 │   │   └── clients/
 │   │       └── [client-files]
+│   ├── player-ip/
+│   │   └── [player-secrets]
+│   ├── content-store/
+│   │   ├── service-ip.provider
+│   │   └── player-ip.provider
 │   └── shared/
 │       └── [shared-secrets]
 ```
 
-Each client file has the name of the client ID and contains the client secret in plain text. The directory should be mounted as a read-only volume in the Docker container.
+#### Service IP Clients
+Each client file has the name of the client ID and contains the client secret in plain text.
+
+#### Content Store Authentication
+The content-store service uses JWT provider configuration files:
+- `service-ip.provider`: Configuration for accepting service-ip JWT tokens
+- `player-ip.provider`: Configuration for accepting player-ip JWT tokens
+
+Each provider file contains JWT validation parameters including issuer, audience, key ID, and signing key.
+
+All secret directories should be mounted as read-only volumes in Docker containers.
 
 ## Docker Compose Commands
 
@@ -76,6 +121,8 @@ docker-compose logs -f
 
 # View specific service logs
 docker-compose logs -f service-ip
+docker-compose logs -f player-ip
+docker-compose logs -f content-store
 
 # Stop services
 docker-compose down
@@ -106,7 +153,9 @@ All services include health checks that can be monitored:
 docker-compose ps
 
 # Check health status
-curl http://localhost:8083/health
+curl http://localhost:8083/health  # service-ip
+curl http://localhost:8082/health  # player-ip
+curl http://localhost:8081/health  # content-store
 ```
 
 ### Logs
@@ -137,19 +186,38 @@ docker-compose ps service-ip
 
 ### Manual Testing
 
-1. **Health Check**:
+1. **Health Checks**:
    ```bash
-   curl http://localhost:8083/health
+   curl http://localhost:8083/health  # service-ip
+   curl http://localhost:8082/health  # player-ip
+   curl http://localhost:8081/health  # content-store
    ```
 
-2. **Get Access Token**:
+2. **Get Access Token (Service-to-Service)**:
    ```bash
    curl -X POST http://localhost:8083/token \
      -H "Content-Type: application/x-www-form-urlencoded" \
      -d "grant_type=client_credentials&client_id=your-client-id&client_secret=your-client-secret"
    ```
 
-3. **Test Invalid Credentials**:
+3. **Test Content Store Upload** (requires JWT token):
+   ```bash
+   # First get a token from service-ip or player-ip
+   TOKEN="your-jwt-token-here"
+   
+   # Upload a file
+   curl -X POST http://localhost:8081/upload \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "file=@/path/to/your/file.jpg"
+   ```
+
+4. **Test Content Retrieval** (public access):
+   ```bash
+   # Use the hash returned from upload
+   curl http://localhost:8081/content/your-content-hash
+   ```
+
+5. **Test Invalid Credentials**:
    ```bash
    curl -X POST http://localhost:8083/token \
      -H "Content-Type: application/x-www-form-urlencoded" \
@@ -162,8 +230,10 @@ docker-compose ps service-ip
 
 1. **Port Already in Use**:
    ```bash
-   # Check what's using the port
-   lsof -i :8083
+   # Check what's using the ports
+   lsof -i :8083  # service-ip
+   lsof -i :8082  # player-ip
+   lsof -i :8081  # content-store
    
    # Kill the process or change the port in docker-compose.yml
    ```
@@ -266,4 +336,7 @@ For issues and questions:
 1. Check the logs: `docker-compose logs`
 2. Review this documentation
 3. Check the main project README
-4. Review the service-ip source code in `../app/service-ip/`
+4. Review the service source code:
+   - Service IP: `../app/service-ip/`
+   - Player IP: `../app/player-ip/`
+   - Content Store: `../app/content-store/`

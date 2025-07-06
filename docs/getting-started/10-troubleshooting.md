@@ -50,6 +50,18 @@ This guide provides solutions to common issues encountered when setting up, deve
       - [Problem: Client credentials file not found](#problem-client-credentials-file-not-found)
       - [Problem: Service-ip container fails to start](#problem-service-ip-container-fails-to-start)
       - [Problem: Service-to-service authentication fails](#problem-service-to-service-authentication-fails)
+    - [Content Store Issues](#content-store-issues)
+      - [Problem: File upload fails with "No files were uploaded"](#problem-file-upload-fails-with-no-files-were-uploaded)
+      - [Problem: File upload fails with size limit exceeded](#problem-file-upload-fails-with-size-limit-exceeded)
+      - [Problem: "Invalid token" error on upload](#problem-invalid-token-error-on-upload)
+      - [Problem: "Invalid issuer" or "Invalid audience" error](#problem-invalid-issuer-or-invalid-audience-error)
+      - [Problem: "Invalid key ID" error](#problem-invalid-key-id-error)
+      - [Problem: Content retrieval returns 404](#problem-content-retrieval-returns-404)
+      - [Problem: Hash mismatch or corruption](#problem-hash-mismatch-or-corruption)
+      - [Problem: "No authentication configurations found"](#problem-no-authentication-configurations-found)
+      - [Problem: Provider file parsing errors](#problem-provider-file-parsing-errors)
+      - [Problem: Performance issues with uploads](#problem-performance-issues-with-uploads)
+      - [Problem: Storage capacity issues](#problem-storage-capacity-issues)
     - [Jinaga Issues](#jinaga-issues)
       - [Problem: Jinaga replicator connection fails](#problem-jinaga-replicator-connection-fails)
       - [Problem: Authorization policies not working](#problem-authorization-policies-not-working)
@@ -737,6 +749,232 @@ echo $TOKEN | cut -d. -f2 | base64 -d | jq .
 # Check service logs for authentication errors
 docker compose logs player-ip
 docker compose logs content-store
+```
+
+### Content Store Issues
+
+#### Problem: File upload fails with "No files were uploaded"
+```bash
+Error: No files were uploaded
+```
+
+**Solution:**
+```bash
+# Verify multipart form data is being sent
+# Frontend: Ensure FormData is used correctly
+const formData = new FormData();
+formData.append('file', fileInput.files[0]);
+
+# Backend: Check Content-Type header
+# Should be: multipart/form-data; boundary=...
+
+# Test with curl
+curl -X POST http://localhost:8081/upload \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@/path/to/test-file.jpg"
+```
+
+#### Problem: File upload fails with size limit exceeded
+```bash
+Error: File too large
+```
+
+**Solution:**
+```bash
+# Check file size limit (default 50MB)
+# Increase limit in server.js if needed
+app.use(fileUpload({
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
+}));
+
+# Or compress files before upload
+# Use image optimization for media files
+```
+
+#### Problem: "Invalid token" error on upload
+```bash
+Error: Invalid token
+```
+
+**Solution:**
+```bash
+# Verify JWT token is valid
+# Check token in JWT debugger (jwt.io)
+
+# Ensure Authorization header format
+Authorization: Bearer YOUR_JWT_TOKEN
+
+# Verify provider configuration matches token issuer/audience
+# Check mesh/secrets/content-store/*.provider files
+
+# Test token with other services first
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8082/health
+```
+
+#### Problem: "Invalid issuer" or "Invalid audience" error
+```bash
+Error: Invalid issuer
+Error: Invalid audience
+```
+
+**Solution:**
+```bash
+# Check provider configuration matches JWT claims
+# Token issuer must match provider.issuer
+# Token audience must match provider.audience
+
+# Debug JWT token claims
+node -e "console.log(JSON.parse(Buffer.from('$TOKEN'.split('.')[1], 'base64')))"
+
+# Update provider configuration
+{
+  "issuer": "player-ip",        # Must match JWT iss claim
+  "audience": "gamehub-players" # Must match JWT aud claim
+}
+```
+
+#### Problem: "Invalid key ID" error
+```bash
+Error: Invalid key ID
+```
+
+**Solution:**
+```bash
+# Verify JWT header contains correct kid claim
+# Check provider key_id matches JWT header kid
+
+# Debug JWT header
+node -e "console.log(JSON.parse(Buffer.from('$TOKEN'.split('.')[0], 'base64')))"
+
+# Update provider key_id to match
+{
+  "key_id": "player-ip-key"  # Must match JWT header kid
+}
+```
+
+#### Problem: Content retrieval returns 404
+```bash
+Error: Content not found
+```
+
+**Solution:**
+```bash
+# Verify content hash is correct
+# Check if file exists in storage directory
+docker exec content-store ls -la /app/storage
+
+# Check file permissions
+ls -la mesh/secrets/content-store/
+chmod 644 mesh/secrets/content-store/*.provider
+
+# Verify storage directory is mounted correctly
+docker inspect content-store | grep -A 10 Mounts
+```
+
+#### Problem: Hash mismatch or corruption
+```bash
+Error: Content hash verification failed
+```
+
+**Solution:**
+```bash
+# Verify file integrity
+sha256sum /path/to/original/file
+docker exec content-store sha256sum /app/storage/HASH_PREFIX
+
+# Check for storage corruption
+docker exec content-store fsck /app/storage
+
+# Re-upload corrupted files
+# Content-addressable storage will detect duplicates
+```
+
+#### Problem: "No authentication configurations found"
+```bash
+Error: No authentication configurations found
+```
+
+**Solution:**
+```bash
+# Verify provider files exist
+ls -la mesh/secrets/content-store/
+
+# Create test provider file
+cat > mesh/secrets/content-store/test.provider << EOF
+{
+  "provider": "test",
+  "issuer": "test",
+  "audience": "test",
+  "key_id": "test-key",
+  "key": "test-secret"
+}
+EOF
+
+# Check file permissions and ownership
+chmod 644 mesh/secrets/content-store/*.provider
+```
+
+#### Problem: Provider file parsing errors
+```bash
+Error: Invalid JSON in provider file
+```
+
+**Solution:**
+```bash
+# Validate JSON syntax
+cat mesh/secrets/content-store/service-ip.provider | jq .
+
+# Verify file encoding (UTF-8)
+file mesh/secrets/content-store/*.provider
+
+# Check for hidden characters
+hexdump -C mesh/secrets/content-store/service-ip.provider | head
+```
+
+#### Problem: Performance issues with uploads
+```bash
+# Uploads taking too long
+```
+
+**Solution:**
+```bash
+# Check available disk space
+df -h
+
+# Monitor upload progress
+docker stats content-store
+
+# Check network connectivity
+ping content-store-host
+
+# Optimize file sizes before upload
+# Use compression for large files
+# Consider chunked uploads for very large files
+
+# Check Docker resource limits
+docker inspect content-store | grep -A 5 Resources
+```
+
+#### Problem: Storage capacity issues
+```bash
+Error: No space left on device
+```
+
+**Solution:**
+```bash
+# Check storage usage
+docker exec content-store du -sh /app/storage
+df -h
+
+# Clean up old or unused files
+# Content-addressable storage prevents duplicates
+# But you may need to implement cleanup policies
+
+# Monitor storage growth
+docker exec content-store find /app/storage -type f -exec ls -lh {} \; | head -20
+
+# Consider implementing file retention policies
+# Archive old content to external storage
 ```
 
 ### Jinaga Issues

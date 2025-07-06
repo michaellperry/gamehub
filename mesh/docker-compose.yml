@@ -70,6 +70,37 @@ services:
     depends_on:
       - service-ip
 
+  content-store:
+    build:
+      context: ../app/content-store
+      dockerfile: Dockerfile
+    container_name: gamehub-content-store
+    ports:
+      - "8081:8081"
+    environment:
+      - NODE_ENV=production
+      - PORT=8081
+      - STORAGE_DIR=/app/storage
+      - AUTH_DIR=/app/secrets
+      - CORS_ORIGIN=${CONTENT_STORE_CORS_ORIGIN:-*}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      - content-store-data:/app/storage
+      - ./secrets/content-store:/app/secrets:ro
+      - ./secrets/shared:/app/secrets/shared:ro
+    networks:
+      - gamehub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8081/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - service-ip
+      - player-ip
+
 networks:
   gamehub-network:
     driver: bridge
@@ -80,3 +111,5 @@ volumes:
     name: gamehub-service-ip-data
   player-ip-data:
     name: gamehub-player-ip-data
+  content-store-data:
+    name: gamehub-content-store-data

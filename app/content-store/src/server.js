@@ -127,6 +127,16 @@ async function initializeAuthentication() {
                 return res.status(500).json({ error: 'Content retrieval failed' });
             }
         });
+
+        // Health check endpoint - public access (no authentication required)
+        app.get('/health', (req, res) => {
+            res.status(200).json({
+                status: 'healthy',
+                service: 'content-store',
+                timestamp: new Date().toISOString(),
+                version: process.env.npm_package_version || '1.0.0'
+            });
+        });
     } catch (error) {
         console.warn(`Authentication initialization failed: ${error.message}`);
     }
