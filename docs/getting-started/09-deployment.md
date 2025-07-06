@@ -9,6 +9,12 @@ This guide covers the comprehensive deployment setup, CI/CD pipelines, and produ
   - [Deployment Overview](#deployment-overview)
     - [Architecture Components](#architecture-components)
     - [Deployment Flow](#deployment-flow)
+  - [Backend Service Deployment](#backend-service-deployment)
+    - [Service IP Deployment](#service-ip-deployment)
+      - [Build and Deploy](#build-and-deploy)
+      - [Production Environment Variables](#production-environment-variables)
+      - [Secrets Management](#secrets-management)
+      - [Health Checks and Monitoring](#health-checks-and-monitoring)
   - [Frontend Application Deployment](#frontend-application-deployment)
     - [React Application Build Process](#react-application-build-process)
       - [Environment Configuration Management](#environment-configuration-management)
@@ -23,7 +29,7 @@ The GameHub deployment architecture consists of:
 - **Azure DevOps Pipelines**: Automated CI/CD with multi-stage deployment
 - **Jinaga Model Package**: Dual-target builds (ESM + CommonJS) with policy generation
 - **React Applications**: Admin and Player frontends with environment injection
-- **Backend Services**: Identity providers and content stores
+- **Backend Services**: Identity providers (service-ip, player-ip) and content stores
 - **Policy System**: Automated security policy generation and deployment
 
 ### Deployment Flow
@@ -43,6 +49,49 @@ graph TD
     I --> J
     J --> K[Production Ready]
 ```
+
+## Backend Service Deployment
+
+### Service IP Deployment
+
+Service-ip is deployed as part of the mesh infrastructure using Docker Compose.
+
+#### Build and Deploy
+
+```bash
+# Build and deploy service-ip
+npm run build:service-ip
+./scripts/build-service-ip.sh
+./scripts/deploy-mesh.sh
+```
+
+#### Production Environment Variables
+
+```env
+NODE_ENV=production
+PORT=8083
+JWT_SECRET=<production-secret>
+CLIENTS_DIR=/app/secrets/clients
+```
+
+#### Secrets Management
+
+Client credentials are managed in `mesh/secrets/service-ip/clients/`. Each client requires both a JSON configuration file and a plain text secret file.
+
+**Production Client Setup:**
+```bash
+# Generate production client credentials
+CLIENT_SECRET=$(openssl rand -base64 32)
+echo "$CLIENT_SECRET" > mesh/secrets/service-ip/clients/prod-client
+echo '{"clientId":"prod-client","clientSecret":"'$CLIENT_SECRET'","scopes":["read","write"]}' > mesh/secrets/service-ip/clients/prod-client.json
+```
+
+#### Health Checks and Monitoring
+
+- Health endpoint: `GET /health`
+- Token endpoint: `POST /oauth/token`
+
+For detailed service configuration and API usage, see [Backend Services - Service IP](./06-backend-services.md#service-identity-provider-service-ip).
 
 ## Frontend Application Deployment
 

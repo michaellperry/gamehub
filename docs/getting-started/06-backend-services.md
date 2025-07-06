@@ -15,8 +15,12 @@ This guide covers the setup and configuration of the backend services that provi
     - [Directory Structure](#directory-structure)
     - [Development Commands](#development-commands)
   - [Service Identity Provider (service-ip)](#service-identity-provider-service-ip)
-    - [Client Credentials Flow Implementation](#client-credentials-flow-implementation)
+    - [OAuth 2.0 Client Credentials Flow Implementation](#oauth-20-client-credentials-flow-implementation)
     - [Directory Structure](#directory-structure-1)
+    - [Development Commands](#development-commands-1)
+    - [Environment Configuration](#environment-configuration)
+    - [Client Management](#client-management)
+    - [API Endpoints](#api-endpoints)
   - [Content Store Service](#content-store-service)
     - [File Storage and Content Management](#file-storage-and-content-management)
     - [Directory Structure](#directory-structure-2)
@@ -34,8 +38,8 @@ GameHub uses a microservices architecture with three specialized backend service
 
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   player-ip     │    │  servcice-ip    │    │ content-store   │
-│   Port: 8082    │    │   Port: 8081    │    │   Port: 8081    │
+│   player-ip     │    │   service-ip    │    │ content-store   │
+│   Port: 8082    │    │   Port: 8083    │    │   Port: 8081    │
 │                 │    │                 │    │                 │
 │ • OAuth 2.0 +   │    │ • Client Creds  │    │ • File Upload   │
 │   PKCE Flow     │    │   Flow          │    │ • Content Hash  │
@@ -57,9 +61,9 @@ GameHub uses a microservices architecture with three specialized backend service
 ### Service Communication Patterns
 
 1. **Frontend to player-ip**: OAuth 2.0 Authorization Code Flow with PKCE
-2. **Frontend to game-service**: Client Credentials Flow for service authentication
+2. **Frontend to service-ip**: Client Credentials Flow for service authentication
 3. **Frontend to content-store**: Bearer token authentication via player-ip
-4. **Service-to-service**: JWT token validation and service client authentication
+4. **Service-to-service**: JWT token validation and service client authentication via service-ip
 
 ### API Design Principles
 
@@ -119,35 +123,103 @@ npm run build
 
 ## Service Identity Provider (service-ip)
 
-### Client Credentials Flow Implementation
+### OAuth 2.0 Client Credentials Flow Implementation
 
-The game-service implements OAuth 2.0 Client Credentials Flow for service-to-service authentication, providing JWT tokens for backend services and administrative applications.
+The service-ip service implements OAuth 2.0 Client Credentials Flow for service-to-service authentication, providing JWT tokens for backend services and administrative applications. It runs on **Port 8083** and is fully integrated into the GameHub monorepo.
 
 **Key Features:**
-- Client Credentials Flow for service authentication
+- OAuth 2.0 Client Credentials Flow for service authentication
 - File-based client configuration and management
-- JWT token issuance for services
-- Service-to-service authentication patterns
-- Client secret validation and security
+- JWT token issuance and validation for services
+- Secure client secret management
+- Docker containerization support
+- Integration with mesh infrastructure
+- TypeScript implementation with Express.js
 
 ### Directory Structure
 
 ```
-app/game-service/
+app/service-ip/
 ├── src/
 │   ├── config/
-│   │   └── environment.ts    # Environment configuration
-│   ├── models/               # Service models and types
+│   │   └── environment.ts    # Environment configuration and validation
+│   ├── models/
+│   │   ├── client.ts         # Client model definitions
+│   │   └── index.ts          # Model exports
 │   ├── repository/
-│   │   └── file/             # File-based client storage
-│   ├── routes/               # API route handlers
-│   ├── utils/                # JWT and client utilities
+│   │   ├── file/
+│   │   │   └── client.repository.ts  # File-based client storage
+│   │   └── index.ts          # Repository exports
+│   ├── routes/
+│   │   ├── token.ts          # OAuth token endpoint
+│   │   └── index.ts          # Route exports
+│   ├── utils/
+│   │   ├── jwt.ts            # JWT utilities and validation
+│   │   └── index.ts          # Utility exports
 │   └── server.ts             # Express server setup
-├── package.json
-├── tsconfig.json
-├── Dockerfile
-└── .env
+├── secrets/
+│   └── clients/              # Client credential files
+├── package.json              # Package configuration
+├── tsconfig.json             # TypeScript configuration
+├── Dockerfile                # Docker container configuration
+├── .env.example              # Environment template
+└── README.md                 # Service documentation
 ```
+
+### Development Commands
+
+Service-ip uses the standard monorepo development workflow. See [Project Setup - Development Scripts](./03-project-setup.md#development-workflow) for complete command reference.
+
+**Service-specific commands:**
+```bash
+npm run dev:service-ip      # Development mode
+npm run build:service-ip    # Build only
+npm run start:service-ip    # Production mode
+```
+
+### Environment Configuration
+
+Service-ip uses standard environment configuration. See [Deployment - Environment Variables](./09-deployment.md#environment-variables) for complete setup.
+
+**Key Variables:**
+- `PORT=8083` - Service port
+- `JWT_SECRET` - Shared secret for token signing
+- `CLIENTS_DIR` - Client credentials directory path
+
+### Client Management
+
+Service-ip uses file-based client management stored in `mesh/secrets/service-ip/clients/`. Each client has both a JSON configuration file and a plain text secret file.
+
+**Client Configuration Example:**
+```json
+{
+  "clientId": "your-client-id",
+  "clientSecret": "generated-secret-value",
+  "scopes": ["read", "write"],
+  "description": "Test client for development"
+}
+```
+
+For detailed client setup procedures, see [Deployment - Client Management](./09-deployment.md#secrets-management).
+
+### API Endpoints
+
+**Primary Endpoint:**
+- `POST /token` - OAuth 2.0 Client Credentials token endpoint
+- `GET /health` - Service health check
+
+**Standard OAuth 2.0 Response:**
+```json
+{
+  "access_token": "JWT_TOKEN",
+  "token_type": "Bearer",
+  "expires_in": 3600
+}
+```
+
+For detailed API usage, testing procedures, and integration examples, see:
+- [Deployment - Service Testing](./09-deployment.md#health-checks-and-monitoring)
+- [Troubleshooting - Service IP Issues](./10-troubleshooting.md#service-ip-issues)
 
 ## Content Store Service
 

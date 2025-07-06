@@ -81,10 +81,12 @@ graph TD
 ### Backend Services
 
 #### Service IP (Port 8083)
-- **Purpose**: Identity provider for backend services
+- **Purpose**: OAuth 2.0 Client Credentials identity provider for backend services
 - **Technology**: Node.js + Express + TypeScript
-- **Responsibilities**: Validate shared secrets and issue tokens
-- **Client Management**: Handles client credentials in `/app/secrets/clients`
+- **Responsibilities**: OAuth 2.0 Client Credentials Flow, JWT token issuance and validation
+- **Client Management**: File-based client credential management in `/mesh/secrets/service-ip/clients`
+- **Authentication Flow**: Client Credentials grant type for service-to-service authentication
+- **Integration**: Fully integrated with mesh infrastructure and Docker orchestration
 
 #### Player IP (Port 8082)
 - **Purpose**: Identity provider for players
