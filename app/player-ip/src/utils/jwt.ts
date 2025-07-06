@@ -40,10 +40,10 @@ export const parseDuration = (duration: string): number => {
   if (!match) {
     throw new Error(`Invalid duration format: ${duration}`);
   }
-  
-  const value = parseInt(match[1]);
+
+  const value = parseInt(match[1], 10);
   const unit = match[2];
-  
+
   switch (unit) {
     case 'd': return value * 24 * 60 * 60;
     case 'h': return value * 60 * 60;
@@ -87,6 +87,6 @@ export const generateAccessToken = (userId: string, eventId: string): string => 
 
   return jwt.sign(payload, JWT_SECRET, {
     keyid: JWT_KEY_ID,
-    algorithm: 'HS256',
+    algorithm: 'HS256'
   });
 };

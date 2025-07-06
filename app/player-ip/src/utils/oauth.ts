@@ -38,11 +38,11 @@ export const createAuthorizationCode = (
   scope: string
 ): string => {
   const code = generateAuthorizationCode();
-  
+
   // Set expiration to 10 minutes from now
   const expiresAt = new Date();
   expiresAt.setMinutes(expiresAt.getMinutes() + 10);
-  
+
   const authCode: AuthorizationCode = {
     code,
     client_id: clientId,
@@ -54,7 +54,7 @@ export const createAuthorizationCode = (
     event_id: eventId,
     scope
   };
-  
+
   storeAuthorizationCode(authCode);
   return code;
 };
@@ -79,12 +79,12 @@ export const verifyCodeChallenge = (
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=/g, '');
-    
+
     return hash === codeChallenge;
   } else if (codeChallengeMethod === 'plain') {
     return codeVerifier === codeChallenge;
   }
-  
+
   return false;
 };
 
@@ -114,13 +114,13 @@ export const createRefreshToken = (
   if (ROTATE_REFRESH_TOKENS) {
     revokeUserRefreshTokens(userId, clientId);
   }
-  
+
   const token = generateRefreshToken();
-  
+
   // Set expiration based on configuration
   const expiresAt = new Date();
   expiresAt.setSeconds(expiresAt.getSeconds() + getRefreshTokenExpiration());
-  
+
   const refreshToken: RefreshToken = {
     token,
     user_id: userId,
@@ -130,7 +130,7 @@ export const createRefreshToken = (
     expires_at: expiresAt,
     revoked: false
   };
-  
+
   storeRefreshToken(refreshToken);
   return refreshToken;
 };

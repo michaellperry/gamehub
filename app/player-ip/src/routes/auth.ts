@@ -3,10 +3,10 @@
  */
 
 import { Router, Request, Response, NextFunction } from 'express';
-import { 
-  verifyJwt, 
-  generateAccessToken, 
-  createAuthorizationCode, 
+import {
+  verifyJwt,
+  generateAccessToken,
+  createAuthorizationCode,
   verifyCodeChallenge,
   generateCookieValue,
   setIdentityCookie,
@@ -38,28 +38,28 @@ const router = Router();
  * @throws Error if validation fails
  */
 const validateAuthRequest = (query: any): AuthRequest => {
-  const { 
-    client_id, 
-    redirect_uri, 
-    response_type, 
-    scope, 
-    code_challenge, 
-    code_challenge_method, 
+  const {
+    client_id,
+    redirect_uri,
+    response_type,
+    scope,
+    code_challenge,
+    code_challenge_method,
     state,
     gap_id
   } = query;
-  
+
   // Validate required parameters
   if (!client_id || !redirect_uri || !response_type || !scope || !code_challenge || !code_challenge_method || !gap_id) {
     // Create an informative error message
     const missingParams = [];
-    if (!client_id) missingParams.push('client_id');
-    if (!redirect_uri) missingParams.push('redirect_uri');
-    if (!response_type) missingParams.push('response_type');
-    if (!scope) missingParams.push('scope');
-    if (!code_challenge) missingParams.push('code_challenge');
-    if (!code_challenge_method) missingParams.push('code_challenge_method');
-    if (!gap_id) missingParams.push('gap_id');
+    if (!client_id) {missingParams.push('client_id');}
+    if (!redirect_uri) {missingParams.push('redirect_uri');}
+    if (!response_type) {missingParams.push('response_type');}
+    if (!scope) {missingParams.push('scope');}
+    if (!code_challenge) {missingParams.push('code_challenge');}
+    if (!code_challenge_method) {missingParams.push('code_challenge_method');}
+    if (!gap_id) {missingParams.push('gap_id');}
     // Throw an error with the missing parameters
     throw new Error(`Missing required parameters: ${missingParams.join(', ')}`);
   }
@@ -104,7 +104,7 @@ const asyncHandler = (handler: (req: Request, res: Response, next: NextFunction)
 
 /**
  * Authenticate endpoint
- * 
+ *
  * This endpoint handles the initial authentication request with the GAP ID in the query parameters.
  * If the user doesn't have an identity cookie, it creates one and redirects to authenticate_retry.
  * If the user has an identity cookie, it processes the authentication request.
@@ -112,25 +112,25 @@ const asyncHandler = (handler: (req: Request, res: Response, next: NextFunction)
  */
 router.get('/authenticate', asyncHandler(async (req: Request, res: Response) => {
   // Extract all required parameters from the query
-  const { 
-    client_id, 
-    redirect_uri, 
-    response_type, 
-    scope, 
-    code_challenge, 
+  const {
+    client_id,
+    redirect_uri,
+    response_type,
+    scope,
+    code_challenge,
     code_challenge_method,
     gap_id
   } = req.query;
-  
+
   // Check if only gap_id is missing (and all other required parameters are present)
-  if (!gap_id && 
-      client_id && 
-      redirect_uri && 
-      response_type && 
-      scope && 
-      code_challenge && 
+  if (!gap_id &&
+      client_id &&
+      redirect_uri &&
+      response_type &&
+      scope &&
+      code_challenge &&
       code_challenge_method) {
-    
+
     // Render a user-friendly page asking the user to re-scan their QR code
     return res.status(400).send(`
       <!DOCTYPE html>
@@ -184,43 +184,43 @@ router.get('/authenticate', asyncHandler(async (req: Request, res: Response) => 
       </html>
     `);
   }
-  
+
   // If gap_id is present or other parameters are missing, proceed with normal validation
   const authRequest = validateAuthRequest(req.query);
-  
+
   // Check for identity cookie
   const identityCookie = req.cookies[IDENTITY_COOKIE_NAME];
 
   // Get the user ID associated with the identity cookie
-  const userId = !!identityCookie ? getUserIdByCookie(identityCookie) : undefined;
-  
+  const userId = identityCookie ? getUserIdByCookie(identityCookie) : undefined;
+
   if (!userId) {
     // No identity cookie found, create one and redirect to authenticate_retry
     const cookieValue = generateCookieValue();
-    
+
     // Create a new user
     const user = createUser();
-    
+
     // Store the user identity
     storeUserIdentity(user.id, cookieValue);
-    
+
     // Set the identity cookie
     setIdentityCookie(res, cookieValue);
-    
+
     // Construct the redirect URL with all the original parameters
     const redirectUrl = `authenticate_retry?${new URLSearchParams(req.query as Record<string, string>).toString()}`;
-    
+
     // Redirect to authenticate_retry
     return res.redirect(redirectUrl);
   }
-  
+
   // Identity cookie found, process the authentication request
   return processAuthentication(authRequest, res, userId);
 }));
 
 /**
  * Authenticate retry endpoint
- * 
+ *
  * This endpoint handles the authentication request after the identity cookie has been set.
  * It does not create a new cookie if one is not present.
  */
@@ -230,19 +230,19 @@ router.get('/authenticate_retry', asyncHandler(async (req: Request, res: Respons
 
   // Check for identity cookie
   const identityCookie = req.cookies[IDENTITY_COOKIE_NAME];
-  
+
   if (!identityCookie) {
     // No identity cookie found, return error
     throw new Error('No identity cookie found');
   }
-  
+
   // Get the user ID associated with the identity cookie
   const userId = getUserIdByCookie(identityCookie);
-  
+
   if (!userId) {
     throw new Error('Invalid identity cookie');
   }
-  
+
   // Identity cookie found, process the authentication request
   return processAuthentication(authRequest, res, userId);
 }));
@@ -259,8 +259,8 @@ const validateTokenRequest = (body: any): TokenRequest => {
   // Validate required parameters
   if (!grant_type || !client_id) {
     const missingParams = [];
-    if (!grant_type) missingParams.push('grant_type');
-    if (!client_id) missingParams.push('client_id');
+    if (!grant_type) {missingParams.push('grant_type');}
+    if (!client_id) {missingParams.push('client_id');}
     throw new Error(`Missing required parameters: ${missingParams.join(', ')}`);
   }
 
@@ -268,9 +268,9 @@ const validateTokenRequest = (body: any): TokenRequest => {
   if (grant_type === 'authorization_code') {
     if (!code || !redirect_uri || !code_verifier) {
       const missingParams = [];
-      if (!code) missingParams.push('code');
-      if (!redirect_uri) missingParams.push('redirect_uri');
-      if (!code_verifier) missingParams.push('code_verifier');
+      if (!code) {missingParams.push('code');}
+      if (!redirect_uri) {missingParams.push('redirect_uri');}
+      if (!code_verifier) {missingParams.push('code_verifier');}
       throw new Error(`Missing required parameters for authorization_code grant: ${missingParams.join(', ')}`);
     }
   } else if (grant_type === 'refresh_token') {
@@ -293,7 +293,7 @@ const validateTokenRequest = (body: any): TokenRequest => {
 
 /**
  * Token endpoint
- * 
+ *
  * This endpoint handles the token request after the authorization code has been issued.
  * It verifies the code and code_verifier, and returns an access token.
  * It also handles refresh token requests.
@@ -309,9 +309,9 @@ router.post('/token', asyncHandler(async (req: Request, res: Response) => {
   } else if (tokenRequest.grant_type === 'refresh_token') {
     // Handle refresh token grant
     return handleRefreshTokenGrant(tokenRequest, res);
-  } else {
-    throw new Error('Unsupported grant_type');
   }
+  throw new Error('Unsupported grant_type');
+
 }));
 
 /**
@@ -324,7 +324,7 @@ const handleAuthorizationCodeGrant = async (tokenRequest: TokenRequest, res: Res
 
   // Get the authorization code from the repository
   const authCode = getAuthorizationCode(tokenRequest.code);
-  
+
   if (!authCode) {
     throw new Error('Invalid authorization code');
   }
@@ -372,7 +372,7 @@ const handleAuthorizationCodeGrant = async (tokenRequest: TokenRequest, res: Res
       authCode.scope,
       authCode.event_id
     );
-    
+
     // Add refresh token to the response
     tokenResponse.refresh_token = refreshToken.token;
     tokenResponse.refresh_token_expires_in = getRefreshTokenExpiration();
@@ -391,7 +391,7 @@ const handleRefreshTokenGrant = async (tokenRequest: TokenRequest, res: Response
 
   // Get the refresh token from the repository
   const refreshTokenObj = getRefreshToken(tokenRequest.refresh_token);
-  
+
   if (!refreshTokenObj) {
     throw new Error('Invalid refresh token');
   }
@@ -415,7 +415,7 @@ const handleRefreshTokenGrant = async (tokenRequest: TokenRequest, res: Response
   const accessToken = generateAccessToken(refreshTokenObj.user_id, refreshTokenObj.event_id);
 
   // Create a token response
-  let tokenResponse: TokenResponse = {
+  const tokenResponse: TokenResponse = {
     access_token: accessToken,
     token_type: 'Bearer',
     expires_in: getAccessTokenExpiration(),
@@ -426,7 +426,7 @@ const handleRefreshTokenGrant = async (tokenRequest: TokenRequest, res: Response
   if (ROTATE_REFRESH_TOKENS) {
     // Revoke the old refresh token
     revokeRefreshToken(tokenRequest.refresh_token);
-    
+
     // Generate a new refresh token
     const newRefreshToken = createRefreshToken(
       refreshTokenObj.user_id,
@@ -434,7 +434,7 @@ const handleRefreshTokenGrant = async (tokenRequest: TokenRequest, res: Response
       refreshTokenObj.scope,
       refreshTokenObj.event_id
     );
-    
+
     // Add the new refresh token to the response
     tokenResponse.refresh_token = newRefreshToken.token;
     tokenResponse.refresh_token_expires_in = getRefreshTokenExpiration();
@@ -445,29 +445,29 @@ const handleRefreshTokenGrant = async (tokenRequest: TokenRequest, res: Response
 
 /**
  * Process authentication request
- * 
+ *
  * This function processes the authentication request after the identity cookie has been verified.
  * It uses the GAP ID from the request path, looks up the user ID and event ID, and issues an authorization code.
  */
 const processAuthentication = async (authRequest: AuthRequest, res: Response, userId: string) => {
   // Get the GAP ID directly from the request
   const gapId = authRequest.gapId;
-  
+
   // Get the GAP from the repository
   const gap = getGAPById(gapId);
-  
+
   if (!gap) {
     throw new Error('Invalid GAP ID');
   }
-  
+
   // Check if the GAP is an open access path with cookie-based policy
   if (gap.type !== GAPType.OPEN || gap.policy !== OpenAccessPolicy.COOKIE_BASED) {
     throw new Error('Unsupported GAP type or policy');
   }
-  
+
   // Get the event ID from the GAP
   const eventId = gap.eventId;
-  
+
   // Create an authorization code
   const code = createAuthorizationCode(
     authRequest.client_id,
@@ -478,10 +478,10 @@ const processAuthentication = async (authRequest: AuthRequest, res: Response, us
     eventId,
     authRequest.scope
   );
-  
+
   // Construct the redirect URL with the authorization code and state
   const redirectUrl = `${authRequest.redirect_uri}?code=${code}${authRequest.state ? `&state=${authRequest.state}` : ''}`;
-  
+
   // Redirect to the client with the authorization code
   return res.redirect(redirectUrl);
 };

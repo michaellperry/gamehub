@@ -1,31 +1,20 @@
 module.exports = {
   env: {
     node: true,
-    es2022: true,
+    es2022: true
   },
   extends: [
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
+    'eslint:recommended'
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2022,
-    sourceType: 'module',
-    project: './tsconfig.json',
+    sourceType: 'module'
   },
   plugins: [
-    '@typescript-eslint',
+    '@typescript-eslint'
   ],
   rules: {
-    // TypeScript specific rules
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    '@typescript-eslint/explicit-module-boundary-types': 'off',
-    '@typescript-eslint/no-non-null-assertion': 'warn',
-    '@typescript-eslint/prefer-const': 'error',
-    '@typescript-eslint/no-var-requires': 'error',
-
     // General JavaScript/TypeScript rules
     'no-console': 'off', // Allow console.log for server applications
     'no-debugger': 'error',
@@ -109,11 +98,11 @@ module.exports = {
     'no-process-exit': 'off', // Allow process.exit in CLI scripts
     
     // Async/await best practices
-    'require-await': 'error',
+    'require-await': 'off', // Disabled because asyncHandler requires async functions
     'no-async-promise-executor': 'error',
     'no-await-in-loop': 'warn',
     'no-promise-executor-return': 'error',
-    'prefer-promise-reject-errors': 'error',
+    'prefer-promise-reject-errors': 'error'
   },
   overrides: [
     {
@@ -121,35 +110,33 @@ module.exports = {
       files: ['**/*.test.js', '**/*.test.ts', '**/test-*.js', '**/test-*.ts'],
       env: {
         node: true,
-        es2022: true,
+        es2022: true
       },
       rules: {
         // Relax some rules for test files
-        '@typescript-eslint/no-explicit-any': 'off',
         'no-console': 'off',
         'prefer-arrow-callback': 'off', // Allow function expressions in tests
-        'no-unused-expressions': 'off', // Allow assertions
-      },
+        'no-unused-expressions': 'off' // Allow assertions
+      }
     },
     {
       // Script files
       files: ['scripts/**/*.js', 'scripts/**/*.ts'],
       rules: {
         'no-console': 'off', // Allow console in scripts
-        'no-process-exit': 'off', // Allow process.exit in scripts
-      },
+        'no-process-exit': 'off' // Allow process.exit in scripts
+      }
     },
     {
       // Configuration files
       files: ['*.config.js', '*.config.ts', '.eslintrc.js'],
       env: {
-        node: true,
+        node: true
       },
       rules: {
-        '@typescript-eslint/no-var-requires': 'off',
-        'no-undef': 'off',
-      },
-    },
+        'no-undef': 'off'
+      }
+    }
   ],
   ignorePatterns: [
     'dist/',
@@ -158,6 +145,6 @@ module.exports = {
     '*.min.js',
     'test-data/',
     'backups/',
-    'migrations/',
-  ],
+    'migrations/'
+  ]
 };

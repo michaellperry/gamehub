@@ -10,7 +10,7 @@ if (!fs.existsSync(dbDir)) {
 }
 
 // Create database connection
-const db: Database = new BetterSqlite3(SQLITE_DB_PATH, { 
+const db: Database = new BetterSqlite3(SQLITE_DB_PATH, {
   verbose: process.env.NODE_ENV !== 'production' ? console.log : undefined,
   fileMustExist: false
 });
