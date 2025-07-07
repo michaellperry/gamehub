@@ -19,8 +19,20 @@ This guide walks you through the initial project setup, directory structure unde
     - [Service Authentication Setup](#service-authentication-setup)
     - [Database Configuration](#database-configuration)
     - [FusionAuth Configuration](#fusionauth-configuration)
+  - [FusionAuth Setup](#fusionauth-setup)
+    - [Prerequisites for FusionAuth Setup](#prerequisites-for-fusionauth-setup)
+    - [Obtaining a FusionAuth API Key](#obtaining-a-fusionauth-api-key)
+    - [Running FusionAuth Setup](#running-fusionauth-setup)
+      - [Option 1: Using the Shell Script (Recommended)](#option-1-using-the-shell-script-recommended)
+      - [Option 2: Using npm Commands](#option-2-using-npm-commands)
+      - [Option 3: Development Mode](#option-3-development-mode)
+    - [FusionAuth Setup Configuration Options](#fusionauth-setup-configuration-options)
+    - [What the FusionAuth Setup Does](#what-the-fusionauth-setup-does)
+    - [Generated Files](#generated-files)
+    - [Post-FusionAuth Setup Steps](#post-fusionauth-setup-steps)
   - [Initial Setup Scripts](#initial-setup-scripts)
-    - [Automated Setup](#automated-setup)
+    - [Complete Automated Setup](#complete-automated-setup)
+    - [Legacy Manual Setup](#legacy-manual-setup)
     - [Manual Setup Steps](#manual-setup-steps)
       - [1. Install Application Dependencies](#1-install-application-dependencies)
       - [2. Build Shared Model](#2-build-shared-model)
@@ -32,6 +44,10 @@ This guide walks you through the initial project setup, directory structure unde
       - [Development URLs (Production Mode)](#development-urls-production-mode)
       - [Service Health Checks](#service-health-checks)
   - [Next Steps](#next-steps)
+    - [Immediate Next Steps](#immediate-next-steps)
+    - [Development Workflow](#development-workflow-1)
+    - [Troubleshooting](#troubleshooting)
+    - [Ready for Development](#ready-for-development)
 
 ## Repository Setup
 
@@ -194,23 +210,170 @@ FUSIONAUTH_APP_RUNTIME_MODE=production
 FUSIONAUTH_SEARCH_ENGINE_TYPE=database
 ```
 
-## Initial Setup Scripts
+## FusionAuth Setup
 
-### Automated Setup
-The project includes setup scripts for streamlined initialization:
+GameHub includes an automated FusionAuth setup application that configures OAuth applications, authentication providers, and generates all necessary configuration files.
+
+### Prerequisites for FusionAuth Setup
+
+Before running the FusionAuth setup, ensure you have:
+
+1. **FusionAuth Running**: The mesh infrastructure should be running with FusionAuth accessible
+2. **FusionAuth API Key**: An API key with the following permissions:
+   - Application management (`/api/application/*`)
+   - System configuration (`/api/system-configuration`)
+   - Key management (`/api/key`)
+   - Tenant access (`/api/tenant`)
+
+### Obtaining a FusionAuth API Key
+
+1. **Start the mesh infrastructure** (if not already running):
+   ```bash
+   cd mesh
+   docker compose up -d
+   ```
+
+2. **Access FusionAuth Admin Interface**:
+   ```
+   http://localhost/auth/admin
+   ```
+
+3. **Create API Key**:
+   - Navigate to Settings → API Keys
+   - Click "Add API Key"
+   - Name: `GameHub Setup Key`
+   - Select required permissions (see prerequisites above)
+   - Save and copy the API key
+
+### Running FusionAuth Setup
+
+#### Option 1: Using the Shell Script (Recommended)
 
 ```bash
-cd scripts/setup
-npm install
-npm run build
-npm start -- --api-key <your-fusionauth-api-key>
+# From the GameHub project root
+./scripts/setup.sh YOUR_FUSIONAUTH_API_KEY
 ```
 
-**Steps:**
-1. Navigate to setup scripts directory
-2. Install setup application dependencies
-3. Build the setup application
-4. Run automated setup with your FusionAuth API key
+**What this does:**
+- Validates Node.js environment
+- Installs setup application dependencies
+- Builds the TypeScript application
+- Runs the FusionAuth setup with your API key
+- Provides next steps for completion
+
+#### Option 2: Using npm Commands
+
+```bash
+# Navigate to setup directory
+cd setup
+
+# Install dependencies and build
+npm install
+npm run build
+
+# Run the setup
+npm start -- --api-key YOUR_FUSIONAUTH_API_KEY
+```
+
+#### Option 3: Development Mode
+
+```bash
+cd setup
+npm install
+npm run dev -- --api-key YOUR_FUSIONAUTH_API_KEY --verbose
+```
+
+### FusionAuth Setup Configuration Options
+
+The setup application supports extensive configuration options:
+
+```bash
+./scripts/setup.sh YOUR_API_KEY \
+  --fusion-auth-url http://localhost/auth \
+  --app-name "GameHub" \
+  --admin-redirect-uri http://localhost/admin/callback \
+  --player-redirect-uri http://localhost/player/callback \
+  --verbose \
+  --force
+```
+
+**Key Options:**
+- `--fusion-auth-url`: FusionAuth base URL (default: `http://localhost/auth`)
+- `--app-name`: Application name in FusionAuth (default: `GameHub`)
+- `--admin-redirect-uri`: Admin OAuth callback URL
+- `--player-redirect-uri`: Player OAuth callback URL
+- `--verbose`: Enable detailed logging
+- `--force`: Overwrite existing configuration files
+
+For complete configuration options, see the [FusionAuth Setup Documentation](../setup/README.md).
+
+### What the FusionAuth Setup Does
+
+The automated setup performs the following operations:
+
+1. **Creates FusionAuth Application**: Sets up OAuth 2.0 application with PKCE security
+2. **Configures CORS**: Adds necessary cross-origin request permissions
+3. **Generates Provider Files**: Creates authentication provider for Jinaga replicator
+4. **Creates Environment Files**: Generates configuration for mesh and admin application
+5. **Retrieves Signing Keys**: Obtains JWT signing key information
+
+### Generated Files
+
+The setup creates these configuration files:
+
+- `mesh/replicator/authentication/fusionauth.provider` - Replicator authentication provider
+- `mesh/.env.local` - Mesh environment variables
+- `app/gamehub-admin/.env.container.local` - Admin application environment
+
+### Post-FusionAuth Setup Steps
+
+After the FusionAuth setup completes, you must complete these additional steps:
+
+1. **Create a Tenant**:
+   - Navigate to `http://localhost/admin/tenants`
+   - Create a new tenant for your game/organization
+   - **Important**: Copy the generated tenant public key
+
+2. **Update Configuration with Tenant Key**:
+   ```bash
+   cd setup
+   npm run update-tenant-key -- --tenant-key "YOUR_TENANT_PUBLIC_KEY"
+   ```
+
+3. **Restart the Docker Stack**:
+   ```bash
+   cd mesh
+   docker compose down && docker compose up -d
+   ```
+
+4. **Authorize Service Principal**:
+   - Check player-ip logs for the service principal public key
+   - Add it in the admin app's Service Principals page
+
+For detailed post-setup instructions, see the [FusionAuth Setup Documentation](../setup/README.md#post-setup-steps).
+
+## Initial Setup Scripts
+
+### Complete Automated Setup
+
+For a complete setup including FusionAuth configuration:
+
+```bash
+# 1. Initialize mesh infrastructure
+./scripts/init-mesh.sh
+
+# 2. Start the infrastructure
+cd mesh
+docker compose up -d
+
+# 3. Run FusionAuth setup
+./scripts/setup.sh YOUR_FUSIONAUTH_API_KEY
+
+# 4. Follow post-setup steps (see FusionAuth Setup Documentation)
+```
+
+### Legacy Manual Setup
+The project also supports manual setup for advanced users who need custom configuration:
 
 ### Manual Setup Steps
 
@@ -395,15 +558,72 @@ npm run build:container
 
 ## Next Steps
 
-With the infrastructure set up successfully, proceed to [Jinaga Data Model](./04-jinaga-model.md) to understand and configure the data layer.
+After completing the project setup, including the FusionAuth configuration, you have several paths forward:
 
-**Key current Features Now Available:**
-- PostgreSQL database for FusionAuth
-- FusionAuth OAuth2 provider
-- Jinaga replicator with real-time sync
+### Immediate Next Steps
+
+1. **Complete FusionAuth Setup** (if not already done):
+   - Follow the [FusionAuth Setup Documentation](../setup/README.md) for detailed instructions
+   - Ensure all post-setup steps are completed, including tenant creation and service principal authorization
+
+2. **Verify Setup**:
+   ```bash
+   # Check all services are running
+   cd mesh
+   docker compose ps
+   
+   # Test health endpoints
+   curl http://localhost/health
+   curl http://localhost/admin/
+   ```
+
+3. **Proceed to Data Model Configuration**:
+   - Continue to [Jinaga Data Model](./04-jinaga-model.md) to understand and configure the data layer
+
+### Development Workflow
+
+With the infrastructure set up successfully, you now have access to:
+
+**Core Infrastructure:**
+- PostgreSQL database for FusionAuth and application data
+- FusionAuth OAuth2 provider with configured applications
+- Jinaga replicator with real-time synchronization
 - NGINX reverse proxy with SSL support
 - Network segmentation for security
 - Comprehensive health monitoring
+
+**Development Endpoints:**
+- **Admin Interface**: `http://localhost/admin/` - GameHub administration
+- **FusionAuth Admin**: `http://localhost/auth/admin` - Identity management
+- **API Gateway**: `http://localhost/` - Main application gateway
+- **Replicator**: `http://localhost/replicator/` - Real-time data sync
+
+### Troubleshooting
+
+If you encounter issues during setup:
+
+1. **Check Service Status**:
+   ```bash
+   docker compose ps
+   docker compose logs [service-name]
+   ```
+
+2. **Verify FusionAuth Setup**:
+   - Ensure API key has correct permissions
+   - Check that all configuration files were generated
+   - Verify tenant creation and service principal authorization
+
+3. **Review Documentation**:
+   - [FusionAuth Setup Documentation](../setup/README.md) for detailed setup instructions
+   - [Troubleshooting Guide](./10-troubleshooting.md) for common issues
+
+### Ready for Development
+
+Once setup is complete, you can begin:
+- Developing GameHub applications
+- Configuring game-specific data models
+- Setting up user authentication flows
+- Building administrative interfaces
 
 ---
 
