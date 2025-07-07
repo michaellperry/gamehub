@@ -103,8 +103,8 @@ services:
   # Player IP (existing service with SQLite integration)
   player-ip:
     build:
-      context: ../app/player-ip
-      dockerfile: Dockerfile
+      context: ../app
+      dockerfile: player-ip/Dockerfile
     container_name: gamehub-player-ip
     ports:
       - "8082:8082"

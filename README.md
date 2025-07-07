@@ -40,9 +40,6 @@ GameHub is a **starter template** that provides everything you need to build you
    ```bash
    # Admin interface
    npm run dev:admin
-   
-   # Player console demo
-   npm run dev:player-ip
    ```
 
 4. **Launch full environment**:
@@ -50,7 +47,8 @@ GameHub is a **starter template** that provides everything you need to build you
    cd ../mesh
    cp .env.example .env
    # Update .env with your configuration
-   docker compose up -d
+   docker compose pull
+   docker compose up -d --build
    ```
 
 Visit `http://localhost` to see your game platform running!

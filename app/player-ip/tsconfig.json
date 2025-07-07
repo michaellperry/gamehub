@@ -19,8 +19,8 @@
     "noEmit": false,
     "baseUrl": ".",
     "paths": {
-      "gamehub-model": ["../gamehub-model/dist/types/index"],
-      "gamehub-model/*": ["../gamehub-model/dist/types/*"]
+      "gamehub-model": ["./node_modules/gamehub-model/dist/types/index"],
+      "gamehub-model/*": ["./node_modules/gamehub-model/dist/types/*"]
     }
   },
   "include": [
