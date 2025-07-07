@@ -51,7 +51,69 @@ GameHub is a **starter template** that provides everything you need to build you
    docker compose up -d --build
    ```
 
-Visit `http://localhost` to see your game platform running!
+Visit `http://localhost` to see your game platform running! Start with the **[Authentication](http://localhost/auth/)** service to create an admin user. Run the FusionAuth setup to create an API key (skip the other steps). Copy that API key for use in the setup script.
+
+5. **Run the GameHub setup application**:
+   ```bash
+   ./scripts/setup.sh <API_KEY>
+   ```
+
+   The setup script will automatically:
+   - Build the TypeScript setup application
+   - Configure FusionAuth with OAuth and CORS settings
+   - Generate necessary configuration files
+   - Provide clear feedback on the setup process
+
+   For additional options, run:
+   ```bash
+   ./scripts/setup.sh --help
+   ```
+
+## 🔧 Setup Application
+
+GameHub includes an automated setup application that configures FusionAuth for your game platform. The setup application is a TypeScript-based CLI tool that handles all the complex configuration automatically.
+
+### What the Setup Application Does
+
+- **Creates FusionAuth Application**: Sets up a new OAuth application with proper security settings
+- **Configures OAuth & PKCE**: Implements secure authentication flows
+- **Sets up CORS**: Configures cross-origin resource sharing for web applications
+- **Generates Configuration Files**: Creates all necessary environment and provider files
+- **Validates Configuration**: Ensures all settings are correct before proceeding
+
+### Setup Script Usage
+
+The `scripts/setup.sh` script provides a convenient wrapper around the setup application:
+
+```bash
+# Basic usage
+./scripts/setup.sh <YOUR_API_KEY>
+
+# With additional options
+./scripts/setup.sh <YOUR_API_KEY> --verbose --force
+
+# View all available options
+./scripts/setup.sh --help
+```
+
+### Setup Script Features
+
+- **Dependency Management**: Automatically installs npm dependencies if needed
+- **Build Automation**: Compiles TypeScript code before running
+- **Error Handling**: Provides clear error messages and troubleshooting tips
+- **Progress Feedback**: Shows detailed progress with colored output
+- **Validation**: Checks Node.js version and environment requirements
+
+### Post-Setup Steps
+
+After running the setup script successfully:
+
+1. **Create a tenant** in the admin app at `http://localhost/admin/tenants`
+2. **Copy the tenant public key** to update configuration files
+3. **Restart the Docker stack**: `docker compose down && docker compose up -d`
+4. **Authorize the Service Principal** in the admin app's Service Principals page
+
+For detailed setup documentation, see the [setup directory README](setup/README.md).
 
 ## 📚 Documentation
 
@@ -100,6 +162,8 @@ When running locally with Docker Compose:
   - **[gamehub-model/](app/gamehub-model/)** - Shared TypeScript library with Jinaga domain model
   - **[gamehub-admin/](app/gamehub-admin/)** - Vite-based web application for administration
   - **[player-ip/](app/player-ip/)** - Node.js console application for player IP management
+- **[setup/](setup/)** - Automated FusionAuth setup application
+- **[scripts/](scripts/)** - Build, deployment, and setup scripts
 - **[docs/](docs/)** - Comprehensive documentation and guides
 - **[mesh/](mesh/)** - Docker orchestration and deployment configuration
 
