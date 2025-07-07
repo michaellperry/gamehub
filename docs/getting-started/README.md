@@ -20,10 +20,11 @@ The platform is built using:
 
 1. **Prerequisites**: Ensure you have Docker, Node.js, and required development tools installed
 2. **Clone & Setup**: Clone the repository and navigate to the app directory
-3. **Install Dependencies**: Run `npm install` to install all workspace dependencies
-4. **Build Shared Model**: Run `npm run build:model` to build the shared Jinaga model
-5. **Start Development**: Use `npm run dev:admin` or `npm run dev:player-ip` for development
-6. **Production Mode**: Use Docker Compose to start all services for production-like environment
+3. **Initialize Mesh**: Run `./scripts/init-mesh.sh` to set up environment and secrets
+4. **Install Dependencies**: Run `npm install` to install all workspace dependencies
+5. **Build Shared Model**: Run `npm run build:model` to build the shared Jinaga model
+6. **Start Development**: Use `npm run dev:admin` or `npm run dev:player-ip` for development
+7. **Production Mode**: Use Docker Compose to start all services for production-like environment
 
 ## Documentation Sections
 

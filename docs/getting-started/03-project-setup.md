@@ -15,6 +15,7 @@ This guide walks you through the initial project setup, directory structure unde
     - [Infrastructure Structure (`/mesh`)](#infrastructure-structure-mesh)
     - [Scripts Structure (`/scripts`)](#scripts-structure-scripts)
   - [Environment Configuration](#environment-configuration)
+    - [Automated Setup with init-mesh.sh](#automated-setup-with-init-meshsh)
     - [Service Authentication Setup](#service-authentication-setup)
     - [Database Configuration](#database-configuration)
     - [FusionAuth Configuration](#fusionauth-configuration)
@@ -125,10 +126,34 @@ scripts/
 
 ## Environment Configuration
 
-### Service Authentication Setup
-Backend services require client credentials for inter-service communication.
+### Automated Setup with init-mesh.sh
 
-Run these commands to generate and configure the shared secrets:
+The recommended way to initialize the mesh environment is using the automated setup script:
+
+```bash
+./scripts/init-mesh.sh
+```
+
+**What the script does:**
+- Copies `.env.example` to `.env` if it doesn't exist
+- Generates secure random secrets for production use
+- Creates all required directories in the `mesh/secrets/` structure
+- Sets up service authentication credentials
+- Ensures client secrets are synchronized between services
+- Is idempotent and safe to run multiple times
+
+**The script automatically configures:**
+- `POSTGRES_PASSWORD` - Database password for PostgreSQL
+- `JWT_SECRET` - JWT signing secret for service-ip
+- `PLAYER_JWT_SECRET` - JWT signing secret for player-ip
+- Service-to-service authentication secrets
+- All required directory structures
+
+### Service Authentication Setup
+
+If you prefer manual setup or need to understand the authentication flow, backend services require client credentials for inter-service communication.
+
+The `init-mesh.sh` script handles this automatically, but for reference, the manual process involves:
 
 ```bash
 # Generate shared secret for service authentication
@@ -143,16 +168,9 @@ mkdir -p mesh/secrets/player-ip
 echo "$SHARED_SECRET" > mesh/secrets/player-ip/player-ip-client-secret
 ```
 
-**What these commands do:**
-1. Generate a random 32-bit shared secret encoded in base-64
-2. Create service IP client credentials directory
-3. Store the player-ip client credentials with the shared secret
-4. Create player IP service credentials directory  
-5. Store the service IP client credentials (using the same shared secret)
-
 ### Database Configuration
 
-The infrastructure uses PostgreSQL as the database for FusionAuth:
+The infrastructure uses PostgreSQL as the database for FusionAuth. The `init-mesh.sh` script automatically handles the environment setup, but you can also configure manually:
 
 ```bash
 cd mesh
@@ -196,6 +214,8 @@ npm start -- --api-key <your-fusionauth-api-key>
 
 ### Manual Setup Steps
 
+**Recommended:** Use the automated setup script `./scripts/init-mesh.sh` for initial configuration. The manual steps below are provided for advanced users who need custom configuration.
+
 #### 1. Install Application Dependencies
 
 The monorepo uses npm workspaces, so you can install all dependencies from the root:
@@ -225,7 +245,9 @@ npm run generate-policies
 
 #### 3. Configure Environment
 
-Set up the environment configuration for the mesh infrastructure:
+**Recommended:** Use `./scripts/init-mesh.sh` to automatically set up the environment.
+
+For manual setup, configure the mesh infrastructure environment:
 
 ```bash
 cd ../mesh
@@ -235,7 +257,9 @@ cp .env.example .env
 
 #### 4. Set Up Secrets
 
-Generate and configure the required secrets:
+**Recommended:** The `init-mesh.sh` script handles all secret generation automatically.
+
+For manual secret setup:
 
 ```bash
 # Generate service authentication secrets

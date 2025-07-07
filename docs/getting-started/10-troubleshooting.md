@@ -692,6 +692,13 @@ Error: ENOENT: no such file or directory, open 'clients/client-name'
 ```
 
 **Solution:**
+
+**Recommended:** Use the automated initialization script to set up all required directories and secrets:
+```bash
+./scripts/init-mesh.sh
+```
+
+**Manual setup (for custom client configurations):**
 ```bash
 # Create client credentials directory
 mkdir -p mesh/secrets/service-ip/clients

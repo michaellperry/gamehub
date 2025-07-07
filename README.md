@@ -44,9 +44,9 @@ GameHub is a **starter template** that provides everything you need to build you
 
 4. **Launch full environment**:
    ```bash
-   cd ../mesh
-   cp .env.example .env
-   # Update .env with your configuration
+   cd ../
+   ./scripts/init-mesh.sh
+   cd mesh
    docker compose pull
    docker compose up -d --build
    ```
@@ -191,9 +191,8 @@ npm run type-check        # TypeScript checking
 
 ```bash
 # Start full development environment
+./scripts/init-mesh.sh
 cd mesh
-cp .env.example .env
-# Update .env with your configuration
 docker compose up -d
 
 # View logs
@@ -208,9 +207,8 @@ docker compose down
 ### Development Environment
 
 ```bash
+./scripts/init-mesh.sh
 cd mesh
-cp .env.example .env
-# Update environment variables as needed
 docker compose up -d
 ```
 
@@ -218,9 +216,9 @@ docker compose up -d
 
 1. **Configure environment variables**:
    ```bash
+   ./scripts/init-mesh.sh
    cd mesh
-   cp .env.example .env
-   # Update all production values in .env
+   # Review and update production values in .env as needed
    ```
 
 2. **Set up secrets**:
