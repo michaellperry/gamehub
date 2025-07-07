@@ -196,7 +196,7 @@ if npm start -- $SETUP_ARGS; then
     print_success "GameHub setup completed successfully!"
     echo ""
     print_info "Next steps:"
-    print_info "1. Create a tenant in the admin app: http://localhost/admin/tenants"
+    print_info "1. Create a tenant in the admin app: http://localhost/portal/tenants"
     print_info "2. Copy the tenant public key to the configuration files"
     print_info "3. Restart the Docker stack: docker compose down && docker compose up -d"
     print_info "4. Authorize the Service Principal in the admin app"

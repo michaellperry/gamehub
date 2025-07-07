@@ -342,7 +342,7 @@ After the setup application completes successfully, follow these steps to comple
 **Purpose**: Tenants in GameHub represent isolated game environments
 
 **Steps**:
-1. Navigate to the admin application: `http://localhost/admin/tenants`
+1. Navigate to the admin application: `http://localhost/portal/tenants`
 2. Click "Create New Tenant"
 3. Fill in tenant details:
    - **Name**: Your game or organization name

@@ -330,7 +330,7 @@ The setup creates these configuration files:
 After the FusionAuth setup completes, you must complete these additional steps:
 
 1. **Create a Tenant**:
-   - Navigate to `http://localhost/admin/tenants`
+   - Navigate to `http://localhost/portal/tenants`
    - Create a new tenant for your game/organization
    - **Important**: Copy the generated tenant public key
 

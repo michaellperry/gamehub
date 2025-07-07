@@ -144,7 +144,7 @@ export class CLI {
         message: "FusionAuth setup completed successfully",
         clientId: appResult.clientId,
         nextSteps: [
-          "1. Create a tenant in the admin app by navigating to http://localhost/admin/tenants",
+          "1. Create a tenant in the admin app by navigating to http://localhost/portal/tenants",
           "2. Copy the tenant public key to the following files:",
           "   - mesh/.env.local",
           "   - app/gamehub-admin/.env.container.local",
