@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GameHub Setup Script
+# GameHub FusionAuth Setup Script
 # This script builds and runs the GameHub FusionAuth setup application
 
 set -e  # Exit on any error
