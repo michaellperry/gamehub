@@ -25,12 +25,6 @@ GameHub is a multi-tenant application. Create the tenant using your administrato
 3. Create new tenant and copy the generated public key
 4. From your terminal, execute: `./scripts/setup-tenant.sh "<TENANT_PUBLIC_KEY>"`
 
-**Script Functionality**:
-- Validates tenant public key format
-- Updates [`mesh/.env.local`](mesh/.env.local:1) with `TENANT_PUBLIC_KEY`
-- Restarts necessary Docker services to apply changes
-- Validates tenant configuration
-
 ### Step 3: Service Principal Configuration
 
 The backend services authenticate using service principals. This step creates a service principal for the Player-IP service, which allows players to anonymously log into your game.
