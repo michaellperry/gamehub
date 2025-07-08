@@ -16,7 +16,7 @@ FusionAuth is your administrator identity provider. This step sets up your Fusio
 4. Copy that API key.
 5. From your terminal, execute: `./scripts/setup-fusionauth.sh <API_KEY>`
 
-### Step 2: Tenant Creation and Configuration
+## Step 2: Tenant Creation and Configuration
 
 GameHub is a multi-tenant application. Create the tenant using your administrator account so that you have full access to the tenant management features. Then run a script to configure the web apps to use that tenant.
 
@@ -25,7 +25,7 @@ GameHub is a multi-tenant application. Create the tenant using your administrato
 3. Create new tenant and copy the generated public key
 4. From your terminal, execute: `./scripts/setup-tenant.sh "<TENANT_PUBLIC_KEY>"`
 
-### Step 3: Service Principal Configuration
+## Step 3: Service Principal Configuration
 
 The backend services authenticate using service principals. This step creates a service principal for the Player-IP service, which allows players to anonymously log into your game.
 

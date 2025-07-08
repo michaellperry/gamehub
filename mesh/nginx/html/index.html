@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameHub - Gaming Platform</title>
+    <title>GameHub Setup Guide</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
@@ -12,31 +16,279 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        .setup-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .step-card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.15);
+        }
+
+        .step-card.completed {
+            background: rgba(76, 175, 80, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .container {
-            text-align: center;
-            max-width: 600px;
-            padding: 2rem;
-        }
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        p {
+            font-weight: bold;
             font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
         }
-        .services {
+
+        .step-card.completed .step-number {
+            background: #4CAF50;
+        }
+
+        .check-mark {
+            font-size: 1.5rem;
+            color: #4CAF50;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .step-card.completed .check-mark {
+            opacity: 1;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-description {
+            opacity: 0.8;
+            margin-bottom: 1rem;
+        }
+
+        .step-action {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+            width: 100%;
+        }
+
+        .step-action:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .step-card.completed .step-action {
+            background: rgba(76, 175, 80, 0.3);
+        }
+
+        .instructions-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-bottom: 2rem;
+        }
+
+        .instructions-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .instructions-content {
+            display: none;
+        }
+
+        .instructions-content.active {
+            display: block;
+        }
+
+        .instruction-step {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .command-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .copy-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .input-group {
+            margin: 1rem 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .input-group input::placeholder, .input-group textarea::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: rgba(255, 193, 7, 0.3);
+            color: #FFC107;
+        }
+
+        .status-completed {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            height: 8px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .link-button {
+            color: #87CEEB;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .link-button:hover {
+            text-decoration: underline;
+        }
+
+        .completion-message {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 15px;
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            display: none;
+        }
+
+        .completion-message.show {
+            display: block;
+        }
+
+        .completion-message h2 {
+            color: #4CAF50;
+            margin-bottom: 1rem;
+        }
+
+        .services-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             margin-top: 2rem;
         }
+
         .service-card {
             background: rgba(255,255,255,0.1);
             padding: 1.5rem;
@@ -44,64 +296,373 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
             transition: transform 0.3s ease;
+            text-align: center;
         }
+
         .service-card:hover {
             transform: translateY(-5px);
         }
+
         .service-card h3 {
             margin: 0 0 0.5rem 0;
             font-size: 1.1rem;
         }
+
         .service-card p {
             margin: 0;
             font-size: 0.9rem;
             opacity: 0.8;
         }
+
         .service-card a {
             color: #fff;
             text-decoration: none;
         }
+
         .service-card a:hover {
             text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .setup-steps {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎮 GameHub</h1>
-        <p>Welcome to GameHub - Your Gaming Platform Infrastructure</p>
-        
-        <div class="services">
-            <div class="service-card">
-                <h3><a href="/admin/">Admin Panel</a></h3>
-                <p>Manage tenants, players, and game sessions</p>
+        <div class="header">
+            <h1>🎮 GameHub Setup Guide</h1>
+            <p>Complete these 3 steps to configure your GameHub platform</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
             </div>
-            
-            <div class="service-card">
-                <h3><a href="/auth/">Authentication</a></h3>
-                <p>FusionAuth identity management</p>
+        </div>
+
+        <div class="setup-steps">
+            <div class="step-card" id="step1" onclick="navigateToStep(1)">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="check-mark">✓</div>
+                </div>
+                <div class="step-title">FusionAuth Configuration</div>
+                <div class="step-description">Set up your authentication service and create an admin account</div>
+                <button class="step-action">Configure FusionAuth</button>
             </div>
-            
-            <div class="service-card">
-                <h3><a href="/replicator/">Replicator</a></h3>
-                <p>Real-time data synchronization</p>
+
+            <div class="step-card" id="step2" onclick="navigateToStep(2)">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="check-mark">✓</div>
+                </div>
+                <div class="step-title">Tenant Creation</div>
+                <div class="step-description">Create and configure your GameHub tenant</div>
+                <button class="step-action">Manage Tenants</button>
             </div>
-            
-            <div class="service-card">
-                <h3><a href="/player-ip/">Player IP</a></h3>
-                <p>Player authentication</p>
+
+            <div class="step-card" id="step3" onclick="navigateToStep(3)">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="check-mark">✓</div>
+                </div>
+                <div class="step-title">Service Principal</div>
+                <div class="step-description">Configure service-to-service authentication</div>
+                <button class="step-action">Setup Service Principal</button>
             </div>
-            
-            <div class="service-card">
-                <h3><a href="/service-ip/">Service IP</a></h3>
-                <p>Service-to-service authentication</p>
+        </div>
+
+        <div class="instructions-section">
+            <div class="instructions-title">
+                <span id="currentStepTitle">Next Step: FusionAuth Configuration</span>
+                <span class="status-indicator status-pending" id="statusIndicator">Pending</span>
             </div>
+
+            <!-- Step 1 Instructions -->
+            <div class="instructions-content active" id="instructions1">
+                <div class="instruction-step">
+                    <strong>1. Navigate to FusionAuth Admin</strong>
+                    <p>Click the link below to open the FusionAuth administration interface:</p>
+                    <p><a href="http://localhost/auth/" target="_blank" class="link-button">→ Open FusionAuth Admin</a></p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>2. Create Admin Account</strong>
+                    <p>Follow the setup wizard to create your administrator account. This will be your main admin login for GameHub.</p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>3. Generate API Key</strong>
+                    <p>In the FusionAuth admin panel, run the setup to create an API key. Skip the other setup steps for now.</p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>4. Copy API Key and Run Setup Script</strong>
+                    <div class="input-group">
+                        <label for="apiKey">Paste your FusionAuth API Key:</label>
+                        <input type="text" id="apiKey" placeholder="Enter the API key from FusionAuth">
+                    </div>
+                    <p>Then run this command in your terminal:</p>
+                    <div class="command-box">
+                        <button class="copy-button" onclick="copyCommand('fusionauth')">Copy</button>
+                        <code id="fusionAuthCommand">./scripts/setup-fusionauth.sh &lt;API_KEY&gt;</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 Instructions -->
+            <div class="instructions-content" id="instructions2">
+                <div class="instruction-step">
+                    <strong>1. Navigate to Tenant Management</strong>
+                    <p>Click the link below to open the tenant management interface:</p>
+                    <p><a href="http://localhost/portal/tenants" target="_blank" class="link-button">→ Open Tenant Management</a></p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>2. Log in with FusionAuth Credentials</strong>
+                    <p>Use the admin account you created in Step 1 to log into the tenant management portal.</p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>3. Create New Tenant</strong>
+                    <p>Create a new tenant and copy the generated public key that appears after creation.</p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>4. Configure Tenant with Setup Script</strong>
+                    <div class="input-group">
+                        <label for="tenantKey">Paste your Tenant Public Key:</label>
+                        <textarea id="tenantKey" rows="4" placeholder="Enter the public key from tenant creation"></textarea>
+                    </div>
+                    <p>Then run this command in your terminal:</p>
+                    <div class="command-box">
+                        <button class="copy-button" onclick="copyCommand('tenant')">Copy</button>
+                        <code id="tenantCommand">./scripts/setup-tenant.sh "&lt;TENANT_PUBLIC_KEY&gt;"</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 Instructions -->
+            <div class="instructions-content" id="instructions3">
+                <div class="instruction-step">
+                    <strong>1. Navigate to Service Principal Management</strong>
+                    <p>Click the link below to open the service principal interface:</p>
+                    <p><a href="http://localhost/portal/service-principals" target="_blank" class="link-button">→ Open Service Principal Management</a></p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>2. Log in with FusionAuth Credentials</strong>
+                    <p>Use the same admin account from previous steps to log into the service principal management.</p>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>3. Create Service Principal for Player-IP</strong>
+                    <p>Click "Create Service Principal for Player-IP". The system will automatically:</p>
+                    <ul>
+                        <li>Fetch the public key from <code>http://localhost/player-ip/public-key</code></li>
+                        <li>Create the service principal with the fetched key</li>
+                        <li>Update service configurations automatically</li>
+                    </ul>
+                </div>
+
+                <div class="instruction-step">
+                    <strong>4. Confirm Creation</strong>
+                    <p>Verify that the service principal was created successfully. No additional terminal commands are needed for this step.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completion Message -->
+        <div class="completion-message" id="completionMessage">
+            <h2>🎉 Setup Complete!</h2>
+            <p>Congratulations! Your GameHub platform is now fully configured and ready to use.</p>
+            <p>You can now access all the GameHub services:</p>
             
-            <div class="service-card">
-                <h3><a href="/content/">Content Store</a></h3>
-                <p>Image upload and sharing</p>
+            <div class="services-grid">
+                <div class="service-card">
+                    <h3><a href="/portal/">Admin Portal</a></h3>
+                    <p>Manage tenants, players, and game sessions</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3><a href="/auth/">Authentication</a></h3>
+                    <p>FusionAuth identity management</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3><a href="/replicator/">Replicator</a></h3>
+                    <p>Real-time data synchronization</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3><a href="/player-ip/">Player IP</a></h3>
+                    <p>Player authentication service</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3><a href="/service-ip/">Service IP</a></h3>
+                    <p>Service-to-service authentication</p>
+                </div>
+                
+                <div class="service-card">
+                    <h3><a href="/content/">Content Store</a></h3>
+                    <p>Image upload and sharing</p>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        let setupStatus = {
+            step1_completed: false,
+            step2_completed: false,
+            step3_completed: false
+        };
+
+        // Fetch setup status from API
+        async function fetchSetupStatus() {
+            try {
+                const response = await fetch('/api/setup-status');
+                if (response.ok) {
+                    setupStatus = await response.json();
+                    updateUI();
+                }
+            } catch (error) {
+                console.error('Failed to fetch setup status:', error);
+            }
+        }
+
+        // Update UI based on setup status
+        function updateUI() {
+            // Update step cards
+            updateStepCard('step1', setupStatus.step1_completed);
+            updateStepCard('step2', setupStatus.step2_completed);
+            updateStepCard('step3', setupStatus.step3_completed);
+
+            // Update progress bar
+            const completedSteps = [setupStatus.step1_completed, setupStatus.step2_completed, setupStatus.step3_completed].filter(Boolean).length;
+            const progressPercentage = (completedSteps / 3) * 100;
+            document.getElementById('progressFill').style.width = progressPercentage + '%';
+
+            // Show appropriate instructions
+            showCurrentStepInstructions();
+
+            // Show completion message if all steps are done
+            const allCompleted = setupStatus.step1_completed && setupStatus.step2_completed && setupStatus.step3_completed;
+            document.getElementById('completionMessage').classList.toggle('show', allCompleted);
+        }
+
+        // Update individual step card
+        function updateStepCard(stepId, completed) {
+            const stepCard = document.getElementById(stepId);
+            stepCard.classList.toggle('completed', completed);
+        }
+
+        // Show instructions for current step
+        function showCurrentStepInstructions() {
+            // Hide all instruction content
+            document.querySelectorAll('.instructions-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            let currentStep = 1;
+            let stepTitle = "Next Step: FusionAuth Configuration";
+            let statusClass = "status-pending";
+
+            if (!setupStatus.step1_completed) {
+                currentStep = 1;
+                stepTitle = "Next Step: FusionAuth Configuration";
+            } else if (!setupStatus.step2_completed) {
+                currentStep = 2;
+                stepTitle = "Next Step: Tenant Creation";
+            } else if (!setupStatus.step3_completed) {
+                currentStep = 3;
+                stepTitle = "Next Step: Service Principal Configuration";
+            } else {
+                stepTitle = "Setup Complete!";
+                statusClass = "status-completed";
+            }
+
+            // Show current step instructions
+            if (currentStep <= 3) {
+                document.getElementById(`instructions${currentStep}`).classList.add('active');
+            }
+
+            // Update title and status
+            document.getElementById('currentStepTitle').textContent = stepTitle;
+            const statusIndicator = document.getElementById('statusIndicator');
+            statusIndicator.className = `status-indicator ${statusClass}`;
+            statusIndicator.textContent = statusClass === "status-completed" ? "Completed" : "Pending";
+        }
+
+        // Navigate to step-specific page
+        function navigateToStep(stepNumber) {
+            const urls = {
+                1: 'http://localhost/auth/',
+                2: 'http://localhost/portal/tenants',
+                3: 'http://localhost/portal/service-principals'
+            };
+            
+            if (urls[stepNumber]) {
+                window.open(urls[stepNumber], '_blank');
+            }
+        }
+
+        // Copy command to clipboard
+        function copyCommand(type) {
+            let command = '';
+            
+            if (type === 'fusionauth') {
+                const apiKey = document.getElementById('apiKey').value.trim();
+                command = apiKey ? `./scripts/setup-fusionauth.sh ${apiKey}` : './scripts/setup-fusionauth.sh <API_KEY>';
+            } else if (type === 'tenant') {
+                const tenantKey = document.getElementById('tenantKey').value.trim();
+                command = tenantKey ? `./scripts/setup-tenant.sh "${tenantKey}"` : './scripts/setup-tenant.sh "<TENANT_PUBLIC_KEY>"';
+            }
+
+            if (command) {
+                navigator.clipboard.writeText(command).then(() => {
+                    // Visual feedback
+                    const button = event.target;
+                    const originalText = button.textContent;
+                    button.textContent = 'Copied!';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Failed to copy command:', err);
+                });
+            }
+        }
+
+        // Update command display when user types
+        document.getElementById('apiKey').addEventListener('input', function() {
+            const apiKey = this.value.trim();
+            const command = apiKey ? `./scripts/setup-fusionauth.sh ${apiKey}` : './scripts/setup-fusionauth.sh &lt;API_KEY&gt;';
+            document.getElementById('fusionAuthCommand').innerHTML = command;
+        });
+
+        document.getElementById('tenantKey').addEventListener('input', function() {
+            const tenantKey = this.value.trim();
+            const command = tenantKey ? `./scripts/setup-tenant.sh "${tenantKey}"` : './scripts/setup-tenant.sh "&lt;TENANT_PUBLIC_KEY&gt;"';
+            document.getElementById('tenantCommand').innerHTML = command;
+        });
+
+        // Initialize and set up polling
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchSetupStatus();
+            
+            // Poll for status updates every 5 seconds
+            setInterval(fetchSetupStatus, 5000);
+        });
+    </script>
 </body>
 </html>
