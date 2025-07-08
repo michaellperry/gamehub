@@ -51,27 +51,7 @@ GameHub is a **starter template** that provides everything you need to build you
    docker compose up -d --build
    ```
 
-Visit `http://localhost` to see your game platform running! Start with the **[Authentication](http://localhost/auth/)** service to create an admin user. Run the FusionAuth setup to create an API key (skip the other steps). Copy that API key for use in the setup script.
-
-5. **Run the GameHub setup application**:
-   ```bash
-   cd ..
-   ./scripts/setup.sh <API_KEY>
-   ```
-
-### Post-Setup Steps
-
-After running the setup script successfully:
-
-1. **Create a tenant** in the admin app at `http://localhost/portal/tenants`
-2. **Copy the tenant public key** to update configuration file `app/gamehub-admin/.env.local`:
-   ```bash
-   TENANT_PUBLIC_KEY=<your-tenant-public-key>
-   ```
-3. **Restart the Docker stack**: `docker compose down && docker compose up -d`
-4. **Authorize the Service Principal** in the admin app's Service Principals page
-
-For detailed setup documentation, see the [setup directory README](setup/README.md).
+Navigate to http://localhost to access the GameHub admin portal. Then follow the [3-step setup guide](./SETUP_GUIDE.md) to configure your game platform.
 
 ## 📚 Documentation
 
