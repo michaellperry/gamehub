@@ -40,20 +40,38 @@ GameHub is a **starter template** that provides everything you need to build you
    ```bash
    # Admin interface
    npm run dev:admin
-   
-   # Player console demo
-   npm run dev:player-ip
    ```
 
 4. **Launch full environment**:
    ```bash
-   cd ../mesh
-   cp .env.example .env
-   # Update .env with your configuration
-   docker compose up -d
+   cd ..
+   ./scripts/init-mesh.sh
+   cd mesh
+   docker compose pull
+   docker compose up -d --build
    ```
 
-Visit `http://localhost` to see your game platform running!
+Visit `http://localhost` to see your game platform running! Start with the **[Authentication](http://localhost/auth/)** service to create an admin user. Run the FusionAuth setup to create an API key (skip the other steps). Copy that API key for use in the setup script.
+
+5. **Run the GameHub setup application**:
+   ```bash
+   cd ..
+   ./scripts/setup.sh <API_KEY>
+   ```
+
+### Post-Setup Steps
+
+After running the setup script successfully:
+
+1. **Create a tenant** in the admin app at `http://localhost/portal/tenants`
+2. **Copy the tenant public key** to update configuration file `app/gamehub-admin/.env.local`:
+   ```bash
+   TENANT_PUBLIC_KEY=<your-tenant-public-key>
+   ```
+3. **Restart the Docker stack**: `docker compose down && docker compose up -d`
+4. **Authorize the Service Principal** in the admin app's Service Principals page
+
+For detailed setup documentation, see the [setup directory README](setup/README.md).
 
 ## 📚 Documentation
 
@@ -102,6 +120,8 @@ When running locally with Docker Compose:
   - **[gamehub-model/](app/gamehub-model/)** - Shared TypeScript library with Jinaga domain model
   - **[gamehub-admin/](app/gamehub-admin/)** - Vite-based web application for administration
   - **[player-ip/](app/player-ip/)** - Node.js console application for player IP management
+- **[setup/](setup/)** - Automated FusionAuth setup application
+- **[scripts/](scripts/)** - Build, deployment, and setup scripts
 - **[docs/](docs/)** - Comprehensive documentation and guides
 - **[mesh/](mesh/)** - Docker orchestration and deployment configuration
 
@@ -193,9 +213,8 @@ npm run type-check        # TypeScript checking
 
 ```bash
 # Start full development environment
+./scripts/init-mesh.sh
 cd mesh
-cp .env.example .env
-# Update .env with your configuration
 docker compose up -d
 
 # View logs
@@ -210,9 +229,8 @@ docker compose down
 ### Development Environment
 
 ```bash
+./scripts/init-mesh.sh
 cd mesh
-cp .env.example .env
-# Update environment variables as needed
 docker compose up -d
 ```
 
@@ -220,9 +238,9 @@ docker compose up -d
 
 1. **Configure environment variables**:
    ```bash
+   ./scripts/init-mesh.sh
    cd mesh
-   cp .env.example .env
-   # Update all production values in .env
+   # Review and update production values in .env as needed
    ```
 
 2. **Set up secrets**:

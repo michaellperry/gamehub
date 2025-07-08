@@ -1,0 +1,37 @@
+{
+  "name": "gamehub-fusionauth-setup",
+  "version": "1.0.0",
+  "description": "Automation script for FusionAuth setup for GameHub",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "update-tenant-key": "ts-node src/cli/updateTenantKey.ts"
+  },
+  "keywords": [
+    "fusionauth",
+    "automation",
+    "setup",
+    "gamehub"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "commander": "^11.0.0",
+    "dotenv": "^16.3.1",
+    "fs-extra": "^11.1.1",
+    "joi": "^17.11.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.9.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  }
+}

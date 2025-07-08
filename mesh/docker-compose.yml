@@ -89,7 +89,6 @@ services:
       - CLIENTS_DIR=/app/secrets/clients
     volumes:
       - ./secrets/service-ip/clients:/app/secrets/clients:ro
-      - ./secrets/shared:/app/secrets/shared:ro
     networks:
       - gamehub-network
     restart: unless-stopped
@@ -103,8 +102,8 @@ services:
   # Player IP (existing service with SQLite integration)
   player-ip:
     build:
-      context: ../app/player-ip
-      dockerfile: Dockerfile
+      context: ../app
+      dockerfile: player-ip/Dockerfile
     container_name: gamehub-player-ip
     ports:
       - "8082:8082"
@@ -128,7 +127,6 @@ services:
     volumes:
       - player-ip-data:/app/data
       - ./secrets/player-ip:/app/secrets:ro
-      - ./secrets/shared:/app/secrets/shared:ro
     networks:
       - gamehub-network
     restart: unless-stopped
@@ -160,7 +158,6 @@ services:
     volumes:
       - content-store-data:/app/storage
       - ./secrets/content-store:/app/secrets:ro
-      - ./secrets/shared:/app/secrets/shared:ro
     networks:
       - gamehub-network
     restart: unless-stopped
@@ -174,6 +171,40 @@ services:
       - service-ip
       - player-ip
 
+  # GameHub Admin Frontend Builder
+  gamehub-admin-builder:
+    build:
+      context: ../app
+      dockerfile_inline: |
+        FROM node:20-alpine as gamehub-model-builder
+        WORKDIR /gamehub-model
+        COPY gamehub-model/package*.json ./
+        RUN npm install
+        COPY gamehub-model/ ./
+        RUN npm run build
+
+        FROM node:20-alpine as admin-builder
+        WORKDIR /app
+        COPY --from=gamehub-model-builder /gamehub-model /gamehub-model
+        COPY tsconfig.json ../tsconfig.json
+        COPY gamehub-admin/package*.json ./
+        COPY gamehub-admin/tsconfig*.json ./
+        COPY gamehub-admin/vite.config.ts ./
+        RUN mkdir -p node_modules && ln -sf /gamehub-model node_modules/gamehub-model
+        RUN npm install
+        COPY gamehub-admin/src ./src
+        COPY gamehub-admin/index.html ./
+        RUN npm run build
+
+        FROM alpine:latest
+        WORKDIR /dist
+        COPY --from=admin-builder /app/dist ./
+        CMD ["sh", "-c", "cp -r /dist/* /output/ && echo 'Admin build copied to volume'"]
+    container_name: gamehub-admin-builder
+    volumes:
+      - gamehub-admin-dist:/output
+    restart: "no"
+
   # NGINX Reverse Proxy
   nginx:
     image: nginx:stable-alpine
@@ -184,7 +215,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
-      - gamehub-admin-dist:/usr/share/nginx/html/admin:ro
+      - gamehub-admin-dist:/var/www/admin:ro
       - ./nginx/html:/usr/share/nginx/html:ro
     networks:
       - gamehub-network
@@ -202,6 +233,7 @@ services:
       - content-store
       - gamehub-replicator
       - fusionauth
+      - gamehub-admin-builder
 
 # Network Configuration
 networks:

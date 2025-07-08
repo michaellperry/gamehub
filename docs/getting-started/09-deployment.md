@@ -169,7 +169,10 @@ CLIENTS_DIR=/app/secrets/clients
 
 **Client Setup:**
 ```bash
-# Generate production client credentials
+# Use the automated initialization script (recommended)
+./scripts/init-mesh.sh
+
+# Manual setup (advanced users only)
 CLIENT_SECRET=$(openssl rand -base64 32)
 echo "$CLIENT_SECRET" > mesh/secrets/service-ip/clients/player-ip
 ```
@@ -207,7 +210,16 @@ AUTH_DIR=/app/secrets
 ```
 
 **Authentication Provider Setup:**
+
+The `init-mesh.sh` script creates the necessary directory structure. For content store authentication providers, you'll need to create the provider configurations manually after running the initialization script:
+
 ```bash
+# First run the initialization script
+./scripts/init-mesh.sh
+
+# Then create provider configurations (using secrets from .env)
+source mesh/.env
+
 # Create provider configuration for service-ip authentication
 cat > mesh/secrets/content-store/service-ip.provider << EOF
 {
@@ -286,6 +298,19 @@ SSL_KEY_PATH=/etc/nginx/ssl/key.pem
 
 ### Secrets Management
 
+**Initial Setup:**
+Use the automated initialization script for initial secret generation:
+
+```bash
+./scripts/init-mesh.sh
+```
+
+The script automatically:
+- Generates secure random secrets for all services
+- Creates the required directory structure
+- Sets up service authentication credentials
+- Ensures secrets are properly synchronized
+
 **Security Best Practices:**
 - Use different JWT secrets for each service
 - Restrict file permissions on secret files (600)
@@ -293,7 +318,7 @@ SSL_KEY_PATH=/etc/nginx/ssl/key.pem
 - Rotate secrets regularly in production
 - Use environment-specific secret management
 
-**Generate Production Secrets:**
+**Manual Secret Generation (Advanced Users):**
 ```bash
 # Generate JWT secrets
 JWT_SECRET=$(openssl rand -base64 32)
@@ -368,17 +393,24 @@ docker compose logs player-ip | grep -i auth
 
 ### Initial Deployment
 
-1. **Prepare Environment:**
+1. **Initialize Mesh Configuration:**
+   ```bash
+   # Use the automated initialization script (recommended)
+   ./scripts/init-mesh.sh
+   ```
+   
+   **Alternative manual setup:**
    ```bash
    cd mesh
    cp .env.example .env
    # Update .env with production values
    ```
 
-2. **Set Up Secrets:**
+2. **Verify Configuration:**
    ```bash
-   # Generate and configure secrets
-   ./scripts/setup-secrets.sh
+   # The init-mesh.sh script handles secret generation automatically
+   # Verify the configuration was created successfully
+   ls -la mesh/.env mesh/secrets/
    ```
 
 3. **Deploy Infrastructure:**

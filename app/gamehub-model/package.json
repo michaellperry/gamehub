@@ -63,6 +63,9 @@
   "author": "Michael L Perry",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^20.10.0",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "jinaga": "^6.7.8"
