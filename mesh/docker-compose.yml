@@ -190,6 +190,7 @@ services:
         COPY gamehub-admin/package*.json ./
         COPY gamehub-admin/tsconfig*.json ./
         COPY gamehub-admin/vite.config.ts ./
+        COPY gamehub-admin/.env.local ./
         RUN mkdir -p node_modules && ln -sf /gamehub-model node_modules/gamehub-model
         RUN npm install
         COPY gamehub-admin/src ./src
@@ -205,6 +206,42 @@ services:
       - gamehub-admin-dist:/output
     restart: "no"
 
+  # Setup Status Checker - Init container to check FileGenerator artifacts
+  setup-checker:
+    image: alpine:latest
+    container_name: gamehub-setup-checker
+    volumes:
+      - ./replicator:/var/lib/replicator:ro
+      - .:/var/lib/mesh:ro
+      - ../app:/var/lib/app:ro
+      - setup-status:/var/lib/status
+    command: |
+      sh -c '
+        echo "Checking FusionAuth setup files..."
+        
+        # Check file existence
+        FUSIONAUTH_FILE_EXISTS="false"
+        MESH_ENV_EXISTS="false"
+        ADMIN_ENV_EXISTS="false"
+        
+        [ -f "/var/lib/replicator/authentication/fusionauth.provider" ] && FUSIONAUTH_FILE_EXISTS="true"
+        [ -f "/var/lib/mesh/.env.local" ] && MESH_ENV_EXISTS="true"
+        [ -f "/var/lib/app/gamehub-admin/.env.local" ] && ADMIN_ENV_EXISTS="true"
+        
+        echo "File check results:"
+        echo "  fusionauth.provider: $FUSIONAUTH_FILE_EXISTS"
+        echo "  mesh/.env.local: $MESH_ENV_EXISTS"
+        echo "  admin/.env.local: $ADMIN_ENV_EXISTS"
+        
+        # Write environment file for nginx
+        printf "FUSIONAUTH_FILE_EXISTS=%s\nMESH_ENV_EXISTS=%s\nADMIN_ENV_EXISTS=%s\n" \
+          "$FUSIONAUTH_FILE_EXISTS" "$MESH_ENV_EXISTS" "$ADMIN_ENV_EXISTS" \
+          > /var/lib/status/file-status.env
+        
+        echo "Setup status environment file created"
+      '
+    restart: "no"
+
   # NGINX Reverse Proxy
   nginx:
     build:
@@ -214,6 +251,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    env_file:
+      - /var/lib/status/file-status.env
     environment:
       - FUSIONAUTH_APPLICATION_ID=${FUSIONAUTH_APPLICATION_ID:-generated_application_id_change_me}
       - FUSIONAUTH_KEY_ID=${FUSIONAUTH_KEY_ID:-generated_key_id_change_me}
@@ -223,6 +262,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - gamehub-admin-dist:/var/www/admin:ro
       - ./nginx/html:/usr/share/nginx/html:ro
+      - setup-status:/var/lib/status:ro
     networks:
       - gamehub-network
       - gamehub-auth-network
@@ -234,6 +274,7 @@ services:
       retries: 3
       start_period: 30s
     depends_on:
+      - setup-checker
       - service-ip
       - player-ip
       - content-store
@@ -274,3 +315,7 @@ volumes:
   # Frontend application volumes
   gamehub-admin-dist:
     name: gamehub-admin-dist
+  
+  # Setup status volume
+  setup-status:
+    name: gamehub-setup-status

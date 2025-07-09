@@ -15,14 +15,26 @@ echo "  FUSIONAUTH_APPLICATION_ID: ${FUSIONAUTH_APPLICATION_ID}"
 echo "  FUSIONAUTH_KEY_ID: ${FUSIONAUTH_KEY_ID}"
 echo "  TENANT_PUBLIC_KEY: $(if [ -n "$TENANT_PUBLIC_KEY" ]; then echo '[SET]'; else echo '[EMPTY]'; fi)"
 
-# Check Step 1: FusionAuth configuration
-echo "Checking Step 1: FusionAuth configuration..."
-if [ "$FUSIONAUTH_APPLICATION_ID" != "generated_application_id_change_me" ] && [ "$FUSIONAUTH_KEY_ID" != "generated_key_id_change_me" ]; then
+# Check Step 1: FusionAuth setup via environment variables
+echo "Checking Step 1: FusionAuth setup files..."
+
+# Default values if environment variables are not set
+FUSIONAUTH_FILE_EXISTS=${FUSIONAUTH_FILE_EXISTS:-"false"}
+MESH_ENV_EXISTS=${MESH_ENV_EXISTS:-"false"}
+ADMIN_ENV_EXISTS=${ADMIN_ENV_EXISTS:-"false"}
+
+# Display individual file status
+echo "  fusionauth.provider: $(if [ "$FUSIONAUTH_FILE_EXISTS" = "true" ]; then echo '✓'; else echo '✗'; fi)"
+echo "  mesh/.env.local: $(if [ "$MESH_ENV_EXISTS" = "true" ]; then echo '✓'; else echo '✗'; fi)"
+echo "  admin/.env.local: $(if [ "$ADMIN_ENV_EXISTS" = "true" ]; then echo '✓'; else echo '✗'; fi)"
+
+# Set completion status
+if [ "$FUSIONAUTH_FILE_EXISTS" = "true" ] && [ "$MESH_ENV_EXISTS" = "true" ] && [ "$ADMIN_ENV_EXISTS" = "true" ]; then
     STEP1_COMPLETED="true"
-    echo "  ✓ FusionAuth is configured"
+    echo "  ✓ All FusionAuth setup files exist"
 else
     STEP1_COMPLETED="false"
-    echo "  ✗ FusionAuth needs configuration"
+    echo "  ✗ Some FusionAuth setup files are missing"
 fi
 
 # Check Step 2: Tenant public key

@@ -104,22 +104,22 @@ export class FileGenerator {
     try {
       logger.info('Creating Vite environment files');
    
-      // Create .env.container.local file content
-      const containerLocalEnvContent = `VITE_CLIENT_ID=${appResult.clientId}
+      // Create .env.local file content
+      const localEnvContent = `VITE_CLIENT_ID=${appResult.clientId}
 # Add VITE_TENANT_PUBLIC_KEY after creating a tenant in the admin app
 # VITE_TENANT_PUBLIC_KEY='"-----BEGIN PUBLIC KEY-----\\r\\nMIIBIjANB...QIDAQAB\\r\\n-----END PUBLIC KEY-----\\r\\n"'
 `;
       
       // Environment file path - Updated for GameHub structure
-      const adminContainerLocalEnvFilePath = '../app/gamehub-admin/.env.container.local';
+      const adminLocalEnvFilePath = '../app/gamehub-admin/.env.local';
       
       // Check if admin environment file exists
-      if (fileExists(adminContainerLocalEnvFilePath) && !overwrite) {
-        logger.warn(`Admin environment file already exists: ${adminContainerLocalEnvFilePath}. Use overwrite=true to replace it.`);
+      if (fileExists(adminLocalEnvFilePath) && !overwrite) {
+        logger.warn(`Admin environment file already exists: ${adminLocalEnvFilePath}. Use overwrite=true to replace it.`);
       } else {
         // Write admin environment file
-        writeFile(adminContainerLocalEnvFilePath, containerLocalEnvContent, overwrite);
-        logger.info(`Created admin environment file: ${adminContainerLocalEnvFilePath}`);
+        writeFile(adminLocalEnvFilePath, localEnvContent, overwrite);
+        logger.info(`Created admin environment file: ${adminLocalEnvFilePath}`);
       }
       
       logger.info('Created Vite environment files');

@@ -21,6 +21,10 @@ SECRETS_DIR="$MESH_DIR/secrets"
 SERVICE_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/service-ip/clients/player-ip"
 PLAYER_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/player-ip/player-ip-client-secret"
 
+# Status file configuration
+STATUS_FILE="/var/lib/status/file-status.env"
+STATUS_DIR="/var/lib/status"
+
 # Example values that need to be replaced
 POSTGRES_PASSWORD_EXAMPLE="secure_password_change_in_production"
 JWT_SECRET_EXAMPLE="production-secret-key-change-me-in-production"
@@ -166,7 +170,35 @@ main() {
         fi
     done
     
-    # Step 4: Generate client secrets if they contain example values
+    # Step 4: Initialize setup status file
+    print_info "Initializing setup status file..."
+    
+    # Create the status directory if it doesn't exist
+    if [[ ! -d "$STATUS_DIR" ]]; then
+        mkdir -p "$STATUS_DIR"
+        print_warning "Created status directory: $STATUS_DIR"
+    else
+        print_success "Status directory already exists: $STATUS_DIR"
+    fi
+    
+    # Create the status file with default values if it doesn't exist
+    if [[ ! -f "$STATUS_FILE" ]]; then
+        cat > "$STATUS_FILE" << 'EOF'
+FUSIONAUTH_FILE_EXISTS=false
+MESH_ENV_EXISTS=false
+ADMIN_ENV_EXISTS=false
+EOF
+        print_warning "Created default status file: $STATUS_FILE"
+        print_info "Default status file created with all values set to 'false'"
+    else
+        print_success "Status file already exists: $STATUS_FILE"
+        print_info "Current status file contents:"
+        while IFS= read -r line; do
+            echo "    $line"
+        done < "$STATUS_FILE"
+    fi
+    
+    # Step 5: Generate client secrets if they contain example values
     print_info "Checking client secret files..."
     
     # Check service-ip client secret
@@ -203,7 +235,7 @@ main() {
         print_warning "Created player-ip client secret file"
     fi
     
-    # Step 5: Verify secrets match
+    # Step 6: Verify secrets match
     service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
     player_secret=$(cat "$PLAYER_IP_CLIENT_SECRET_FILE")
     
@@ -224,6 +256,7 @@ main() {
     print_info "Configuration Summary:"
     echo "  📁 Environment file: $ENV_FILE"
     echo "  🔐 Secrets directory: $SECRETS_DIR"
+    echo "  📊 Status file: $STATUS_FILE"
     echo "  🔑 Service-IP client secret: $SERVICE_IP_CLIENT_SECRET_FILE"
     echo "  🔑 Player-IP client secret: $PLAYER_IP_CLIENT_SECRET_FILE"
 }
