@@ -3,6 +3,8 @@ import authRoutes from './auth.js';
 import { jinagaClient } from '../gap/jinaga-config.js';
 import { User } from 'jinaga';
 
+let ready = false;
+
 const router = Router();
 
 // Health check endpoint
@@ -12,6 +14,23 @@ router.get('/health', (req: Request, res: Response) => {
     message: 'Identity provider is running',
     timestamp: new Date().toISOString()
   });
+});
+
+router.get('/ready', (req: Request, res: Response) => {
+  if (ready) {
+    res.status(200).json({
+      status: 'ready',
+      message: 'Identity provider is ready to serve requests',
+      timestamp: new Date().toISOString()
+    });
+  }
+  else {
+    res.status(503).json({
+      status: 'not ready',
+      message: 'Identity provider is not ready yet',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Root endpoint
@@ -35,7 +54,7 @@ router.get('/public-key', async (req: Request, res: Response) => {
     }
 
     const { userFact } = await jinagaClient.login<User>();
-    
+
     res.status(200).json({
       publicKey: userFact.publicKey
     });
@@ -51,4 +70,8 @@ router.get('/public-key', async (req: Request, res: Response) => {
 // Authentication routes
 router.use('/', authRoutes);
 
-export default router;
+function setReady() {
+  ready = true;
+}
+
+export { router, setReady };

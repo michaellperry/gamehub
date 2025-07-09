@@ -35,14 +35,14 @@ else
     echo "  ✗ Tenant public key is missing"
 fi
 
-# Check Step 3: Player IP service accessibility
-echo "Checking Player-IP service health at http://gamehub-player-ip:8082/health..."
-if wget --quiet --tries=1 --timeout=5 --spider http://gamehub-player-ip:8082/health 2>/dev/null; then
+# Check Step 3: Player IP service readiness
+echo "Checking Player-IP service readiness at http://gamehub-player-ip:8082/ready..."
+if wget --quiet --tries=1 --timeout=5 --spider http://gamehub-player-ip:8082/ready 2>/dev/null; then
     STEP3_COMPLETED="true"
-    echo "Player-IP service is healthy"
+    echo "Player-IP service is ready"
 else
     STEP3_COMPLETED="false"
-    echo "Player-IP service is not accessible"
+    echo "Player-IP service is not ready"
 fi
 
 # Generate JSON response
