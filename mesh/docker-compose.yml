@@ -171,6 +171,35 @@ services:
       - service-ip
       - player-ip
 
+  # Relay Service (observability aggregation)
+  relay-service:
+    build:
+      context: ../app/relay-service
+      dockerfile: Dockerfile
+    container_name: gamehub-relay-service
+    ports:
+      - "8084:8084"
+    environment:
+      - NODE_ENV=production
+      - SERVER_PORT=8084
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - CORS_ORIGIN=${RELAY_CORS_ORIGIN:-*}
+      - CACHE_TIMEOUT=${RELAY_CACHE_TIMEOUT:-30000}
+      - RELAY_CONFIG=${RELAY_CONFIG:-}
+    networks:
+      - gamehub-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8084/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - service-ip
+      - player-ip
+      - content-store
+
   # GameHub Admin Frontend Builder
   gamehub-admin-builder:
     build:
@@ -231,6 +260,7 @@ services:
       - service-ip
       - player-ip
       - content-store
+      - relay-service
       - gamehub-replicator
       - fusionauth
       - gamehub-admin-builder

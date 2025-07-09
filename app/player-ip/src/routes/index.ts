@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import authRoutes from './auth.js';
 import { jinagaClient } from '../gap/jinaga-config.js';
 import { User } from 'jinaga';
+import fs from 'fs';
+import path from 'path';
 
 let ready = false;
 
@@ -29,6 +31,58 @@ router.get('/ready', (req: Request, res: Response) => {
       status: 'not ready',
       message: 'Identity provider is not ready yet',
       timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// Configuration status endpoint
+router.get('/configured', (req: Request, res: Response) => {
+  try {
+    // Check JWT configuration
+    const jwtConfigured = !!(
+      process.env.JWT_SECRET &&
+      process.env.JWT_EXPIRES_IN &&
+      process.env.JWT_ISSUER &&
+      process.env.JWT_AUDIENCE &&
+      process.env.JWT_KEY_ID
+    );
+
+    // Check Service IP configuration
+    const serviceIpConfigured = !!(
+      process.env.SERVICE_IP_URL &&
+      process.env.SERVICE_IP_CLIENT_ID &&
+      process.env.SERVICE_IP_CLIENT_SECRET_FILE &&
+      fs.existsSync(process.env.SERVICE_IP_CLIENT_SECRET_FILE)
+    );
+
+    const configuredGroups = {
+      jwt: jwtConfigured,
+      'service-ip': serviceIpConfigured
+    };
+
+    const allConfigured = jwtConfigured && serviceIpConfigured;
+
+    res.status(200).json({
+      service: 'player-ip',
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      configured: allConfigured,
+      configuredGroups,
+      ready
+    });
+  } catch (error) {
+    console.error('Error checking configuration:', error);
+    res.status(500).json({
+      service: 'player-ip',
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      configured: false,
+      configuredGroups: {
+        jwt: false,
+        'service-ip': false
+      },
+      ready: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 });
