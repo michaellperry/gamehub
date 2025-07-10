@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub Status Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">GameHub Status Dashboard</h1>
+            <div class="header-controls">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot" id="connectionDot"></span>
+                    <span id="connectionText">Connecting...</span>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="lastUpdated">Never</span>
+                </div>
+                <button class="refresh-btn" id="refreshBtn" title="Refresh Status">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="m3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                    </svg>
+                </button>
+                <label class="auto-refresh-toggle">
+                    <input type="checkbox" id="autoRefreshToggle" checked>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Auto-refresh</span>
+                </label>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="loading-state" id="loadingState">
+                <div class="spinner"></div>
+                <p>Loading service status...</p>
+            </div>
+
+            <div class="error-state" id="errorState" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h2>Polling Error</h2>
+                <p id="errorMessage">Unable to fetch status from the relay service.</p>
+                <button class="retry-btn" id="retryBtn">Retry Polling</button>
+            </div>
+
+            <div class="services-grid" id="servicesGrid" style="display: none;">
+                <!-- Service cards will be dynamically generated here -->
+            </div>
+
+            <div class="summary-section" id="summarySection" style="display: none;">
+                <div class="summary-card">
+                    <h3>System Summary</h3>
+                    <div class="summary-stats">
+                        <div class="stat">
+                            <span class="stat-label">Total Services:</span>
+                            <span class="stat-value" id="totalServices">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Healthy:</span>
+                            <span class="stat-value healthy" id="healthyServices">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Configured:</span>
+                            <span class="stat-value configured" id="configuredServices">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Ready:</span>
+                            <span class="stat-value ready" id="readyServices">0</span>
+                        </div>
+                        <div class="stat overall">
+                            <span class="stat-label">Overall Status:</span>
+                            <span class="stat-value" id="overallStatus">Unknown</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 GameHub. HTTP polling-based service monitoring dashboard.</p>
+        </footer>
+    </div>
+
+    <!-- Tooltip for configuration details -->
+    <div class="tooltip" id="tooltip" style="display: none;">
+        <div class="tooltip-content" id="tooltipContent"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

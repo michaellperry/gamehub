@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub Setup Wizard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">GameHub Setup Wizard</h1>
+            <div class="header-controls">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot" id="connectionDot"></span>
+                    <span id="connectionText">Connecting...</span>
+                </div>
+                <div class="setup-progress">
+                    Step <span id="currentStep">1</span> of <span id="totalSteps">3</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-steps" id="progressSteps">
+                    <!-- Progress steps will be dynamically generated -->
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="loading-state" id="loadingState">
+                <div class="spinner"></div>
+                <p>Initializing setup wizard...</p>
+            </div>
+
+            <!-- Error State -->
+            <div class="error-state" id="errorState" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h2>Connection Error</h2>
+                <p id="errorMessage">Unable to connect to the relay service.</p>
+                <button class="retry-btn" id="retryBtn">Retry Connection</button>
+            </div>
+
+            <!-- Setup Wizard Content -->
+            <div class="wizard-container" id="wizardContainer" style="display: none;">
+                <!-- Step Overview Cards -->
+                <div class="steps-overview" id="stepsOverview">
+                    <!-- Step cards will be dynamically generated -->
+                </div>
+
+                <!-- Current Step Panel -->
+                <div class="step-panel" id="stepPanel">
+                    <div class="step-header">
+                        <h2 id="stepTitle">Step Title</h2>
+                        <div class="step-status" id="stepStatus">
+                            <span class="status-indicator" id="stepStatusIndicator">⏳</span>
+                            <span id="stepStatusText">In Progress</span>
+                        </div>
+                    </div>
+
+                    <div class="step-content" id="stepContent">
+                        <!-- Step-specific content will be dynamically loaded -->
+                    </div>
+
+                    <div class="step-actions">
+                        <button class="btn btn-secondary" id="prevBtn" style="display: none;">Previous</button>
+                        <div class="action-spacer"></div>
+                        <button class="btn btn-secondary" id="skipBtn" style="display: none;">Skip</button>
+                        <button class="btn btn-primary" id="nextBtn">Next</button>
+                        <button class="btn btn-success" id="completeBtn" style="display: none;">Complete Setup</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Completion State -->
+            <div class="completion-state" id="completionState" style="display: none;">
+                <div class="completion-icon">🎉</div>
+                <h2>Setup Complete!</h2>
+                <p>Your GameHub environment has been successfully configured.</p>
+                <div class="completion-actions">
+                    <a href="/status" class="btn btn-primary">View Status Dashboard</a>
+                    <a href="/admin" class="btn btn-secondary">Open Admin Portal</a>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 GameHub. Guided setup wizard for environment configuration.</p>
+        </footer>
+    </div>
+
+    <!-- Command Modal -->
+    <div class="modal" id="commandModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Execute Command</h3>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modalDescription">Run the following command in your terminal:</p>
+                <div class="command-box">
+                    <code id="modalCommand"></code>
+                    <button class="copy-btn" id="modalCopyBtn" title="Copy to clipboard">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="m5 15-4-4 4-4"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="command-status" id="commandStatus" style="display: none;">
+                    <span class="status-indicator" id="commandStatusIndicator">⏳</span>
+                    <span id="commandStatusText">Waiting for completion...</span>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modalCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="modalDoneBtn">Mark as Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input Modal -->
+    <div class="modal" id="inputModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="inputModalTitle">Input Required</h3>
+                <button class="modal-close" id="inputModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="inputModalDescription">Please provide the required information:</p>
+                <div class="input-group">
+                    <label id="inputModalLabel" for="inputModalField">Input:</label>
+                    <input type="text" id="inputModalField" class="input-field" placeholder="Enter value...">
+                    <div class="input-help" id="inputModalHelp" style="display: none;"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="inputModalCancelBtn">Cancel</button>
+                <button class="btn btn-primary" id="inputModalSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip" style="display: none;">
+        <div class="tooltip-content" id="tooltipContent"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

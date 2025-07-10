@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# GameHub Setup Script
+# GameHub FusionAuth Setup Script
 # This script builds and runs the GameHub FusionAuth setup application
 
 set -e  # Exit on any error
@@ -193,17 +193,29 @@ print_info "Setup arguments: $SETUP_ARGS"
 
 # Run the setup application
 if npm start -- $SETUP_ARGS; then
-    print_success "GameHub setup completed successfully!"
+    # Stop and recreate the Docker Compose stack to pick up new environment variables
+    print_info "Stopping and recreating Docker Compose stack..."
+    # Navigate to mesh directory and recreate Docker Compose stack
+    MESH_DIR="$PROJECT_ROOT/mesh"
+    if [[ -d "$MESH_DIR" && -f "$MESH_DIR/docker-compose.yml" ]]; then
+        print_info "Navigating to mesh directory: $MESH_DIR"
+        if (cd "$MESH_DIR" && docker compose down && docker compose up -d); then
+            print_success "Docker Compose stack stopped and started successfully"
+        else
+            print_warning "Failed to stop and start Docker Compose stack, but continuing setup process"
+            print_info "You may need to manually restart the stack with: cd $MESH_DIR && docker compose down && docker compose up -d"
+        fi
+    else
+        print_warning "Docker Compose file not found at $MESH_DIR/docker-compose.yml"
+        print_info "Skipping Docker Compose restart"
+    fi
+    print_success "GameHub FusionAuth setup completed successfully!"
     echo ""
-    print_info "Next steps:"
-    print_info "1. Create a tenant in the admin app: http://localhost/portal/tenants"
-    print_info "2. Copy the tenant public key to the configuration files"
-    print_info "3. Restart the Docker stack: docker compose down && docker compose up -d"
-    print_info "4. Authorize the Service Principal in the admin app"
+    print_info "Return to http://localhost to continue the setup process."
     echo ""
-    print_success "Setup process completed!"
+    print_success "FusionAuth setup process completed!"
 else
-    print_error "Setup failed!"
+    print_error "FusionAuth setup failed!"
     echo ""
     print_info "Troubleshooting tips:"
     print_info "1. Verify your FusionAuth API key has the necessary permissions"

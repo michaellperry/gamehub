@@ -3,7 +3,7 @@ import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
 import { startSubscription } from './gap/index.js';
 import { CORS_ORIGIN, SERVER_PORT } from './config/environment.js';
-import routes from './routes/index.js';
+import { router, setReady } from './routes/index.js';
 // Import database to ensure it's initialized
 import './config/database.js';
 
@@ -20,7 +20,7 @@ app.use(cors({
 }));
 
 // Configure routes
-app.use('/', routes);
+app.use('/', router);
 
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
@@ -41,6 +41,7 @@ async function run() {
   } else {
     try {
       stopSubscription = await startSubscription();
+      setReady();
     }
     catch (error) {
       console.error('Error starting subscription:', error);

@@ -137,6 +137,100 @@ async function initializeAuthentication() {
                 version: process.env.npm_package_version || '1.0.0'
             });
         });
+
+        // Configuration status endpoint - public access (no authentication required)
+        app.get('/configured', (req, res) => {
+            try {
+                // Check secrets configuration - verify AUTH_DIR contains required secrets
+                let secretsConfigured = false;
+                
+                try {
+                    if (fs.existsSync(AUTH_DIR)) {
+                        const authFiles = fs.readdirSync(AUTH_DIR);
+                        // Check for at least one authentication provider file or allow-anonymous file
+                        const hasProviders = authFiles.some(file =>
+                            file.endsWith('.provider') || file === 'allow-anonymous'
+                        );
+                        secretsConfigured = hasProviders;
+                    }
+                } catch (error) {
+                    console.error('Error reading auth directory:', error);
+                    secretsConfigured = false;
+                }
+
+                const configuredGroups = {
+                    secrets: secretsConfigured
+                };
+
+                const allConfigured = secretsConfigured;
+
+                res.status(200).json({
+                    service: 'content-store',
+                    status: 'healthy',
+                    timestamp: new Date().toISOString(),
+                    configured: allConfigured,
+                    configuredGroups,
+                    ready: allConfigured // Service is ready when configured
+                });
+            } catch (error) {
+                console.error('Error checking configuration:', error);
+                res.status(500).json({
+                    service: 'content-store',
+                    status: 'error',
+                    timestamp: new Date().toISOString(),
+                    configured: false,
+                    configuredGroups: {
+                        secrets: false
+                    },
+                    ready: false,
+                    error: error.message || 'Unknown error'
+                });
+            }
+        });
+
+        // Readiness check endpoint - public access (no authentication required)
+        app.get('/ready', (req, res) => {
+            try {
+                // Check if authentication is properly configured
+                let ready = false;
+                
+                try {
+                    if (fs.existsSync(AUTH_DIR)) {
+                        const authFiles = fs.readdirSync(AUTH_DIR);
+                        // Check for at least one authentication provider file or allow-anonymous file
+                        const hasProviders = authFiles.some(file =>
+                            file.endsWith('.provider') || file === 'allow-anonymous'
+                        );
+                        ready = hasProviders;
+                    }
+                } catch (error) {
+                    console.error('Error reading auth directory:', error);
+                    ready = false;
+                }
+
+                if (ready) {
+                    res.status(200).json({
+                        status: 'ready',
+                        message: 'Content store is ready to serve requests',
+                        timestamp: new Date().toISOString()
+                    });
+                } else {
+                    res.status(503).json({
+                        status: 'not ready',
+                        message: 'Content store is not ready yet - authentication not configured',
+                        timestamp: new Date().toISOString()
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking readiness:', error);
+                res.status(503).json({
+                    status: 'not ready',
+                    message: 'Error checking readiness',
+                    timestamp: new Date().toISOString(),
+                    error: error.message || 'Unknown error'
+                });
+            }
+        });
     } catch (error) {
         console.warn(`Authentication initialization failed: ${error.message}`);
     }

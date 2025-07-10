@@ -121,8 +121,11 @@ docker run -p 8082:8082 \
 ### Health Check
 - `GET /health` - Service health status
 
-### OAuth 2.0 Endpoints
+### Service Information
 - `GET /` - Service information
+- `GET /public-key` - Service public key for service principal creation
+
+### OAuth 2.0 Endpoints
 - `GET /authorize` - Authorization endpoint
 - `POST /token` - Token endpoint
 - `POST /revoke` - Token revocation
