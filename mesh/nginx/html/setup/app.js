@@ -8,7 +8,7 @@ class SetupWizard {
         this.pollingInterval = null;
         this.pollingDelay = 10000; // 10 seconds
         this.currentStep = 1;
-        this.totalSteps = 6;
+        this.totalSteps = 3;
         this.stepData = {};
         this.statusData = null;
         this.isConnected = false;
@@ -17,41 +17,20 @@ class SetupWizard {
         this.steps = [
             {
                 id: 1,
-                title: 'Prerequisites Verification',
-                description: 'Check Node.js, Docker, Git, and system requirements',
-                estimatedTime: '5 minutes',
-                validationKey: 'prerequisites'
-            },
-            {
-                id: 2,
-                title: 'Repository Setup',
-                description: 'Clone repository, install dependencies, and build shared model',
-                estimatedTime: '10 minutes',
-                validationKey: 'repository'
-            },
-            {
-                id: 3,
-                title: 'Environment Initialization',
-                description: 'Initialize mesh environment and start Docker services',
-                estimatedTime: '5 minutes',
-                validationKey: 'environment'
-            },
-            {
-                id: 4,
                 title: 'FusionAuth Configuration',
                 description: 'Configure OAuth applications and API keys',
                 estimatedTime: '15 minutes',
                 validationKey: 'fusionauth'
             },
             {
-                id: 5,
+                id: 2,
                 title: 'Tenant Creation',
                 description: 'Create tenant and configure public keys',
                 estimatedTime: '10 minutes',
                 validationKey: 'tenant'
             },
             {
-                id: 6,
+                id: 3,
                 title: 'Service Principal Authorization',
                 description: 'Authorize service principal for tenant access',
                 estimatedTime: '5 minutes',
@@ -115,22 +94,7 @@ class SetupWizard {
             this.startPolling();
         });
 
-        // Navigation buttons
-        this.prevBtn.addEventListener('click', () => {
-            this.goToStep(this.currentStep - 1);
-        });
-
-        this.nextBtn.addEventListener('click', () => {
-            this.goToStep(this.currentStep + 1);
-        });
-
-        this.skipBtn.addEventListener('click', () => {
-            this.skipCurrentStep();
-        });
-
-        this.completeBtn.addEventListener('click', () => {
-            this.completeSetup();
-        });
+        // Navigation buttons removed - wizard now auto-advances
 
         // Modal events
         this.bindModalEvents();
@@ -282,6 +246,16 @@ class SetupWizard {
     showWizard() {
         this.loadingState.style.display = 'none';
         this.errorState.style.display = 'none';
+        
+        // Check if all steps are completed
+        if (this.allStepsCompleted()) {
+            this.showCompletion();
+            return;
+        }
+        
+        // Find and set the first incomplete step
+        this.currentStep = this.getFirstIncompleteStep();
+        
         this.wizardContainer.style.display = 'flex';
         this.completionState.style.display = 'none';
         
@@ -346,11 +320,7 @@ class SetupWizard {
             if (isCompleted) card.classList.add('completed');
             if (isCurrent) card.classList.add('current');
             
-            card.addEventListener('click', () => {
-                if (step.id <= this.currentStep || isCompleted) {
-                    this.goToStep(step.id);
-                }
-            });
+            // Remove click event handler - no manual navigation
             
             card.innerHTML = `
                 <div class="step-card-header">
@@ -380,11 +350,11 @@ class SetupWizard {
         this.stepStatusIndicator.textContent = this.getStepStatusIcon(step.id);
         this.stepStatusText.textContent = this.getStepStatusText(step.id);
         
-        // Update navigation buttons
-        this.prevBtn.style.display = this.currentStep > 1 ? 'block' : 'none';
-        this.nextBtn.style.display = this.currentStep < this.totalSteps ? 'block' : 'none';
-        this.completeBtn.style.display = this.currentStep === this.totalSteps && this.allStepsCompleted() ? 'block' : 'none';
-        this.skipBtn.style.display = !isCompleted && this.canSkipStep(step.id) ? 'block' : 'none';
+        // Hide all navigation buttons
+        this.prevBtn.style.display = 'none';
+        this.nextBtn.style.display = 'none';
+        this.completeBtn.style.display = 'none';
+        this.skipBtn.style.display = 'none';
         
         // Render step content
         this.renderStepContent(step);
@@ -393,106 +363,17 @@ class SetupWizard {
     renderStepContent(step) {
         switch (step.id) {
             case 1:
-                this.renderPrerequisitesStep();
-                break;
-            case 2:
-                this.renderRepositoryStep();
-                break;
-            case 3:
-                this.renderEnvironmentStep();
-                break;
-            case 4:
                 this.renderFusionAuthStep();
                 break;
-            case 5:
+            case 2:
                 this.renderTenantStep();
                 break;
-            case 6:
+            case 3:
                 this.renderServicePrincipalStep();
                 break;
         }
     }
 
-    renderPrerequisitesStep() {
-        const prerequisites = [
-            { name: 'Node.js (>= 18.0.0)', command: 'node --version', check: 'node' },
-            { name: 'npm (>= 9.0.0)', command: 'npm --version', check: 'npm' },
-            { name: 'Docker', command: 'docker --version', check: 'docker' },
-            { name: 'Docker Compose', command: 'docker compose --version', check: 'dockerCompose' },
-            { name: 'Git', command: 'git --version', check: 'git' }
-        ];
-        
-        this.stepContent.innerHTML = `
-            <div class="step-instructions">
-                <h3>System Prerequisites</h3>
-                <p>Before setting up GameHub, ensure you have the following tools installed on your system:</p>
-                <div class="prerequisites-list">
-                    ${prerequisites.map(prereq => `
-                        <div class="prerequisite-check" data-check="${prereq.check}">
-                            <div class="prerequisite-name">${prereq.name}</div>
-                            <div class="prerequisite-status">
-                                <span class="status-indicator">⏳</span>
-                                <span class="status-text">Checking...</span>
-                                <button class="action-button secondary" onclick="setupWizard.showCommand('${prereq.command}', 'Check ${prereq.name}')">Check</button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                <div style="margin-top: 20px;">
-                    <button class="action-button" onclick="setupWizard.checkAllPrerequisites()">Check All Prerequisites</button>
-                </div>
-            </div>
-        `;
-        
-        // Auto-check prerequisites if not already done
-        if (!this.stepData.prerequisitesChecked) {
-            setTimeout(() => this.checkAllPrerequisites(), 1000);
-        }
-    }
-
-    renderRepositoryStep() {
-        this.stepContent.innerHTML = `
-            <div class="step-instructions">
-                <h3>Repository Setup</h3>
-                <p>Set up the GameHub repository and install dependencies:</p>
-                <ol>
-                    <li><strong>Clone the repository</strong> (if not already done)</li>
-                    <li><strong>Navigate to the app directory</strong></li>
-                    <li><strong>Install dependencies</strong> using npm workspaces</li>
-                    <li><strong>Build the shared model</strong> for Jinaga</li>
-                </ol>
-                <div style="margin-top: 20px;">
-                    <button class="action-button" onclick="setupWizard.showCommand('cd app && npm install', 'Install Dependencies')">Install Dependencies</button>
-                    <button class="action-button" onclick="setupWizard.showCommand('cd app && npm run build:model', 'Build Shared Model')">Build Model</button>
-                </div>
-                <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when the gamehub-model is built successfully.</p>
-                </div>
-            </div>
-        `;
-    }
-
-    renderEnvironmentStep() {
-        this.stepContent.innerHTML = `
-            <div class="step-instructions">
-                <h3>Environment Initialization</h3>
-                <p>Initialize the mesh environment and start Docker services:</p>
-                <ol>
-                    <li><strong>Run the initialization script</strong> to set up environment and secrets</li>
-                    <li><strong>Start Docker services</strong> using Docker Compose</li>
-                    <li><strong>Verify all services</strong> are running and healthy</li>
-                </ol>
-                <div style="margin-top: 20px;">
-                    <button class="action-button" onclick="setupWizard.showCommand('./scripts/init-mesh.sh', 'Initialize Mesh Environment')">Initialize Environment</button>
-                    <button class="action-button" onclick="setupWizard.showCommand('cd mesh && docker compose up -d', 'Start Docker Services')">Start Services</button>
-                </div>
-                <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when all services are healthy via the Relay Service.</p>
-                    <button class="action-button secondary" onclick="setupWizard.requestStatus()">Check Service Status</button>
-                </div>
-            </div>
-        `;
-    }
 
     renderFusionAuthStep() {
         this.stepContent.innerHTML = `
@@ -565,17 +446,11 @@ class SetupWizard {
         if (!this.statusData) return false;
         
         switch (stepId) {
-            case 1: // Prerequisites
-                return this.stepData.prerequisitesChecked && this.stepData.allPrerequisitesMet;
-            case 2: // Repository
-                return this.stepData.repositorySetup || false;
-            case 3: // Environment
-                return this.statusData.summary?.healthyServices >= 3;
-            case 4: // FusionAuth
+            case 1: // FusionAuth Configuration
                 return this.statusData.bundles?.['admin-portal']?.configuredGroups?.client === true;
-            case 5: // Tenant
+            case 2: // Tenant Creation
                 return this.statusData.bundles?.['admin-portal']?.configuredGroups?.tenant === true;
-            case 6: // Service Principal
+            case 3: // Service Principal Authorization
                 return this.statusData.services?.['player-ip']?.ready === true;
             default:
                 return false;
@@ -597,11 +472,16 @@ class SetupWizard {
 
     canSkipStep(stepId) {
         // Allow skipping most steps except critical ones
-        return stepId !== 3; // Don't allow skipping environment setup
+        return stepId !== 3; // Don't allow skipping service principal authorization
     }
 
     allStepsCompleted() {
         return this.steps.every(step => this.isStepCompleted(step.id));
+    }
+
+    getFirstIncompleteStep() {
+        const incompleteStep = this.steps.find(step => !this.isStepCompleted(step.id));
+        return incompleteStep ? incompleteStep.id : 1;
     }
 
     updateStepValidation() {
@@ -609,59 +489,23 @@ class SetupWizard {
         this.renderProgressSteps();
         this.renderStepsOverview();
         
-        // Auto-advance if current step is now complete
-        if (this.isStepCompleted(this.currentStep) && this.currentStep < this.totalSteps) {
-            // Optional: Auto-advance to next step
-            // this.goToStep(this.currentStep + 1);
-        }
-        
         // Check if all steps are complete
         if (this.allStepsCompleted()) {
-            this.completeBtn.style.display = 'block';
-            this.nextBtn.style.display = 'none';
+            this.showCompletion();
+            return;
         }
-    }
-
-    // Navigation methods
-    goToStep(stepNumber) {
-        if (stepNumber < 1 || stepNumber > this.totalSteps) return;
         
-        this.currentStep = stepNumber;
-        this.renderCurrentStep();
-        this.renderProgressSteps();
-        this.renderStepsOverview();
-        this.saveProgress();
-    }
-
-    skipCurrentStep() {
-        if (this.canSkipStep(this.currentStep)) {
-            this.stepData[`step${this.currentStep}Skipped`] = true;
-            this.goToStep(this.currentStep + 1);
+        // Auto-advance to first incomplete step if current step is now complete
+        const firstIncompleteStep = this.getFirstIncompleteStep();
+        if (this.currentStep !== firstIncompleteStep) {
+            this.currentStep = firstIncompleteStep;
+            this.renderCurrentStep();
         }
     }
 
-    completeSetup() {
-        this.saveProgress();
-        this.showCompletion();
-    }
+    // Navigation methods removed - wizard now auto-advances
 
     // Utility methods
-    checkAllPrerequisites() {
-        this.stepData.prerequisitesChecked = true;
-        this.stepData.allPrerequisitesMet = true; // Simplified for demo
-        
-        // Update UI to show all prerequisites as met
-        const checks = document.querySelectorAll('.prerequisite-check');
-        checks.forEach(check => {
-            check.classList.add('success');
-            const indicator = check.querySelector('.status-indicator');
-            const text = check.querySelector('.status-text');
-            indicator.textContent = '✅';
-            text.textContent = 'Available';
-        });
-        
-        this.updateStepValidation();
-    }
 
     promptForApiKey() {
         this.showInputModal(
