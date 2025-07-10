@@ -156,12 +156,12 @@ Phase 1 is now complete and ready for Phase 2 implementation:
 1. **Phase 2**: Relay Service Development
    - Create centralized observability aggregation service
    - Implement service discovery and health check polling
-   - Add WebSocket support for real-time updates
+   - Add HTTP polling support for periodic updates
 
 2. **Phase 3**: Status Page Development
    - Create React-based status dashboard
    - Integrate with Relay Service API
-   - Implement real-time status updates
+   - Implement periodic status updates
 
 3. **Phase 4**: Setup Page Development
    - Create guided setup walkthrough

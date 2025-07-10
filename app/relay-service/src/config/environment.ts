@@ -13,15 +13,9 @@ export interface BundleConfig {
   configFunction: string;
 }
 
-export interface PollingConfig {
-  interval: number;
-  timeout: number;
-}
-
 export interface RelayConfig {
   services: Record<string, ServiceConfig>;
   bundles: Record<string, BundleConfig> | undefined;
-  polling: PollingConfig;
 }
 
 export interface EnvironmentConfig {
@@ -66,10 +60,6 @@ const DEFAULT_RELAY_CONFIG: RelayConfig = {
       type: 'bundle',
       configFunction: 'getConfiguredGroups'
     }
-  },
-  polling: {
-    interval: 10000,
-    timeout: 30000
   }
 };
 
@@ -90,11 +80,7 @@ function parseRelayConfig(configString?: string): RelayConfig {
     // Apply defaults for missing optional fields
     const config: RelayConfig = {
       services: {},
-      bundles: parsed.bundles || DEFAULT_RELAY_CONFIG.bundles || undefined,
-      polling: {
-        interval: parsed.polling?.interval || DEFAULT_RELAY_CONFIG.polling.interval,
-        timeout: parsed.polling?.timeout || DEFAULT_RELAY_CONFIG.polling.timeout
-      }
+      bundles: parsed.bundles || DEFAULT_RELAY_CONFIG.bundles || undefined
     };
 
     // Process services with defaults

@@ -11,7 +11,7 @@ Successfully implemented Phase 2 of the status and setup pages system by creatin
 The Relay Service is built as a robust Node.js/TypeScript microservice with the following key components:
 
 - **Express.js Server**: RESTful API with comprehensive middleware
-- **WebSocket Support**: Real-time status updates for connected clients
+- **HTTP Polling**: Periodic status updates for connected clients
 - **Configuration-Driven**: JSON-based service discovery and monitoring
 - **Caching Layer**: 30-second cache to prevent backend service overload
 - **Error Handling**: Graceful degradation when services are unavailable
@@ -26,13 +26,13 @@ app/relay-service/
 ├── Dockerfile                      # Multi-stage Docker build
 ├── README.md                       # Comprehensive documentation
 └── src/
-    ├── server.ts                   # Main Express server with WebSocket
+    ├── server.ts                   # Main Express server with HTTP API
     ├── config/
     │   └── environment.ts          # Environment configuration management
     ├── services/
     │   └── observability.service.ts # Core observability logic
     └── routes/
-        └── relay.routes.ts         # API routes and WebSocket handlers
+        └── relay.routes.ts         # API routes and HTTP handlers
 ```
 
 ### Key Features Implemented
@@ -76,12 +76,11 @@ app/relay-service/
 }
 ```
 
-#### 4. Real-Time WebSocket Updates
-- WebSocket server at `/ws` endpoint
-- Automatic connection management and cleanup
-- Periodic status broadcasts every 10 seconds
-- Initial status sent on connection establishment
-- Ping/pong heartbeat for connection health
+#### 4. HTTP Polling Updates
+- HTTP polling endpoint for status updates
+- Configurable polling intervals
+- Cached responses to reduce server load
+- Status updates available via standard HTTP requests
 
 #### 5. Comprehensive API Endpoints
 
@@ -89,7 +88,7 @@ app/relay-service/
 - **GET /relay/health**: Service health check
 - **POST /relay/refresh**: Force cache refresh and broadcast update
 - **GET /relay/cache/stats**: Cache statistics for debugging
-- **WebSocket /relay/ws**: Real-time status updates
+- **GET /relay/status**: Periodic status updates via HTTP polling
 
 #### 6. Advanced Caching Strategy
 - 30-second cache timeout (configurable)
@@ -133,15 +132,13 @@ location /relay {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
     
-    # WebSocket support for real-time updates
+    # Standard HTTP proxy settings
     proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_cache_bypass $http_upgrade;
+    proxy_set_header Connection "";
     
-    # Timeout settings for WebSocket connections
-    proxy_read_timeout 86400;
-    proxy_send_timeout 86400;
+    # Timeout settings for HTTP requests
+    proxy_read_timeout 30;
+    proxy_send_timeout 30;
 }
 ```
 
@@ -179,7 +176,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 - Parallel service checking with Promise.all
 - Response caching to reduce backend load
 - Connection pooling for HTTP requests
-- Efficient WebSocket connection management
+- Efficient HTTP request handling
 - Memory usage monitoring and cleanup
 
 ### Testing and Validation
@@ -222,7 +219,7 @@ The Relay Service provides comprehensive monitoring of:
 
 The Relay Service is designed to integrate with:
 
-1. **Status Page (Phase 3)**: Will consume the `/relay` API for real-time dashboard
+1. **Status Page (Phase 3)**: Will consume the `/relay` API for periodic status updates
 2. **Setup Page (Phase 4)**: Will use status information for guided configuration
 3. **Admin Portal**: Bundle status integration for frontend configuration tracking
 4. **Monitoring Systems**: Metrics and alerting integration points
@@ -244,7 +241,7 @@ The Relay Service is designed to integrate with:
 
 3. **Access Points**:
    - API: `http://localhost/relay`
-   - WebSocket: `ws://localhost/relay/ws`
+   - Status Updates: `http://localhost/relay/status`
    - Health Check: `http://localhost/relay/health`
 
 ### Architecture Compliance
@@ -258,7 +255,7 @@ This implementation fully complies with the architecture specifications in `docs
 - ✅ **Unified Response**: Consistent JSON format across all endpoints
 - ✅ **Error Handling**: Graceful degradation for unreachable services
 - ✅ **Caching**: 30-second cache to prevent backend overload
-- ✅ **WebSocket Support**: Real-time updates for connected clients
+- ✅ **HTTP Polling**: Periodic status updates for connected clients
 - ✅ **Docker Integration**: Full containerization with health checks
 - ✅ **Security**: Comprehensive security headers and validation
 
@@ -269,7 +266,7 @@ Phase 2 is now complete and ready for Phase 3 implementation:
 1. **Phase 3**: Status Page Development
    - Create React-based status dashboard
    - Integrate with Relay Service API
-   - Implement real-time WebSocket updates
+   - Implement periodic HTTP polling updates
    - Add responsive design and accessibility
 
 2. **Phase 4**: Setup Page Development
@@ -278,4 +275,4 @@ Phase 2 is now complete and ready for Phase 3 implementation:
    - Add configuration forms and command generation
    - Implement progress tracking and persistence
 
-The Relay Service provides a solid foundation for the complete observability and setup system, enabling real-time monitoring and guided configuration of the entire GameHub infrastructure.
+The Relay Service provides a solid foundation for the complete observability and setup system, enabling periodic monitoring and guided configuration of the entire GameHub infrastructure.

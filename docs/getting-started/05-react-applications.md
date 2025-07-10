@@ -14,7 +14,7 @@ This guide provides comprehensive documentation for setting up and configuring R
       - [Admin Portal Structure](#admin-portal-structure)
   - [Jinaga Integration](#jinaga-integration)
     - [Pre-populated Sample Data Setup](#pre-populated-sample-data-setup)
-    - [Real-time Data Synchronization Patterns](#real-time-data-synchronization-patterns)
+    - [Data Synchronization Patterns](#data-synchronization-patterns)
   - [Next Steps](#next-steps)
 
 ## React + Vite Setup
@@ -34,7 +34,7 @@ Note: The player interface is now handled by the `player-ip` console application
 - **Vite 6.2**: Fast build tool and development server with HMR
 - **React Router 7.2**: Client-side routing with data loading
 - **TailwindCSS 3.4**: Utility-first CSS framework
-- **Jinaga 6.7**: Real-time data synchronization and fact-based modeling
+- **Jinaga 6.7**: Data synchronization and fact-based modeling
 - **react-oauth2-code-pkce 1.22**: OAuth2 PKCE authentication flow
 
 ## Project Structure and Architecture
@@ -104,7 +104,7 @@ The Jinaga client automatically handles:
 
 The `jinaga-config.ts` file initializes sample data for development. This data is only used while in development mode, which uses the in-memory Jinaga Client. Define sample facts to set up scenarios for testing and development.
 
-### Real-time Data Synchronization Patterns
+### Data Synchronization Patterns
 
 - **Reactive Updates**: Components automatically re-render when data changes
 - **Optimistic Updates**: Local changes applied immediately, synced in background

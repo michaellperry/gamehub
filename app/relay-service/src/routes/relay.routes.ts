@@ -1,12 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { WebSocket } from 'ws';
 import ObservabilityService from '../services/observability.service';
 
 const router = Router();
 const observabilityService = new ObservabilityService();
-
-// Store WebSocket connections for real-time updates
-const wsConnections = new Set<WebSocket>();
 
 /**
  * GET /relay
@@ -50,13 +46,6 @@ router.post('/refresh', async (_req: Request, res: Response) => {
     observabilityService.clearCache();
     const status = await observabilityService.getAggregatedStatus();
     
-    // Broadcast update to WebSocket clients
-    broadcastToWebSockets({
-      type: 'status_update',
-      data: status,
-      timestamp: new Date().toISOString()
-    });
-    
     res.json({
       message: 'Cache cleared and status refreshed',
       status
@@ -82,87 +71,5 @@ router.get('/cache/stats', (_req: Request, res: Response) => {
     timestamp: new Date().toISOString()
   });
 });
-
-/**
- * WebSocket connection handler
- */
-export function handleWebSocketConnection(ws: WebSocket) {
-  console.log('New WebSocket connection established');
-  wsConnections.add(ws);
-
-  // Send initial status
-  observabilityService.getAggregatedStatus()
-    .then(status => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'initial_status',
-          data: status,
-          timestamp: new Date().toISOString()
-        }));
-      }
-    })
-    .catch(error => {
-      console.error('Error sending initial status:', error);
-    });
-
-  // Handle connection close
-  ws.on('close', () => {
-    console.log('WebSocket connection closed');
-    wsConnections.delete(ws);
-  });
-
-  // Handle connection errors
-  ws.on('error', (error: Error) => {
-    console.error('WebSocket error:', error);
-    wsConnections.delete(ws);
-  });
-
-  // Handle ping/pong for connection health
-  ws.on('ping', () => {
-    ws.pong();
-  });
-}
-
-/**
- * Broadcast message to all connected WebSocket clients
- */
-function broadcastToWebSockets(message: any) {
-  const messageString = JSON.stringify(message);
-  
-  wsConnections.forEach(ws => {
-    if (ws.readyState === WebSocket.OPEN) {
-      try {
-        ws.send(messageString);
-      } catch (error) {
-        console.error('Error sending WebSocket message:', error);
-        wsConnections.delete(ws);
-      }
-    } else {
-      wsConnections.delete(ws);
-    }
-  });
-}
-
-/**
- * Start periodic status updates via WebSocket
- */
-export function startPeriodicUpdates(intervalMs: number = 10000) {
-  setInterval(async () => {
-    if (wsConnections.size === 0) {
-      return; // No clients connected, skip update
-    }
-
-    try {
-      const status = await observabilityService.getAggregatedStatus();
-      broadcastToWebSockets({
-        type: 'periodic_update',
-        data: status,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Error during periodic update:', error);
-    }
-  }, intervalMs);
-}
 
 export default router;

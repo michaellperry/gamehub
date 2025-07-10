@@ -8,7 +8,7 @@ This technical reference provides comprehensive documentation for developers and
 
 - [API Documentation](#api-documentation)
 - [Configuration Reference](#configuration-reference)
-- [WebSocket Specifications](#websocket-specifications)
+- [HTTP Polling Specifications](#http-polling-specifications)
 - [HTTP Polling Specifications](#http-polling-specifications)
 - [Error Codes and Response Formats](#error-codes-and-response-formats)
 - [Extension and Customization](#extension-and-customization)
@@ -131,7 +131,7 @@ Host: localhost
 
 #### POST /relay/refresh
 
-Forces a cache refresh and broadcasts updated status to WebSocket clients.
+Forces a cache refresh and provides updated status for polling clients.
 
 **Request**:
 ```http
@@ -404,22 +404,22 @@ interface ServiceResponse {
 }
 ```
 
-## WebSocket Specifications
+## HTTP Polling Specifications
 
 ### Connection Endpoint
 
-**URL**: `ws://localhost/relay/ws`
+**URL**: `http://localhost/relay`
 
 ### Connection Lifecycle
 
 1. **Connection Establishment**:
    ```javascript
-   const ws = new WebSocket('ws://localhost/relay/ws');
+   const response = await fetch('http://localhost/relay');
    ```
 
-2. **Initial Status Message**: Upon connection, the server sends the current status
-3. **Periodic Updates**: Server sends updates every 10 seconds or when status changes
-4. **Heartbeat**: Ping/pong messages maintain connection health
+2. **Initial Status Response**: Server responds with current status
+3. **Periodic Polling**: Client requests updates at configurable intervals
+4. **Error Handling**: Graceful handling of failed requests
 
 ### Message Formats
 
@@ -505,7 +505,7 @@ interface ServiceResponse {
 ### Client Implementation Example
 
 ```javascript
-class StatusWebSocket {
+class StatusPolling {
   constructor(url) {
     this.url = url;
     this.ws = null;
@@ -514,11 +514,16 @@ class StatusWebSocket {
     this.reconnectDelay = 1000;
   }
 
-  connect() {
-    this.ws = new WebSocket(this.url);
-    
-    this.ws.onopen = () => {
-      console.log('WebSocket connected');
+  startPolling() {
+    this.poll();
+    this.intervalId = setInterval(() => this.poll(), this.interval);
+  }
+
+  async poll() {
+    try {
+      const response = await fetch(this.url);
+      const data = await response.json();
+      console.log('HTTP polling response:', data);
       this.reconnectAttempts = 0;
     };
     
@@ -527,14 +532,18 @@ class StatusWebSocket {
       this.handleMessage(message);
     };
     
-    this.ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      this.reconnect();
+    } catch (error) {
+      console.error('HTTP polling error:', error);
+      this.handleError();
     };
     
-    this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
+  }
+
+  handleError() {
+    this.reconnectAttempts++;
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
+      setTimeout(() => this.poll(), this.reconnectDelay);
+    }
   }
 
   handleMessage(message) {
@@ -554,9 +563,9 @@ class StatusWebSocket {
     }
   }
 
-  sendPong() {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify({
+  stopPolling() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
         type: 'pong',
         timestamp: new Date().toISOString()
       }));
@@ -581,7 +590,7 @@ class StatusWebSocket {
 
 ### Polling Strategy
 
-When WebSocket connections are not available, the Status Page falls back to HTTP polling.
+The Status Page uses HTTP polling as the primary communication method.
 
 **Polling Configuration**:
 - **Interval**: 10 seconds (configurable)
@@ -696,7 +705,7 @@ class StatusPoller {
 | `INVALID_CONFIG` | Invalid service configuration | 500 | Check RELAY_CONFIG format |
 | `SERVICE_TIMEOUT` | Service request timeout | 502 | Check service availability |
 | `SERVICE_UNAVAILABLE` | Service not responding | 503 | Restart affected service |
-| `WEBSOCKET_ERROR` | WebSocket connection error | 500 | Check WebSocket configuration |
+| `POLLING_ERROR` | HTTP polling connection error | 500 | Check HTTP configuration |
 | `CACHE_ERROR` | Cache operation failed | 500 | Restart Relay Service |
 
 #### Service Integration Error Codes
@@ -897,9 +906,9 @@ Customize the Status Page appearance:
 }
 ```
 
-### WebSocket Message Extensions
+### HTTP Polling Extensions
 
-Add custom WebSocket message types:
+Add custom HTTP polling response types:
 
 ```typescript
 // Server-side extension
@@ -1033,7 +1042,7 @@ describe('Status Page Integration', () => {
     const serviceCards = await page.$$('.service-card');
     expect(serviceCards).toHaveLength(3);
     
-    // Verify WebSocket connection
+    // Verify HTTP polling connection
     const connectionStatus = await page.$('.connection-status');
     expect(await connectionStatus.textContent()).toContain('Connected');
   });

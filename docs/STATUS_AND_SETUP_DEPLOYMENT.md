@@ -240,13 +240,19 @@ curl -s http://localhost/relay/cache/stats | jq
 curl -s -X POST http://localhost/relay/refresh | jq
 ```
 
-**WebSocket Connection Test:**
+**HTTP Polling Test:**
 ```javascript
 // Test in browser console
-const ws = new WebSocket('ws://localhost/relay/ws');
-ws.onopen = () => console.log('WebSocket connected');
-ws.onmessage = (event) => console.log('Received:', JSON.parse(event.data));
-ws.onerror = (error) => console.error('WebSocket error:', error);
+async function testPolling() {
+  try {
+    const response = await fetch('http://localhost/relay');
+    const data = await response.json();
+    console.log('HTTP polling response:', data);
+  } catch (error) {
+    console.error('HTTP polling error:', error);
+  }
+}
+testPolling();
 ```
 
 **Expected Aggregated Response:**
@@ -280,7 +286,7 @@ ws.onerror = (error) => console.error('WebSocket error:', error);
 
 **Functional Testing:**
 1. **Load Test**: Navigate to [`http://localhost/status`](http://localhost/status)
-2. **WebSocket Connection**: Verify connection indicator shows green
+2. **HTTP Connection**: Verify connection indicator shows green
 3. **Service Cards**: Confirm all services display with status indicators
 4. **Manual Refresh**: Click refresh button and verify loading animation
 5. **Auto-refresh Toggle**: Test enable/disable functionality
@@ -348,7 +354,7 @@ window.addEventListener('load', () => {
 **Scenario 2: Service Failure Recovery**
 1. Stop one service: `docker-compose stop player-ip`
 2. Verify status page shows service as unhealthy
-3. Verify WebSocket updates reflect the change
+3. Verify HTTP polling updates reflect the change
 4. Restart service: `docker-compose start player-ip`
 5. Verify status page shows recovery
 
@@ -395,7 +401,7 @@ ab -n 1000 -c 10 http://localhost/status/
 **Target Performance Metrics:**
 - Status Page Load: < 500ms
 - Relay Service API: < 100ms
-- WebSocket Connection: < 50ms
+- HTTP Polling Response: < 50ms
 - Setup Page Load: < 1000ms
 
 **Performance Testing Commands:**
@@ -441,7 +447,7 @@ top -p $(pgrep -f relay-service)
 # Monitor network connections
 netstat -tuln | grep -E ':(80|8084)'
 
-# Monitor WebSocket connections
+# Monitor HTTP connections
 ss -tuln | grep :8084
 
 # Test network latency
@@ -464,16 +470,16 @@ netstat -tuln | grep -E ':(80|8081|8082|8083|8084)'
 docker-compose restart [service-name]
 ```
 
-**Issue 2: WebSocket Connection Failures**
+**Issue 2: HTTP Polling Connection Failures**
 ```bash
-# Check NGINX WebSocket configuration
+# Check NGINX HTTP configuration
 docker-compose exec nginx nginx -t
 
 # Check Relay Service logs
-docker-compose logs relay-service | grep -i websocket
+docker-compose logs relay-service | grep -i http
 
-# Test WebSocket endpoint directly
-curl -i -N -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Sec-WebSocket-Key: test" -H "Sec-WebSocket-Version: 13" http://localhost/relay/ws
+# Test HTTP endpoint directly
+curl -i http://localhost/relay
 ```
 
 **Issue 3: Status Page Not Loading**
@@ -559,11 +565,11 @@ for endpoint in "${endpoints[@]}"; do
   fi
 done
 
-# Check WebSocket
-if curl -s -I -H "Connection: Upgrade" -H "Upgrade: websocket" http://localhost/relay/ws | grep -q "101"; then
-  echo "✅ WebSocket: Available"
+# Check HTTP Polling
+if curl -s -I http://localhost/relay | grep -q "200"; then
+  echo "✅ HTTP Polling: Available"
 else
-  echo "❌ WebSocket: Not available"
+  echo "❌ HTTP Polling: Not available"
 fi
 
 echo "=== Health Check Complete ==="

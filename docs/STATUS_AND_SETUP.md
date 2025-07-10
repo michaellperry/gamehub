@@ -7,7 +7,7 @@ The GameHub Status and Setup Pages system has been **successfully implemented** 
 ## Quick Start
 
 ### Access Points
-- **Status Page**: [`http://localhost/status`](http://localhost/status) - Real-time service monitoring dashboard
+- **Status Page**: [`http://localhost/status`](http://localhost/status) - HTTP polling service monitoring dashboard
 - **Setup Page**: [`http://localhost/setup`](http://localhost/setup) - Guided configuration wizard
 - **Relay Service API**: [`http://localhost/relay`](http://localhost/relay) - Centralized observability API
 
@@ -38,18 +38,18 @@ Centralized observability aggregation service at [`app/relay-service/`](app/rela
 
 **Key Features:**
 - **Port**: 8084 (internal), accessible via [`/relay`](http://localhost/relay)
-- **Technology**: Node.js, TypeScript, Express.js with WebSocket support
+- **Technology**: Node.js, TypeScript, Express.js with HTTP polling support
 - **Configuration**: JSON-based service discovery via `RELAY_CONFIG`
 - **Caching**: 30-second cache with manual refresh capability
-- **Real-time**: WebSocket updates at [`ws://localhost/relay/ws`](ws://localhost/relay/ws)
+- **Polling**: HTTP polling updates at [`http://localhost/relay`](http://localhost/relay)
 
 ### ✅ Phase 3: Status Page (COMPLETED)
-Real-time monitoring dashboard at [`mesh/nginx/html/status/`](mesh/nginx/html/status/):
+HTTP polling monitoring dashboard at [`mesh/nginx/html/status/`](mesh/nginx/html/status/):
 
 **Implementation:**
 - **Technology**: Static HTML/CSS/JavaScript (no framework dependencies)
 - **Deployment**: Served directly by NGINX for optimal performance
-- **Features**: Real-time WebSocket updates, responsive design, accessibility compliance
+- **Features**: HTTP polling updates, responsive design, accessibility compliance
 - **Performance**: < 500ms load time, minimal resource usage
 
 ### ✅ Phase 4: Setup Page (COMPLETED)
@@ -149,12 +149,12 @@ The Relay Service provides centralized observability at [`http://localhost/relay
 
 ## Status Page
 
-Real-time monitoring dashboard at [`http://localhost/status`](http://localhost/status):
+HTTP polling monitoring dashboard at [`http://localhost/status`](http://localhost/status):
 
 **Features:**
 - **Service Cards**: Visual status indicators for health, configuration, and readiness
 - **Configuration Tooltips**: Detailed configuration group status on hover
-- **Real-time Updates**: WebSocket connection with automatic reconnection
+- **Periodic Updates**: HTTP polling connection with automatic retry
 - **Performance Metrics**: Response times and last-checked timestamps
 - **Responsive Design**: Mobile-first layout with accessibility compliance
 - **System Summary**: Overall health statistics and status assessment
@@ -166,7 +166,7 @@ Guided configuration wizard at [`http://localhost/setup`](http://localhost/setup
 **Workflow Features:**
 - **Progressive Steps**: 6-step guided workflow with validation
 - **Command Generation**: Dynamic terminal commands based on user input
-- **Form Validation**: Real-time validation with clear error messages
+- **Form Validation**: Periodic validation with clear error messages
 - **Progress Persistence**: Setup state saved in localStorage
 - **Copy-to-Clipboard**: Easy command copying for terminal execution
 
@@ -194,12 +194,12 @@ Guided configuration wizard at [`http://localhost/setup`](http://localhost/setup
 
 ### For Developers
 - **Reduced Setup Time**: Guided wizard reduces setup complexity from hours to 45-60 minutes
-- **Real-time Monitoring**: Live insight into system health and configuration status
+- **Periodic Monitoring**: Regular insight into system health and configuration status
 - **Centralized Observability**: Single dashboard for all service status information
 - **Clear Troubleshooting**: Detailed configuration status helps identify issues quickly
 
 ### For Operations
-- **Production Monitoring**: Real-time service health and performance metrics
+- **Production Monitoring**: Periodic service health and performance metrics
 - **Configuration Validation**: Automated validation of service configuration
 - **Error Recovery**: Graceful handling of service failures with automatic reconnection
 - **Performance Tracking**: Response time monitoring and availability statistics
@@ -216,7 +216,7 @@ Guided configuration wizard at [`http://localhost/setup`](http://localhost/setup
 - **Health Checks**: Built-in health monitoring for all components
 - **Performance Metrics**: Response time and availability tracking
 - **Error Logging**: Comprehensive logging with configurable levels
-- **Connection Health**: WebSocket connection status indicators
+- **Connection Health**: HTTP polling connection status indicators
 
 ### Configuration Management
 - **Environment Variables**: Centralized configuration via environment files
@@ -238,7 +238,7 @@ Guided configuration wizard at [`http://localhost/setup`](http://localhost/setup
 The GameHub Status and Setup Pages system is **production-ready** and provides:
 
 1. ✅ **Complete Implementation**: All four phases successfully implemented
-2. ✅ **Real-time Monitoring**: Live WebSocket updates and comprehensive status tracking
+2. ✅ **Periodic Monitoring**: HTTP polling updates and comprehensive status tracking
 3. ✅ **Guided Setup**: Step-by-step configuration wizard with validation
 4. ✅ **Developer Experience**: Intuitive interfaces with comprehensive documentation
 5. ✅ **Production Quality**: Robust error handling, security, and performance optimization

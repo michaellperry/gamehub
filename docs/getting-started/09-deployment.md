@@ -43,7 +43,7 @@ The GameHub current deployment architecture consists of:
 
 - **PostgreSQL Database**: Database for FusionAuth
 - **FusionAuth**: OAuth2 authentication provider for web applications
-- **Jinaga Replicator**: Real-time data synchronization with GameHub-specific policies
+- **Jinaga Replicator**: Data synchronization with GameHub-specific policies
 - **NGINX Reverse Proxy**: SSL termination and service routing
 - **Backend Services**: Identity providers (service-ip, player-ip) and content store
 - **React Applications**: Admin and Player frontends with environment injection
@@ -120,7 +120,7 @@ fusionauth:
 
 ### Jinaga Replicator
 
-The Jinaga replicator provides real-time data synchronization with GameHub-specific authorization policies.
+The Jinaga replicator provides data synchronization with GameHub-specific authorization policies.
 
 **Configuration:**
 ```yaml

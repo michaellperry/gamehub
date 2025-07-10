@@ -92,7 +92,7 @@ The player-ip service is a comprehensive OAuth 2.0 identity provider that handle
 - SQLite database for user and session management
 - JWT token issuance with refresh token rotation
 - Integration with Service IP for backend service authentication
-- Integration with Jinaga replicator for real-time data synchronization
+- Integration with Jinaga replicator for data synchronization
 - Cookie-based session management
 - QR code authentication support
 - Docker containerization with health checks

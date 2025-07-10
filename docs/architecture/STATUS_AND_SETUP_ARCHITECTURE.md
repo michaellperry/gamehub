@@ -2,10 +2,10 @@
 
 ## Executive Summary
 
-This document outlines the comprehensive architecture and implementation plan for the GameHub status and setup pages system. The system provides real-time observability and guided setup capabilities through three main components:
+This document outlines the comprehensive architecture and implementation plan for the GameHub status and setup pages system. The system provides HTTP-based observability and guided setup capabilities through three main components:
 
 1. **Relay Service** - Centralized observability aggregation at `http://localhost/relay`
-2. **Status Page** - Real-time dashboard at `http://localhost/status`
+2. **Status Page** - HTTP polling dashboard at `http://localhost/status`
 3. **Setup Page** - Guided configuration walkthrough at `http://localhost/setup`
 
 ## Table of Contents
@@ -70,7 +70,7 @@ The status and setup system adds three new components that integrate seamlessly 
 
 1. **Non-Intrusive Integration** - Minimal changes to existing services
 2. **Configuration-Driven** - JSON-based service discovery and configuration
-3. **Real-Time Updates** - Live status monitoring with WebSocket support
+3. **HTTP Polling Updates** - Periodic status monitoring with HTTP polling
 4. **Progressive Enhancement** - Graceful degradation when services are unavailable
 5. **Container-Native** - Docker-first deployment strategy
 6. **Security-First** - Proper authentication and authorization
@@ -109,7 +109,7 @@ The status and setup system adds three new components that integrate seamlessly 
 │  │ • Health Check Aggregation                                 ││
 │  │ • Configuration Status Polling                             ││
 │  │ • Readiness Assessment                                      ││
-│  │ • WebSocket Real-time Updates                              ││
+│  │ • HTTP Polling Updates                                     ││
 │  │ • Error Handling & Retry Logic                             ││
 │  └─────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
@@ -144,7 +144,7 @@ The status and setup system adds three new components that integrate seamlessly 
 - Configurable service discovery
 - Parallel health check execution
 - Intelligent retry logic with exponential backoff
-- WebSocket support for real-time updates
+- HTTP polling support for periodic updates
 - Comprehensive error handling
 - Metrics collection and logging
 
@@ -193,20 +193,20 @@ The status and setup system adds three new components that integrate seamlessly 
 
 ### 2. Status Page
 
-**Purpose**: Real-time dashboard displaying health, configuration, and readiness status of all GameHub services.
+**Purpose**: HTTP polling dashboard displaying health, configuration, and readiness status of all GameHub services.
 
 **Technical Specifications**:
 - **Framework**: React 18 with TypeScript
 - **Build Tool**: Vite
 - **Styling**: TailwindCSS
 - **State Management**: React Query for server state
-- **Real-time**: WebSocket connection to Relay Service
+- **Polling**: HTTP polling connection to Relay Service
 - **Deployment**: Static files served by NGINX at `/status`
 
 **Key Features**:
 - Service status cards with color-coded indicators
 - Configuration tooltips showing detailed status
-- Real-time updates via WebSocket
+- Periodic updates via HTTP polling
 - Responsive design for mobile and desktop
 - Error boundaries and graceful degradation
 - Accessibility compliance (WCAG 2.1)
@@ -341,26 +341,11 @@ Returns the current status of all configured services.
 }
 ```
 
-#### WebSocket /relay/ws
-Real-time updates for status changes.
+#### GET /relay/status
+Periodic status updates via HTTP polling.
 
-**Message Format**:
-```json
-{
-  "type": "status_update",
-  "service": "player-ip",
-  "data": {
-    "health": true,
-    "configured": true,
-    "ready": true,
-    "configuredGroups": {
-      "jwt": true,
-      "service-ip": true
-    }
-  },
-  "timestamp": "2025-01-09T15:30:15.123Z"
-}
-```
+**Response Format**:
+Same as GET /relay endpoint, providing current status of all services for polling clients.
 
 ### Service Integration Endpoints
 
@@ -400,7 +385,7 @@ Readiness check endpoint.
 ### Status Page Data Flow
 
 ```
-┌─────────────────┐    WebSocket     ┌─────────────────┐
+┌─────────────────┐    HTTP Polling  ┌─────────────────┐
 │   Status Page   │◄────────────────►│  Relay Service  │
 │   (React SPA)   │                  │                 │
 └─────────────────┘                  └─────────────────┘
@@ -486,7 +471,7 @@ Readiness check endpoint.
    - Implement Express.js server
    - Add service discovery configuration
    - Implement parallel health checking
-   - Add WebSocket support for real-time updates
+   - Add HTTP polling support for periodic updates
 
 2. **Docker Integration**
    - Create Dockerfile
@@ -497,17 +482,17 @@ Readiness check endpoint.
 3. **NGINX Configuration**
    - Add `/relay` route to `nginx.conf`
    - Configure proxy settings
-   - Add WebSocket support
+   - Add HTTP polling support
 
 ### Phase 3: Status Page Development
 
-**Objective**: Create the real-time status dashboard.
+**Objective**: Create the HTTP polling status dashboard.
 
 **Tasks**:
 1. **React Application** (`app/status-page/`)
    - Initialize Vite React TypeScript project
    - Implement service status cards
-   - Add real-time WebSocket integration
+   - Add HTTP polling integration
    - Create responsive UI with TailwindCSS
 
 2. **Build Integration**
@@ -559,13 +544,13 @@ Readiness check endpoint.
 
 ### Sprint 2 (Week 3-4): Core Services
 - [ ] Complete Relay Service implementation
-- [ ] WebSocket real-time updates
+- [ ] HTTP polling updates
 - [ ] NGINX routing configuration
 - [ ] Basic Status Page structure
 
 ### Sprint 3 (Week 5-6): Status Dashboard
 - [ ] Complete Status Page implementation
-- [ ] Real-time UI updates
+- [ ] Periodic UI updates
 - [ ] Responsive design
 - [ ] Error handling and graceful degradation
 
@@ -587,7 +572,7 @@ Readiness check endpoint.
 - **Runtime**: Node.js 20+
 - **Language**: TypeScript 5+
 - **Framework**: Express.js 4+
-- **WebSocket**: ws library
+- **HTTP Client**: axios for polling
 - **HTTP Client**: axios
 - **Validation**: Zod
 - **Logging**: winston
@@ -600,7 +585,7 @@ Readiness check endpoint.
 - **Styling**: TailwindCSS 3+
 - **State Management**: React Query (TanStack Query)
 - **Forms**: React Hook Form + Zod
-- **WebSocket**: native WebSocket API
+- **HTTP Polling**: axios for periodic requests
 - **Testing**: Vitest + React Testing Library
 
 ### Infrastructure
@@ -628,10 +613,10 @@ gamehub/
 │   │   │   ├── services/
 │   │   │   │   ├── health-checker.ts
 │   │   │   │   ├── config-manager.ts
-│   │   │   │   └── websocket-manager.ts
+│   │   │   │   └── polling-manager.ts
 │   │   │   ├── routes/
 │   │   │   │   ├── status.ts
-│   │   │   │   └── websocket.ts
+│   │   │   │   └── polling.ts
 │   │   │   ├── types/
 │   │   │   │   └── service-config.ts
 │   │   │   └── utils/
@@ -651,7 +636,7 @@ gamehub/
 │   │   │   │   ├── ConfigTooltip.tsx
 │   │   │   │   └── Dashboard.tsx
 │   │   │   ├── hooks/
-│   │   │   │   ├── useWebSocket.ts
+│   │   │   │   ├── usePolling.ts
 │   │   │   │   └── useServiceStatus.ts
 │   │   │   ├── services/
 │   │   │   │   └── api.ts
@@ -752,7 +737,7 @@ gamehub/
 ### Network Security
 - Internal service communication via Docker networks
 - NGINX reverse proxy handles external access
-- WebSocket connections use same-origin policy
+- HTTP polling requests use same-origin policy
 - Rate limiting on status endpoints
 
 ### Data Privacy
@@ -766,7 +751,7 @@ gamehub/
 ### Scalability
 - Relay Service designed for horizontal scaling
 - Efficient polling with configurable intervals
-- WebSocket connection pooling
+- HTTP request pooling
 - Caching of status responses
 
 ### Monitoring
@@ -777,7 +762,7 @@ gamehub/
 
 ### Optimization
 - Parallel service health checks
-- Debounced WebSocket updates
+- Optimized HTTP polling intervals
 - Lazy loading of setup page components
 - Efficient React re-rendering
 
@@ -788,7 +773,7 @@ This architecture provides a comprehensive, scalable, and maintainable solution 
 The phased implementation approach ensures minimal disruption to existing services while delivering value incrementally. The technology choices align with GameHub's current stack and development practices, ensuring consistency and maintainability.
 
 Key benefits of this architecture:
-- **Real-time visibility** into system health and configuration
+- **Periodic visibility** into system health and configuration
 - **Guided setup experience** reducing onboarding friction
 - **Minimal service changes** preserving existing functionality
 - **Scalable design** supporting future growth

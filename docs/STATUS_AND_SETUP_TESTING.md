@@ -28,7 +28,7 @@ The testing strategy follows the testing pyramid approach:
                     └─────────────────┘
                   ┌───────────────────────┐
                   │  Integration Tests    │  ← Some, API/Service
-                  │  (API, WebSocket)     │
+                  │  (API, HTTP Polling)  │
                   └───────────────────────┘
               ┌─────────────────────────────────┐
               │        Unit Tests               │  ← Many, Fast
@@ -39,8 +39,8 @@ The testing strategy follows the testing pyramid approach:
 ### Testing Scope
 
 **Components Under Test**:
-1. **Relay Service** - API endpoints, WebSocket, service discovery
-2. **Status Page** - UI components, real-time updates, responsiveness
+1. **Relay Service** - API endpoints, HTTP polling, service discovery
+2. **Status Page** - UI components, periodic updates, responsiveness
 3. **Setup Page** - Workflow, form validation, command generation
 4. **Service Integration** - Observability endpoints, configuration validation
 5. **System Integration** - End-to-end workflows, error handling
@@ -76,7 +76,7 @@ import { jest } from '@jest/globals';
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
-// Mock WebSocket
+// Mock HTTP polling
 jest.mock('ws');
 
 // Test configuration
@@ -211,20 +211,17 @@ describe('ObservabilityService', () => {
 });
 ```
 
-#### WebSocket Handler Tests
+#### HTTP Polling Handler Tests
 
 ```typescript
 // test/routes/relay.routes.test.ts
-import { WebSocketServer } from 'ws';
 import { createServer } from 'http';
 
-describe('WebSocket Handler', () => {
+describe('HTTP Polling Handler', () => {
   let server: any;
-  let wss: WebSocketServer;
 
   beforeEach(() => {
     server = createServer();
-    wss = new WebSocketServer({ server });
   });
 
   afterEach(() => {
@@ -241,7 +238,7 @@ describe('WebSocket Handler', () => {
     };
 
     // Act
-    const ws = new WebSocket('ws://localhost:8084/ws');
+    const response = await fetch('http://localhost:8084/relay');
     
     ws.on('message', (data) => {
       const message = JSON.parse(data.toString());
@@ -254,7 +251,7 @@ describe('WebSocket Handler', () => {
   });
 
   it('should handle ping/pong heartbeat', (done) => {
-    const ws = new WebSocket('ws://localhost:8084/ws');
+    const response = await fetch('http://localhost:8084/relay');
     
     ws.on('message', (data) => {
       const message = JSON.parse(data.toString());
@@ -279,18 +276,13 @@ describe('WebSocket Handler', () => {
 ```javascript
 // test/status-page/components.test.js
 describe('Status Page Components', () => {
-  let mockWebSocket;
+  let mockFetch;
   let statusApp;
 
   beforeEach(() => {
-    // Mock WebSocket
-    mockWebSocket = {
-      send: jest.fn(),
-      close: jest.fn(),
-      readyState: WebSocket.OPEN
-    };
-    
-    global.WebSocket = jest.fn(() => mockWebSocket);
+    // Mock fetch
+    mockFetch = jest.fn();
+    global.fetch = mockFetch;
     
     // Initialize status app
     statusApp = new StatusApp();
@@ -347,21 +339,21 @@ describe('Status Page Components', () => {
     });
   });
 
-  describe('WebSocket Connection', () => {
-    it('should establish WebSocket connection on initialization', () => {
+  describe('HTTP Polling Connection', () => {
+    it('should establish HTTP polling on initialization', () => {
       // Act
-      statusApp.initializeWebSocket();
+      statusApp.initializePolling();
 
       // Assert
-      expect(global.WebSocket).toHaveBeenCalledWith('ws://localhost/relay/ws');
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost/relay');
     });
 
     it('should handle connection status updates', () => {
       // Arrange
-      statusApp.initializeWebSocket();
+      statusApp.initializePolling();
 
       // Act
-      mockWebSocket.onopen();
+      mockFetch.mockResolvedValue({ json: () => Promise.resolve({}) });
 
       // Assert
       const connectionStatus = document.querySelector('.connection-status');
@@ -371,14 +363,14 @@ describe('Status Page Components', () => {
 
     it('should attempt reconnection on disconnect', (done) => {
       // Arrange
-      statusApp.initializeWebSocket();
-      
+      statusApp.initializePolling();
+
       // Act
-      mockWebSocket.onclose();
+      mockFetch.mockRejectedValue(new Error('Connection failed'));
 
       // Assert
       setTimeout(() => {
-        expect(global.WebSocket).toHaveBeenCalledTimes(2);
+        expect(global.fetch).toHaveBeenCalledTimes(2);
         done();
       }, 1100); // Wait for reconnection delay
     });
@@ -542,19 +534,21 @@ describe('Relay API Integration', () => {
     });
   });
 
-  describe('WebSocket /relay/ws', () => {
-    it('should establish WebSocket connection', (done) => {
-      const ws = new WebSocket('ws://localhost:8084/relay/ws');
-      
-      ws.on('open', () => {
-        expect(ws.readyState).toBe(WebSocket.OPEN);
-        ws.close();
+  describe('HTTP Polling /relay', () => {
+    it('should respond to HTTP polling requests', async () => {
+      const response = await fetch('http://localhost:8084/relay');
+
+      expect(response.status).toBe(200);
+      const data = await response.json();
+      expect(data).toHaveProperty('services');
         done();
       });
     });
 
-    it('should receive status updates', (done) => {
-      const ws = new WebSocket('ws://localhost:8084/relay/ws');
+    it('should receive status updates via polling', async () => {
+      const response = await fetch('http://localhost:8084/relay');
+      const data = await response.json();
+      expect(data).toHaveProperty('timestamp');
       
       ws.on('message', (data) => {
         const message = JSON.parse(data.toString());
@@ -939,22 +933,22 @@ echo "Generating performance report..."
 python3 generate-performance-report.py
 ```
 
-#### WebSocket Load Testing
+#### HTTP Polling Load Testing
 
 ```javascript
-// test/performance/websocket-load.test.js
-const WebSocket = require('ws');
+// test/performance/polling-load.test.js
+const fetch = require('node-fetch');
 
-describe('WebSocket Performance', () => {
-  it('should handle multiple concurrent connections', async () => {
+describe('HTTP Polling Performance', () => {
+  it('should handle multiple concurrent requests', async () => {
     const connectionCount = 50;
     const connections = [];
     const messageCount = [];
 
     // Create multiple connections
-    for (let i = 0; i < connectionCount; i++) {
-      const ws = new WebSocket('ws://localhost/relay/ws');
-      connections.push(ws);
+    for (let i = 0; i < requestCount; i++) {
+      const promise = fetch('http://localhost/relay');
+      requests.push(promise);
       messageCount[i] = 0;
 
       ws.on('message', () => {
@@ -979,9 +973,15 @@ describe('WebSocket Performance', () => {
     connections.forEach(ws => ws.close());
   });
 
-  it('should maintain performance under message load', async () => {
-    const ws = new WebSocket('ws://localhost/relay/ws');
-    const messageTimestamps = [];
+  it('should maintain performance under request load', async () => {
+    const requestTimestamps = [];
+    
+    for (let i = 0; i < 100; i++) {
+      const start = Date.now();
+      await fetch('http://localhost/relay');
+      const end = Date.now();
+      requestTimestamps.push(end - start);
+    }
 
     ws.on('message', (data) => {
       const message = JSON.parse(data.toString());
@@ -1131,10 +1131,10 @@ describe('Security Testing', () => {
     });
   });
 
-  describe('WebSocket Security', () => {
-    it('should validate WebSocket origin', async () => {
-      const ws = new WebSocket('ws://localhost/relay/ws', {
-        origin: 'http://malicious-site.com'
+  describe('HTTP Security', () => {
+    it('should validate HTTP origin', async () => {
+      const response = await fetch('http://localhost/relay', {
+        headers: { 'Origin': 'http://malicious-site.com' }
       });
 
       await new Promise((resolve, reject) => {

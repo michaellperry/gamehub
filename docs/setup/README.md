@@ -36,7 +36,7 @@ The setup process performs the following operations:
 The setup application integrates with the following GameHub components:
 
 - **FusionAuth**: OAuth 2.0 identity provider
-- **Jinaga Replicator**: Real-time data synchronization with authentication
+- **Jinaga Replicator**: Data synchronization with authentication
 - **GameHub Admin**: Administrative web interface
 - **Player IP**: Player authentication service
 - **Service IP**: Service-to-service authentication

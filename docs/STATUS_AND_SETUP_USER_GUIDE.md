@@ -41,7 +41,7 @@ Before using the system, ensure:
 
 ### Overview
 
-The Status Page provides real-time monitoring of all GameHub services with visual indicators for health, configuration, and readiness status.
+The Status Page provides periodic monitoring of all GameHub services with visual indicators for health, configuration, and readiness status.
 
 ### Interface Layout
 
@@ -91,15 +91,15 @@ The Status Page provides real-time monitoring of all GameHub services with visua
 
 ### Using the Status Page
 
-#### Real-Time Monitoring
+#### Periodic Monitoring
 
 1. **Connection Status**: Check the connection indicator in the top bar
-   - **🟢 Connected**: Real-time updates are active
+   - **🟢 Connected**: Periodic updates are active
    - **🔴 Disconnected**: Updates may be delayed, automatic reconnection in progress
 
-2. **Automatic Updates**: The page updates automatically every 10 seconds via WebSocket
+2. **Automatic Updates**: The page updates automatically every 10 seconds via HTTP polling
    - No manual refresh needed for normal operation
-   - Updates are instant when service status changes
+   - Updates occur at regular intervals when service status changes
 
 3. **Manual Refresh**: Click the refresh button (🔄) to force an immediate update
    - Useful when troubleshooting or after making configuration changes
@@ -450,7 +450,7 @@ docker-compose restart gamehub-admin
 
 #### Form Validation
 
-- **Real-time Validation**: Immediate feedback on form inputs
+- **Periodic Validation**: Regular feedback on form inputs
 - **Error Messages**: Clear error descriptions and solutions
 - **Required Field Indicators**: Visual indication of required fields
 
@@ -633,9 +633,9 @@ curl -s http://localhost:8081/configured | jq '.configuredGroups.secrets'
 - **Check**: Relay Service is running and configured
 - **Solution**: `docker-compose restart relay-service`
 
-**Problem**: WebSocket connection failed
+**Problem**: HTTP polling connection failed
 - **Check**: Browser console for connection errors
-- **Solution**: Verify NGINX WebSocket configuration
+- **Solution**: Verify NGINX HTTP configuration
 
 ### Setup Page Issues
 

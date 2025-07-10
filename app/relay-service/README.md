@@ -1,12 +1,12 @@
 # GameHub Relay Service
 
-The Relay Service is a centralized observability aggregation service that monitors the health, configuration, and readiness status of all GameHub services. It provides a unified API for status information and supports real-time updates via WebSocket connections.
+The Relay Service is a centralized observability aggregation service that monitors the health, configuration, and readiness status of all GameHub services. It provides a unified HTTP API for status information.
 
 ## Overview
 
 - **Port**: 8084 (internal), accessible via `/relay` through NGINX
 - **Purpose**: Aggregate observability data from all GameHub services
-- **Technology**: Node.js with TypeScript, Express.js, WebSocket support
+- **Technology**: Node.js with TypeScript, Express.js
 
 ## Features
 
@@ -15,7 +15,6 @@ The Relay Service is a centralized observability aggregation service that monito
 - **Unified response format** combining all service statuses
 - **Error handling** for unreachable services
 - **Caching** to prevent overwhelming backend services (30-second default)
-- **WebSocket support** for real-time status updates
 - **Admin Portal integration** for frontend bundle status
 
 ## API Endpoints
@@ -66,22 +65,11 @@ Returns the current status of all configured services.
 Health check endpoint for the relay service itself.
 
 ### POST /relay/refresh
-Force refresh of cached status (clears cache and broadcasts update to WebSocket clients).
+Force refresh of cached status (clears cache).
 
 ### GET /relay/cache/stats
 Get cache statistics for debugging purposes.
 
-### WebSocket /relay/ws
-Real-time updates for status changes.
-
-**Message Format:**
-```json
-{
-  "type": "status_update",
-  "data": { /* full status object */ },
-  "timestamp": "2025-01-09T15:30:15.123Z"
-}
-```
 
 ## Configuration
 
@@ -132,10 +120,6 @@ The service is configured via environment variables:
       "type": "bundle",
       "configFunction": "getConfiguredGroups"
     }
-  },
-  "polling": {
-    "interval": 10000,
-    "timeout": 30000
   }
 }
 ```
@@ -181,8 +165,8 @@ docker-compose up relay-service
 The Relay Service integrates with:
 
 1. **All GameHub Services**: Monitors their `/health`, `/configured`, and `/ready` endpoints
-2. **NGINX**: Accessible via `/relay` route with WebSocket support
-3. **Status Page**: Provides data for the real-time dashboard
+2. **NGINX**: Accessible via `/relay` route
+3. **Status Page**: Provides data for the dashboard
 4. **Setup Page**: Provides status information during setup process
 
 ## Error Handling
@@ -190,7 +174,6 @@ The Relay Service integrates with:
 - **Service Timeouts**: 5-second timeout per service with exponential backoff retry
 - **Network Errors**: Graceful handling of unreachable services
 - **Cache Failures**: Automatic fallback to direct service calls
-- **WebSocket Errors**: Automatic cleanup of failed connections
 
 ## Monitoring
 
@@ -198,7 +181,6 @@ The service provides comprehensive logging and metrics:
 
 - Request/response logging with timing
 - Cache hit/miss statistics
-- WebSocket connection tracking
 - Service health check results
 - Error tracking and reporting
 
@@ -214,4 +196,4 @@ The service provides comprehensive logging and metrics:
 - **Parallel Processing**: All service checks run in parallel
 - **Response Caching**: 30-second cache to reduce backend load
 - **Connection Pooling**: Efficient HTTP client configuration
-- **Memory Management**: Automatic cleanup of stale connections
+- **Memory Management**: Efficient resource utilization

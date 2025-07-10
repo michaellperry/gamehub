@@ -3,18 +3,11 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { createServer } from 'http';
-import { WebSocketServer } from 'ws';
 import config from './config/environment';
-import relayRoutes, { handleWebSocketConnection, startPeriodicUpdates } from './routes/relay.routes';
+import relayRoutes from './routes/relay.routes';
 
 const app = express();
 const server = createServer(app);
-
-// WebSocket server setup
-const wss = new WebSocketServer({ 
-  server,
-  path: '/ws'
-});
 
 // Middleware
 app.use(helmet({
@@ -24,7 +17,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
+      connectSrc: ["'self'"],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -63,9 +56,6 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/', relayRoutes);
-
-// WebSocket connection handling
-wss.on('connection', handleWebSocketConnection);
 
 // Error handling middleware
 app.use((error: Error, _req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -130,7 +120,6 @@ server.listen(config.port, () => {
   console.log(`🌐 Environment: ${config.nodeEnv}`);
   console.log(`📊 Log level: ${config.logLevel}`);
   console.log(`🔄 Cache timeout: ${config.cacheTimeout}ms`);
-  console.log(`⚡ WebSocket server running on /ws`);
   
   // Log configured services
   const serviceCount = Object.keys(config.relayConfig.services).length;
@@ -139,9 +128,6 @@ server.listen(config.port, () => {
     console.log(`  - ${service.name} (${id})`);
   });
   
-  // Start periodic WebSocket updates
-  startPeriodicUpdates(config.relayConfig.polling.interval);
-  console.log(`🔄 Periodic updates every ${config.relayConfig.polling.interval}ms`);
 });
 
 export default app;

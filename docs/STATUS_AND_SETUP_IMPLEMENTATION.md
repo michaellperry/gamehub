@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The GameHub Status and Setup Pages system has been successfully implemented as a comprehensive observability and configuration management solution. This system provides real-time monitoring capabilities and guided setup workflows for the entire GameHub infrastructure through four integrated phases.
+The GameHub Status and Setup Pages system has been successfully implemented as a comprehensive observability and configuration management solution. This system provides HTTP polling monitoring capabilities and guided setup workflows for the entire GameHub infrastructure through four integrated phases.
 
 ## System Overview
 
@@ -35,10 +35,10 @@ The implemented system consists of four main components that seamlessly integrat
 
 ### Access Points
 
-- **Status Page**: [`http://localhost/status`](http://localhost/status) - Real-time service monitoring dashboard
+- **Status Page**: [`http://localhost/status`](http://localhost/status) - HTTP polling service monitoring dashboard
 - **Setup Page**: [`http://localhost/setup`](http://localhost/setup) - Guided configuration wizard
 - **Relay Service API**: [`http://localhost/relay`](http://localhost/relay) - Centralized observability API
-- **WebSocket Updates**: [`ws://localhost/relay/ws`](ws://localhost/relay/ws) - Real-time status updates
+- **HTTP Polling**: [`http://localhost/relay`](http://localhost/relay) - Periodic status updates
 
 ## Implementation Phases
 
@@ -79,7 +79,7 @@ The implemented system consists of four main components that seamlessly integrat
 - **Technology Stack**: Node.js, TypeScript, Express.js
 - **Port**: 8084 (internal), accessible via [`/relay`](http://localhost/relay)
 - **Configuration**: JSON-based service discovery via `RELAY_CONFIG`
-- **Features**: Parallel health checks, WebSocket support, caching, error handling
+- **Features**: Parallel health checks, HTTP polling support, caching, error handling
 
 **Key Files**:
 - [`app/relay-service/src/server.ts`](app/relay-service/src/server.ts) - Main Express server
@@ -91,16 +91,16 @@ The implemented system consists of four main components that seamlessly integrat
 - [`GET /relay`](http://localhost/relay) - Aggregated status
 - [`GET /relay/health`](http://localhost/relay/health) - Service health
 - [`POST /relay/refresh`](http://localhost/relay/refresh) - Force refresh
-- [`WebSocket /relay/ws`](ws://localhost/relay/ws) - Real-time updates
+- [`GET /relay/status`](http://localhost/relay/status) - Periodic updates
 
 ### ✅ Phase 3: Status Page (COMPLETED)
 
-**Objective**: Create real-time dashboard for service monitoring.
+**Objective**: Create HTTP polling dashboard for service monitoring.
 
 **Implementation**: [`mesh/nginx/html/status/`](mesh/nginx/html/status/)
 - **Technology**: Static HTML/CSS/JavaScript (no framework dependencies)
 - **Deployment**: Served directly by NGINX for optimal performance
-- **Features**: Real-time WebSocket updates, responsive design, accessibility compliance
+- **Features**: HTTP polling updates, responsive design, accessibility compliance
 
 **Key Files**:
 - [`mesh/nginx/html/status/index.html`](mesh/nginx/html/status/index.html) - Dashboard structure
@@ -110,7 +110,7 @@ The implemented system consists of four main components that seamlessly integrat
 **Features**:
 - Service status cards with color-coded indicators
 - Configuration tooltips with detailed status
-- Real-time WebSocket updates with fallback
+- HTTP polling updates with error handling
 - Responsive mobile-first design
 - Dark mode support
 - WCAG 2.1 accessibility compliance
@@ -186,7 +186,7 @@ location /relay {
     proxy_set_header Connection "upgrade";
 }
 
-# Status Page (real-time dashboard)
+# Status Page (HTTP polling dashboard)
 location /status/ {
     alias /usr/share/nginx/html/status/;
     try_files $uri $uri/ /status/index.html;
@@ -232,7 +232,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 ## Benefits and Features Delivered
 
 ### Real-Time Monitoring
-- **Live Status Updates**: WebSocket-based real-time monitoring of all services
+- **Periodic Status Updates**: HTTP polling-based monitoring of all services
 - **Health Indicators**: Visual health status with color-coded indicators
 - **Configuration Tracking**: Detailed configuration group status with tooltips
 - **Performance Metrics**: Response time tracking and service performance data
@@ -240,7 +240,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 ### Guided Setup Experience
 - **Step-by-Step Workflow**: Progressive setup with clear instructions
 - **Command Generation**: Dynamic command generation based on user input
-- **Validation Feedback**: Real-time validation and progress tracking
+- **Validation Feedback**: Periodic validation and progress tracking
 - **Copy-to-Clipboard**: Easy command copying for terminal execution
 
 ### Developer Experience
@@ -252,16 +252,16 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 ### Operational Benefits
 - **Reduced Setup Time**: Guided wizard reduces setup complexity
 - **Improved Debugging**: Centralized status information for troubleshooting
-- **Better Visibility**: Real-time insight into system health and configuration
+- **Better Visibility**: Periodic insight into system health and configuration
 - **Simplified Maintenance**: Easy monitoring and configuration management
 
 ## Performance Characteristics
 
 ### Status Page Performance
 - **Load Time**: < 500ms initial load (static files)
-- **Update Frequency**: Real-time WebSocket updates (10-second polling fallback)
+- **Update Frequency**: HTTP polling updates (10-second intervals)
 - **Resource Usage**: Minimal CPU and memory footprint
-- **Network Efficiency**: WebSocket persistence reduces HTTP overhead
+- **Network Efficiency**: Optimized HTTP polling reduces server overhead
 
 ### Relay Service Performance
 - **Response Time**: < 100ms for aggregated status
@@ -271,14 +271,14 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 
 ### Setup Page Performance
 - **Interactive Response**: Immediate feedback on user actions
-- **Validation Speed**: Real-time configuration validation
+- **Validation Speed**: Periodic configuration validation
 - **Command Generation**: Instant command generation and copying
 - **Progress Persistence**: Setup state saved in localStorage
 
 ## Security Considerations
 
 ### Network Security
-- **Same-Origin Policy**: WebSocket connections restricted to same origin
+- **Same-Origin Policy**: HTTP requests restricted to same origin
 - **CORS Configuration**: Configurable CORS origins for API access
 - **No Authentication Required**: Observability endpoints are public by design
 - **Input Sanitization**: All dynamic content properly escaped
@@ -287,7 +287,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 - **No Sensitive Data**: Configuration status only (boolean values)
 - **Error Message Sanitization**: Production errors don't expose sensitive information
 - **Secure Headers**: Helmet security headers in Relay Service
-- **HTTPS Ready**: Supports secure WebSocket connections (WSS)
+- **HTTPS Ready**: Supports secure HTTP connections
 
 ## Maintenance and Operations
 
@@ -295,7 +295,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 - **Service Health**: Built-in health checks for all components
 - **Error Logging**: Comprehensive logging with configurable levels
 - **Performance Metrics**: Response time and availability tracking
-- **Connection Monitoring**: WebSocket connection health indicators
+- **Connection Monitoring**: HTTP polling connection health indicators
 
 ### Updates and Maintenance
 - **Zero-Downtime Updates**: Static files can be updated without service restart
@@ -306,7 +306,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 ### Troubleshooting
 - **Debug Endpoints**: Cache statistics and service status endpoints
 - **Error Recovery**: Automatic reconnection and retry logic
-- **Fallback Mechanisms**: HTTP polling when WebSocket unavailable
+- **Error Handling**: Graceful handling of failed HTTP requests
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 
 ## Future Enhancement Opportunities
@@ -333,7 +333,7 @@ RELAY_CONFIG={"services":{"service-ip":{"name":"Service IP","healthEndpoint":"ht
 
 The GameHub Status and Setup Pages system has been successfully implemented as a comprehensive solution that provides:
 
-1. **Complete Observability**: Real-time monitoring of all GameHub services
+1. **Complete Observability**: Periodic monitoring of all GameHub services
 2. **Guided Setup Experience**: Step-by-step configuration wizard
 3. **Developer-Friendly**: Minimal integration requirements with existing services
 4. **Production-Ready**: Robust error handling, caching, and performance optimization
