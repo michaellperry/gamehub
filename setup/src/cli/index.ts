@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { ScriptInputs, ScriptResult } from '../types';
+import { ScriptInputs, ScriptResult } from '../models';
 import { logger } from '../utils/logger';
 import { validateInputs } from '../utils/validation';
 import { FusionAuthService } from '../services/fusionAuth';

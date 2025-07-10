@@ -1,5 +1,5 @@
 import path from 'path';
-import { ApplicationResult, KeyInfo, ProviderFile, ScriptInputs } from '../types';
+import { ApplicationResult, KeyInfo, ProviderFile, ScriptInputs } from '../models';
 import { ensureDirectoryExists, fileExists, writeFile, writeJsonFile } from '../utils/helpers';
 import { logger } from '../utils/logger';
 import { extractHostname } from '../utils/validation';

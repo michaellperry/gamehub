@@ -1,5 +1,5 @@
 import Joi from 'joi';
-import { ScriptInputs } from '../types';
+import { ScriptInputs } from '../models';
 import { logger } from './logger';
 
 /**
