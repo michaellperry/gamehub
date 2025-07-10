@@ -7,15 +7,8 @@ export interface ServiceConfig {
   retries?: number;
 }
 
-export interface BundleConfig {
-  name: string;
-  type: 'bundle';
-  configFunction: string;
-}
-
 export interface RelayConfig {
   services: Record<string, ServiceConfig>;
-  bundles: Record<string, BundleConfig> | undefined;
 }
 
 export interface EnvironmentConfig {
@@ -53,13 +46,6 @@ const DEFAULT_RELAY_CONFIG: RelayConfig = {
       timeout: 5000,
       retries: 3
     }
-  },
-  bundles: {
-    'admin-portal': {
-      name: 'Admin Portal',
-      type: 'bundle',
-      configFunction: 'getConfiguredGroups'
-    }
   }
 };
 
@@ -79,8 +65,7 @@ function parseRelayConfig(configString?: string): RelayConfig {
 
     // Apply defaults for missing optional fields
     const config: RelayConfig = {
-      services: {},
-      bundles: parsed.bundles || DEFAULT_RELAY_CONFIG.bundles || undefined
+      services: {}
     };
 
     // Process services with defaults
