@@ -516,7 +516,7 @@ class SetupWizard {
             'You can create an API key in the FusionAuth admin interface under Settings → API Keys',
             (value) => {
                 this.stepData.fusionAuthApiKey = value;
-                this.showCommand(`./scripts/setup.sh ${value}`, 'Run FusionAuth Setup');
+                this.showCommand(`./scripts/setup-fusionauth.sh ${value}`, 'Run FusionAuth Setup');
             }
         );
     }
