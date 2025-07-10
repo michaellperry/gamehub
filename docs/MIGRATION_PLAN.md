@@ -111,7 +111,7 @@ mkdir -p scripts/{setup,deployment}
 **Infrastructure Components Implemented:**
 - **PostgreSQL Database**: Backend for FusionAuth
 - **FusionAuth Service**: OAuth2 identity provider for web applications
-- **Jinaga Replicator**: Data synchronization with GameHub authorization policies
+- **Jinaga Replicator**: Real-time data synchronization with GameHub authorization policies
 - **NGINX Reverse Proxy**: Complete routing configuration for all services
 - **Network Segmentation**: 3-network architecture for security and isolation
 - **Secrets Management**: Comprehensive secrets directory structure
@@ -119,7 +119,7 @@ mkdir -p scripts/{setup,deployment}
 
 **Key Architectural Decisions:**
 - **PostgreSQL-only for FusionAuth**: Corrected from original plan - PostgreSQL is dedicated to FusionAuth, not shared across all services
-- **Player-IP retains SQLite**: Maintains SQLite for player authentication data while connecting to replicator for data sync
+- **Player-IP retains SQLite**: Maintains SQLite for player authentication data while connecting to replicator for real-time sync
 - **Service Integration**: All Phase 2 services (service-ip, player-ip, content-store) fully integrated with mesh infrastructure
 - **Production-Ready**: SSL termination support, comprehensive environment configuration, and monitoring capabilities
 
@@ -135,7 +135,7 @@ mkdir -p scripts/{setup,deployment}
 
 With Phase 3 infrastructure fully implemented, frontend applications can now be developed with:
 - Complete authentication infrastructure (FusionAuth + Player-IP + Service-IP)
-- Data synchronization via Jinaga replicator
+- Real-time data synchronization via Jinaga replicator
 - Secure service-to-service communication
 - Production-ready reverse proxy routing
 
@@ -143,7 +143,7 @@ With Phase 3 infrastructure fully implemented, frontend applications can now be 
 **Priority: HIGH** - Needed for system administration
 - [ ] Set up React + Vite + TypeScript + TailwindCSS
 - [ ] Implement atomic design component structure
-- [ ] Integrate Jinaga client with data sync (connects to `http://localhost/replicator/`)
+- [ ] Integrate Jinaga client with real-time data (connects to `http://localhost/replicator/`)
 - [ ] Implement OAuth 2.0 authentication flow (via FusionAuth at `http://localhost/auth/`)
 - [ ] Build core admin features:
   - [ ] Tenant management
@@ -155,18 +155,18 @@ With Phase 3 infrastructure fully implemented, frontend applications can now be 
 **Priority: MEDIUM** - Can be developed in parallel with admin
 - [ ] Set up React + Vite + TypeScript + TailwindCSS
 - [ ] Implement atomic design component structure
-- [ ] Integrate Jinaga client with data sync (connects to `http://localhost/replicator/`)
+- [ ] Integrate Jinaga client with real-time data (connects to `http://localhost/replicator/`)
 - [ ] Implement OAuth 2.0 PKCE authentication flow (via Player-IP at `http://localhost/player-ip/`)
 - [ ] Build core player features:
   - [ ] Session participation
   - [ ] Player registration
-  - [ ] Gameplay interface with data sync
+  - [ ] Real-time gameplay interface
 
 ### 4.3 Frontend Integration Notes
 **Authentication Architecture:**
 - **Admin Portal**: Uses FusionAuth OAuth2 for administrative access
 - **Player Portal**: Uses Player-IP OAuth2 + PKCE for player authentication
-- **Data Sync**: Both connect to Jinaga replicator with GameHub authorization policies
+- **Real-time Data**: Both connect to Jinaga replicator with GameHub authorization policies
 - **Content Access**: Both can access content-store via authenticated requests
 
 **Development Setup:**
@@ -188,7 +188,7 @@ docker compose up -d
 
 ### 5.1 End-to-End Integration
 - [ ] Test complete authentication flows
-- [ ] Verify data synchronization
+- [ ] Verify real-time data synchronization
 - [ ] Test service-to-service communication
 - [ ] Validate Docker orchestration
 
@@ -258,9 +258,9 @@ The GameHub infrastructure has been successfully transformed from individual ser
 - JWT token validation across all service boundaries
 - Secure secrets management with isolated credential storage
 
-**📊 Data Infrastructure:**
+**📊 Real-time Data Infrastructure:**
 - Jinaga replicator with GameHub-specific authorization policies
-- HTTP support for data updates
+- WebSocket support for real-time updates
 - PostgreSQL backend for persistent data storage
 - Complete distribution rules for multi-tenant architecture
 
@@ -327,7 +327,7 @@ The GameHub infrastructure has been successfully transformed from individual ser
   - Jinaga replicator with GameHub policies
   - NGINX reverse proxy with complete routing
   - All Phase 2 services integrated with mesh architecture
-- [ ] **Day 11**: Admin portal authenticates and displays data
+- [ ] **Day 11**: Admin portal authenticates and displays real-time data
 - [ ] **Day 13**: Player portal participates in game sessions
 - [ ] **Day 15**: End-to-end system test passes
 - [ ] **Day 20**: Migration from existing application complete
@@ -336,7 +336,7 @@ The GameHub infrastructure has been successfully transformed from individual ser
 - **Complete Docker Orchestration**: All services configured with proper networking and dependencies
 - **Database Integration**: PostgreSQL shared between FusionAuth and Jinaga replicator
 - **Authentication Architecture**: Multi-provider setup (FusionAuth, Player-IP, Service-IP) fully configured
-- **Data Capabilities**: Jinaga replicator with GameHub authorization policies deployed
+- **Real-time Capabilities**: Jinaga replicator with GameHub authorization policies deployed
 - **Production Readiness**: SSL termination, health checks, and monitoring capabilities implemented
 - **Service Integration**: All Phase 2 services enhanced and integrated with mesh infrastructure
 
@@ -367,7 +367,7 @@ curl http://localhost/health  # NGINX health check
 **Development Endpoints Available:**
 - **Main Gateway**: http://localhost (NGINX reverse proxy)
 - **FusionAuth**: http://localhost/auth/ (Admin authentication)
-- **Replicator**: http://localhost/replicator/ (Data sync)
+- **Replicator**: http://localhost/replicator/ (Real-time data)
 - **Player API**: http://localhost/player-ip/ (Player authentication)
 - **Service API**: http://localhost/service-ip/ (Service authentication)
 - **Content Store**: http://localhost/content/ (File storage)
@@ -376,14 +376,14 @@ curl http://localhost/health  # NGINX health check
 **Priority: HIGH** - Start with administrative interface
 - React + Vite + TypeScript + TailwindCSS setup
 - FusionAuth OAuth2 integration for admin authentication
-- Jinaga client integration for data sync
+- Jinaga client integration for real-time data
 - Tenant and user management interfaces
 
 #### 3. Player Portal Development
 **Priority: MEDIUM** - Can develop in parallel
 - React + Vite + TypeScript + TailwindCSS setup
 - Player-IP OAuth2 + PKCE integration
-- Gameplay interface with data sync
+- Real-time gameplay interface
 - Session participation features
 
 ### Infrastructure Validation Checklist
@@ -411,7 +411,7 @@ When ready for production:
 
 ✅ **Scalable Infrastructure**: PostgreSQL backend with health monitoring
 ✅ **Security**: Network segmentation and comprehensive authentication
-✅ **Data Capabilities**: Jinaga replicator with GameHub policies
+✅ **Real-time Capabilities**: Jinaga replicator with GameHub policies
 ✅ **Production Ready**: SSL termination, health checks, and monitoring
 ✅ **Developer Experience**: Complete local development environment
 ✅ **Service Integration**: All Phase 2 services enhanced and integrated
