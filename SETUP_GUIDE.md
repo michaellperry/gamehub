@@ -42,7 +42,7 @@ The backend services authenticate using service principals. This step creates a 
 
 ## Setup Page Implementation
 
-The setup page at http://localhost should include:
+The setup page at http://localhost/setup/ should include:
 
 ### Key Features:
 - **Progress Indicator**: Visual progress bar showing current step

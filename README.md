@@ -22,7 +22,7 @@ GameHub is a **starter template** that provides everything you need to build you
 - **Docker** and **Docker Compose**
 - **Git**
 
-### Get Started in 5 Minutes
+### Get Started in 10 Minutes
 
 1. **Clone and setup**:
    ```bash
@@ -51,7 +51,7 @@ GameHub is a **starter template** that provides everything you need to build you
    docker compose up -d --build
    ```
 
-Navigate to http://localhost to access the GameHub admin portal. Then follow the [3-step setup guide](./SETUP_GUIDE.md) to configure your game platform.
+Navigate to http://localhost/setup/ to access the GameHub setup wizard. Then follow the [3-step setup guide](./SETUP_GUIDE.md) to configure your game platform.
 
 ## 📚 Documentation
 
