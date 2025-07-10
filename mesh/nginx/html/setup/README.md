@@ -10,7 +10,7 @@ The Setup Page is implemented as a static HTML/CSS/JavaScript application that i
 
 ### Core Functionality
 - **Step-by-step wizard** with 6 configuration steps
-- **Real-time status integration** via WebSocket connection to Relay Service
+- **Real-time status integration** via polling connection to Relay Service
 - **Progress tracking** with visual progress bar and step indicators
 - **Interactive setup instructions** with copy-paste commands
 - **Completion validation** based on service configuration status
@@ -83,7 +83,7 @@ mesh/nginx/html/setup/
 
 ### JavaScript Architecture
 - **SetupWizard Class**: Main application controller
-- **WebSocket Integration**: Real-time connection to Relay Service
+- **Polling Integration**: Real-time connection to Relay Service
 - **Step Management**: Dynamic step rendering and validation
 - **Progress Persistence**: localStorage-based progress saving
 - **Modal System**: Command and input modal management
@@ -93,7 +93,7 @@ mesh/nginx/html/setup/
 
 The Setup Page connects to the Relay Service at `/relay/ws` for real-time status updates:
 
-### WebSocket Messages
+### HTTP Messages
 ```javascript
 // Request status update
 { type: 'get_status' }
@@ -160,7 +160,7 @@ location /setup/ {
 3. Access at `http://localhost/setup`
 
 ### Testing
-- Test WebSocket connection to Relay Service
+- Test connection to Relay Service
 - Verify step validation logic
 - Test responsive design on various devices
 - Validate accessibility compliance
@@ -174,17 +174,12 @@ location /setup/ {
 ## Troubleshooting
 
 ### Common Issues
-1. **WebSocket Connection Failed**
-   - Ensure Relay Service is running
-   - Check NGINX WebSocket proxy configuration
-   - Verify network connectivity
-
-2. **Step Validation Not Working**
+1. **Step Validation Not Working**
    - Check Relay Service status endpoint
    - Verify service configuration groups
    - Review browser console for errors
 
-3. **Progress Not Saving**
+2. **Progress Not Saving**
    - Check localStorage availability
    - Verify browser storage permissions
    - Clear localStorage if corrupted
@@ -200,7 +195,7 @@ localStorage.setItem('gamehub-setup-debug', 'true');
 - **No sensitive data storage**: API keys and secrets are not persisted
 - **Input validation**: All user inputs are validated
 - **XSS protection**: Proper HTML escaping for dynamic content
-- **HTTPS ready**: Supports secure WebSocket connections
+- **HTTPS ready**: Supports secure connections
 
 ## Future Enhancements
 
