@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { ApiClient } from '../types';
+import { ApiClient } from '../models';
 import { logger } from './logger';
 
 /**

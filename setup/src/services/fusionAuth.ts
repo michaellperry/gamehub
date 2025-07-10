@@ -8,7 +8,7 @@ import {
   ScriptInputs, 
   SystemConfigurationResponse, 
   TenantsResponse 
-} from '../types';
+} from '../models';
 import { FusionAuthApiClient } from '../utils/apiClient';
 import { jsonEncodeKey } from '../utils/helpers';
 import { logger } from '../utils/logger';
