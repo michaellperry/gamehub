@@ -112,10 +112,6 @@ The Relay Service provides centralized observability at [`http://localhost/relay
       "configuredEndpoint": "http://content-store:8081/configured",
       "readyEndpoint": "http://content-store:8081/ready"
     }
-  },
-  "polling": {
-    "interval": 10000,
-    "timeout": 30000
   }
 }
 ```

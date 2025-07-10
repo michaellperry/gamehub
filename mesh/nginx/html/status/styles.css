@@ -61,7 +61,7 @@ body {
     height: 12px;
     border-radius: 50%;
     background: #fbbf24;
-    animation: pulse 2s infinite;
+    /* animation: pulse 2s infinite; */
 }
 
 .status-dot.connected {
@@ -92,7 +92,7 @@ body {
 
 .refresh-btn:hover {
     background: #2563eb;
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); */
 }
 
 .refresh-btn:active {
@@ -222,7 +222,7 @@ body {
 
 .retry-btn:hover {
     background: #dc2626;
-    transform: translateY(-1px);
+    /* transform: translateY(-1px); */
 }
 
 /* Services grid */
@@ -246,7 +246,7 @@ body {
 }
 
 .service-card:hover {
-    transform: translateY(-2px);
+    /* transform: translateY(-2px); */
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
@@ -529,9 +529,9 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.service-card {
+/* .service-card {
     animation: fadeIn 0.5s ease-out;
-}
+} */
 
 /* Responsive design */
 @media (max-width: 768px) {

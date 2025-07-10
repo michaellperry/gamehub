@@ -42,9 +42,9 @@
 
             <div class="error-state" id="errorState" style="display: none;">
                 <div class="error-icon">⚠️</div>
-                <h2>Connection Error</h2>
-                <p id="errorMessage">Unable to connect to the relay service.</p>
-                <button class="retry-btn" id="retryBtn">Retry Connection</button>
+                <h2>Polling Error</h2>
+                <p id="errorMessage">Unable to fetch status from the relay service.</p>
+                <button class="retry-btn" id="retryBtn">Retry Polling</button>
             </div>
 
             <div class="services-grid" id="servicesGrid" style="display: none;">
@@ -81,7 +81,7 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2025 GameHub. Real-time service monitoring dashboard.</p>
+            <p>&copy; 2025 GameHub. HTTP polling-based service monitoring dashboard.</p>
         </footer>
     </div>
 

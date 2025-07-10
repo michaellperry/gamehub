@@ -1,20 +1,22 @@
 /**
  * GameHub Status Dashboard
- * Real-time service monitoring with WebSocket integration
+ * HTTP polling-based service monitoring dashboard
  */
 
 class StatusDashboard {
     constructor() {
-        this.ws = null;
-        this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        this.reconnectDelay = 1000;
+        this.pollingInterval = null;
+        this.pollingIntervalMs = 10000; // 10 seconds
         this.autoRefresh = true;
         this.lastData = null;
+        this.isPolling = false;
+        this.consecutiveErrors = 0;
+        this.maxConsecutiveErrors = 5;
+        this.retryDelayMs = 5000; // 5 seconds retry delay
         
         this.initializeElements();
         this.bindEvents();
-        this.connect();
+        this.startPolling();
     }
 
     initializeElements() {
@@ -57,14 +59,16 @@ class StatusDashboard {
         // Auto-refresh toggle
         this.autoRefreshToggle.addEventListener('change', (e) => {
             this.autoRefresh = e.target.checked;
-            if (this.autoRefresh && this.ws && this.ws.readyState === WebSocket.OPEN) {
-                this.requestStatus();
+            if (this.autoRefresh) {
+                this.startPolling();
+            } else {
+                this.stopPolling();
             }
         });
 
         // Retry button
         this.retryBtn.addEventListener('click', () => {
-            this.connect();
+            this.startPolling();
         });
 
         // Tooltip events
@@ -80,120 +84,137 @@ class StatusDashboard {
             }
         });
 
-        // Handle page visibility changes
+        // Handle page visibility changes - resume polling when page becomes visible
         document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && this.autoRefresh) {
-                this.requestStatus();
+            if (!document.hidden && this.autoRefresh && !this.pollingInterval) {
+                this.startPolling();
+            } else if (document.hidden && this.pollingInterval) {
+                // Optionally pause polling when page is hidden to save resources
+                // this.stopPolling();
             }
         });
     }
 
-    connect() {
-        this.showLoading();
+    startPolling() {
+        this.stopPolling(); // Clear any existing interval
         this.updateConnectionStatus('connecting', 'Connecting...');
-
-        try {
-            // Use the current protocol and host for WebSocket connection
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}/relay/ws`;
+        this.showLoading();
+        
+        // Initial fetch
+        this.fetchStatus();
+        
+        // Set up polling interval if auto-refresh is enabled
+        if (this.autoRefresh) {
+            this.pollingInterval = setInterval(() => {
+                if (this.autoRefresh && !this.isPolling) {
+                    this.fetchStatus();
+                }
+            }, this.pollingIntervalMs);
             
-            this.ws = new WebSocket(wsUrl);
-
-            this.ws.onopen = () => {
-                console.log('WebSocket connected');
-                this.reconnectAttempts = 0;
-                this.updateConnectionStatus('connected', 'Connected');
-                this.requestStatus();
-            };
-
-            this.ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    this.handleStatusUpdate(data);
-                } catch (error) {
-                    console.error('Error parsing WebSocket message:', error);
-                }
-            };
-
-            this.ws.onclose = (event) => {
-                console.log('WebSocket disconnected:', event.code, event.reason);
-                this.updateConnectionStatus('disconnected', 'Disconnected');
-                
-                if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                    this.scheduleReconnect();
-                } else {
-                    this.showError('Connection lost. Maximum reconnection attempts reached.');
-                }
-            };
-
-            this.ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.updateConnectionStatus('disconnected', 'Connection Error');
-            };
-
-        } catch (error) {
-            console.error('Failed to create WebSocket connection:', error);
-            this.showError('Failed to establish WebSocket connection.');
+            console.log(`HTTP polling started with ${this.pollingIntervalMs / 1000}s interval`);
         }
     }
 
-    scheduleReconnect() {
-        this.reconnectAttempts++;
-        const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
-        
-        this.updateConnectionStatus('connecting', `Reconnecting in ${Math.ceil(delay / 1000)}s...`);
-        
-        setTimeout(() => {
-            if (this.reconnectAttempts <= this.maxReconnectAttempts) {
-                this.connect();
-            }
-        }, delay);
-    }
-
-    requestStatus() {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            // The relay service sends status automatically, but we can request it
-            this.ws.send(JSON.stringify({ type: 'request_status' }));
-        } else {
-            // Fallback to HTTP request
-            this.fetchStatusHTTP();
+    stopPolling() {
+        if (this.pollingInterval) {
+            clearInterval(this.pollingInterval);
+            this.pollingInterval = null;
+            console.log('HTTP polling stopped');
         }
+        this.updateConnectionStatus('disconnected', 'Polling stopped');
     }
 
-    async fetchStatusHTTP() {
+    async fetchStatus() {
+        if (this.isPolling) return; // Prevent concurrent requests
+        
+        this.isPolling = true;
+        
         try {
-            const response = await fetch('/relay');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+            
+            const response = await fetch('/relay', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
+            
             const data = await response.json();
             this.handleStatusUpdate(data);
+            this.consecutiveErrors = 0;
+            this.updateConnectionStatus('connected', `Polling every ${this.pollingIntervalMs / 1000}s`);
+            
         } catch (error) {
-            console.error('HTTP status fetch failed:', error);
-            this.showError(`Failed to fetch status: ${error.message}`);
+            console.error('Status fetch failed:', error);
+            this.consecutiveErrors++;
+            
+            if (error.name === 'AbortError') {
+                console.warn('Request timed out');
+                this.updateConnectionStatus('connecting', 'Request timeout, retrying...');
+            } else if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
+                this.stopPolling();
+                this.showError(`Failed to fetch status after ${this.maxConsecutiveErrors} attempts: ${error.message}`);
+                this.updateConnectionStatus('disconnected', 'Connection failed');
+                
+                // Schedule a retry after delay
+                setTimeout(() => {
+                    if (this.autoRefresh) {
+                        console.log('Attempting to restart polling after error...');
+                        this.consecutiveErrors = 0;
+                        this.startPolling();
+                    }
+                }, this.retryDelayMs);
+            } else {
+                this.updateConnectionStatus('connecting', `Retrying... (${this.consecutiveErrors}/${this.maxConsecutiveErrors})`);
+            }
+        } finally {
+            this.isPolling = false;
         }
     }
 
-    refreshStatus() {
+    async refreshStatus() {
         if (this.refreshBtn.classList.contains('loading')) return;
         
         this.refreshBtn.classList.add('loading');
         
-        // Force refresh via HTTP POST to relay service
-        fetch('/relay/refresh', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                this.handleStatusUpdate(data);
-            })
-            .catch(error => {
-                console.error('Refresh failed:', error);
-                this.requestStatus(); // Fallback to regular request
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    this.refreshBtn.classList.remove('loading');
-                }, 500);
+        try {
+            // Try force refresh via HTTP POST to relay service first
+            const refreshResponse = await fetch('/relay/refresh', { 
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
             });
+            
+            if (refreshResponse.ok) {
+                const data = await refreshResponse.json();
+                this.handleStatusUpdate(data);
+                console.log('Manual refresh completed via POST');
+            } else {
+                // Fallback to regular GET request
+                await this.fetchStatus();
+                console.log('Manual refresh completed via GET fallback');
+            }
+        } catch (error) {
+            console.error('Manual refresh failed:', error);
+            // Fallback to regular fetch
+            await this.fetchStatus();
+        } finally {
+            setTimeout(() => {
+                this.refreshBtn.classList.remove('loading');
+            }, 500);
+        }
     }
 
     handleStatusUpdate(data) {
@@ -205,6 +226,12 @@ class StatusDashboard {
         this.updateLastUpdated(data.timestamp);
         this.renderServices(data.services || {});
         this.renderSummary(data.summary || {});
+        
+        console.log('Status updated:', {
+            timestamp: data.timestamp,
+            services: Object.keys(data.services || {}).length,
+            overallStatus: data.summary?.overallStatus
+        });
     }
 
     renderServices(services) {
@@ -461,16 +488,22 @@ class StatusDashboard {
         this.servicesGrid.style.display = 'grid';
         this.summarySection.style.display = 'block';
     }
+
+    // Cleanup method for proper resource management
+    destroy() {
+        this.stopPolling();
+        console.log('StatusDashboard destroyed');
+    }
 }
 
 // Initialize the dashboard when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new StatusDashboard();
+    window.statusDashboard = new StatusDashboard();
 });
 
-// Handle page unload
+// Handle page unload - cleanup polling
 window.addEventListener('beforeunload', () => {
-    if (window.statusDashboard && window.statusDashboard.ws) {
-        window.statusDashboard.ws.close();
+    if (window.statusDashboard) {
+        window.statusDashboard.destroy();
     }
 });
