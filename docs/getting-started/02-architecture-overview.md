@@ -63,7 +63,7 @@ graph TD
     end
     
     subgraph "Infrastructure Services"
-        G[Jinaga Replicator<br/>Port 8080<br/>Data Sync]
+        G[Jinaga Replicator<br/>Port 8080<br/>Real-time Sync]
         H[PostgreSQL<br/>Port 5432<br/>Shared Database]
         I[FusionAuth<br/>Port 9011<br/>OAuth Provider]
     end
@@ -152,7 +152,7 @@ graph LR
 #### Jinaga Replicator
 - **Purpose**: Distributed data synchronization and event sourcing
 - **Technology**: Jinaga replicator service v3.5.2
-- **Features**: Fact distribution, authorization policies, subscriptions
+- **Features**: Real-time fact distribution, authorization policies, subscriptions
 - **Storage**: Built-in storage for facts
 - **Configuration**: GameHub-specific policies and authentication providers
 - **Health Checks**: HTTP health endpoint monitoring
@@ -205,7 +205,7 @@ graph LR
 - **Features**: Tenant creation, service management, configuration
 - **Authentication**: OAuth 2.0 via FusionAuth
 - **Deployment**: Static files served by NGINX at `/admin/`
-- **Data Sync**: Jinaga integration for data updates
+- **Real-time**: Jinaga integration for live updates
 
 #### Player Portal (`gamehub-player`)
 - **Purpose**: Player interface for game session initiation and participation
@@ -213,7 +213,7 @@ graph LR
 - **Features**: Session registration, gameplay interactions, real-time updates
 - **Authentication**: OAuth 2.0 via Player IP
 - **Deployment**: Static files served by NGINX
-- **Data Sync**: Jinaga integration for gameplay data updates
+- **Real-time**: Jinaga integration for live gameplay updates
 
 ## Data Architecture
 
@@ -221,7 +221,7 @@ graph LR
 - **Pattern**: Historical modeling with immutable facts
 - **Distribution**: Automatic data synchronization across services
 - **Authorization**: Rule-based access control with GameHub-specific policies
-- **Benefits**: Audit trail, data synchronization, conflict resolution
+- **Benefits**: Audit trail, real-time updates, conflict resolution
 - **Storage**: Built-in storage for facts
 
 ### Data Flow
@@ -229,7 +229,7 @@ graph LR
 2. **Fact Creation**: Business logic creates immutable facts
 3. **Authorization**: Jinaga policies validate fact access
 4. **Distribution**: Jinaga distributes facts to relevant subscribers
-5. **UI Updates**: Frontend applications receive data updates
+5. **UI Updates**: Frontend applications receive real-time updates
 6. **Persistence**: Facts stored in PostgreSQL with full history
 
 ### Storage Layers

@@ -124,7 +124,7 @@ mesh/
 ├── replicator/            # Jinaga replicator configuration
 │   ├── authentication/    # Authentication providers
 │   ├── policies/          # Authorization policies
-│   └── subscriptions/     # Data subscriptions
+│   └── subscriptions/     # Real-time subscriptions
 └── secrets/               # Secret management
     ├── player-ip/         # Player-IP service secrets
     ├── service-ip/        # Service-IP client configurations
@@ -499,7 +499,7 @@ The new infrastructure provides the following endpoints through NGINX reverse pr
 | **Main Gateway** | http://localhost | NGINX reverse proxy |
 | **Admin Portal** | http://localhost/admin/ | GameHub admin interface |
 | **FusionAuth** | http://localhost/auth/ | Identity management |
-| **Replicator** | http://localhost/replicator/ | Data sync |
+| **Replicator** | http://localhost/replicator/ | Real-time data sync |
 | **Player API** | http://localhost/player-ip/ | Player authentication |
 | **Service API** | http://localhost/service-ip/ | Service authentication |
 | **Content Store** | http://localhost/content/ | File storage |
@@ -587,7 +587,7 @@ With the infrastructure set up successfully, you now have access to:
 **Core Infrastructure:**
 - PostgreSQL database for FusionAuth and application data
 - FusionAuth OAuth2 provider with configured applications
-- Jinaga replicator with data synchronization
+- Jinaga replicator with real-time synchronization
 - NGINX reverse proxy with SSL support
 - Network segmentation for security
 - Comprehensive health monitoring
@@ -596,7 +596,7 @@ With the infrastructure set up successfully, you now have access to:
 - **Admin Interface**: `http://localhost/admin/` - GameHub administration
 - **FusionAuth Admin**: `http://localhost/auth/admin` - Identity management
 - **API Gateway**: `http://localhost/` - Main application gateway
-- **Replicator**: `http://localhost/replicator/` - Data sync
+- **Replicator**: `http://localhost/replicator/` - Real-time data sync
 
 ### Troubleshooting
 

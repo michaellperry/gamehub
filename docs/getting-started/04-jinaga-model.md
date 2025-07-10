@@ -1,6 +1,6 @@
 # Jinaga Data Model
 
-This guide covers the setup and configuration of the Jinaga data model, which provides distributed data management and synchronization across the GameHub platform.
+This guide covers the setup and configuration of the Jinaga data model, which provides distributed data management and real-time synchronization across the GameHub platform.
 
 ## Table of Contents
 
@@ -41,7 +41,7 @@ Jinaga is a distributed data management system that uses immutable facts and his
 - **Historical Modeling**: Changes are recorded as a graph of facts over time
 - **Automatic Distribution**: Data synchronizes automatically across services and clients
 - **Conflict Detection**: Built-in recognition of concurrent updates through fact succession
-- **Data Updates**: UI updates automatically when data changes anywhere in the system
+- **Real-time Updates**: UI updates automatically when data changes anywhere in the system
 
 ### Benefits for GameHub
 
@@ -49,7 +49,7 @@ Jinaga is a distributed data management system that uses immutable facts and his
 - **Offline Support**: Applications work offline and sync when reconnected
 - **Scalability**: Distributed architecture scales horizontally
 - **Multi-tenant Security**: Fine-grained authorization and distribution rules
-- **Data Collaboration**: Multiple players can work simultaneously with automatic conflict detection
+- **Real-time Collaboration**: Multiple players can work simultaneously with automatic conflict detection
 
 ## Jinaga Model Package Structure
 
@@ -395,7 +395,7 @@ To remove a field from a fact type, drop the field. While the field will still b
 
 With the Jinaga data model configured, you can:
 
-1. **Set up React Applications**: Use the model in frontend applications with data binding
+1. **Set up React Applications**: Use the model in frontend applications with real-time data binding
 2. **Configure Backend Services**: Integrate the model with Node.js services for server-side operations
 3. **Deploy with Docker**: Use the model package in containerized environments
 4. **Implement Authentication**: Secure your model with proper user authentication
