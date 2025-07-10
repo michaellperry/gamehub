@@ -21,7 +21,6 @@ export interface BundleStatus {
 export interface RelayResponse {
   timestamp: string;
   services: Record<string, ServiceStatus>;
-  bundles?: Record<string, BundleStatus>;
   summary: {
     totalServices: number;
     healthyServices: number;
@@ -50,7 +49,6 @@ export class ObservabilityService {
 
     const timestamp = new Date().toISOString();
     const services: Record<string, ServiceStatus> = {};
-    const bundles: Record<string, BundleStatus> = {};
 
     // Check all services in parallel
     const servicePromises = Object.entries(this.relayConfig.services).map(
@@ -60,18 +58,8 @@ export class ObservabilityService {
       }
     );
 
-    // Check bundles if configured
-    const bundlePromises = this.relayConfig.bundles
-      ? Object.entries(this.relayConfig.bundles).map(
-          async ([bundleId, bundleConfig]) => {
-            const status = await this.checkBundle(bundleId, bundleConfig);
-            bundles[bundleId] = status;
-          }
-        )
-      : [];
-
     // Wait for all checks to complete
-    await Promise.allSettled([...servicePromises, ...bundlePromises]);
+    await Promise.allSettled([...servicePromises]);
 
     // Calculate summary
     const summary = this.calculateSummary(services);
@@ -79,7 +67,6 @@ export class ObservabilityService {
     const response: RelayResponse = {
       timestamp,
       services,
-      ...(this.relayConfig.bundles && Object.keys(bundles).length > 0 && { bundles }),
       summary
     };
 
@@ -140,30 +127,6 @@ export class ObservabilityService {
         lastChecked,
         responseTime,
         error: errorMessage
-      };
-    }
-  }
-
-  private async checkBundle(_bundleId: string, _bundleConfig: any): Promise<BundleStatus> {
-    const lastChecked = new Date().toISOString();
-
-    try {
-      // For now, we'll simulate bundle checking
-      // In a real implementation, this would check the admin portal bundle status
-      // This is a placeholder for future implementation
-      return {
-        configured: false,
-        configuredGroups: {
-          client: true,
-          tenant: false
-        },
-        lastChecked
-      };
-    } catch (error) {
-      return {
-        configured: false,
-        configuredGroups: {},
-        lastChecked
       };
     }
   }
