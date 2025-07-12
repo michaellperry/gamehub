@@ -104,8 +104,12 @@ export class FileGenerator {
     try {
       logger.info('Creating Vite environment files');
    
-      // Create .env.container.local file content
-      const containerLocalEnvContent = `VITE_CLIENT_ID=${appResult.clientId}
+      // Create .env.container.local file content for developer-specific overrides
+      // This file contains only the values that need to be customized per developer/deployment
+      const containerLocalEnvContent = `# Developer-specific environment overrides for GameHub Admin
+# This file overrides values from .env.container
+
+VITE_CLIENT_ID=${appResult.clientId}
 # Add VITE_TENANT_PUBLIC_KEY after creating a tenant in the admin app
 # VITE_TENANT_PUBLIC_KEY='"-----BEGIN PUBLIC KEY-----\\r\\nMIIBIjANB...QIDAQAB\\r\\n-----END PUBLIC KEY-----\\r\\n"'
 `;
