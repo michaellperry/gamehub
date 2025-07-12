@@ -151,19 +151,21 @@ The recommended way to initialize the mesh environment is using the automated se
 ```
 
 **What the script does:**
-- Copies `.env.example` to `.env` if it doesn't exist
+- Creates `.env.local` file for secrets
 - Generates secure random secrets for production use
 - Creates all required directories in the `mesh/secrets/` structure
 - Sets up service authentication credentials
 - Ensures client secrets are synchronized between services
 - Is idempotent and safe to run multiple times
 
-**The script automatically configures:**
+**The script automatically configures in `.env.local`:**
 - `POSTGRES_PASSWORD` - Database password for PostgreSQL
 - `JWT_SECRET` - JWT signing secret for service-ip
 - `PLAYER_JWT_SECRET` - JWT signing secret for player-ip
 - Service-to-service authentication secrets
 - All required directory structures
+
+**Note:** The script writes secrets to `.env.local` and does not modify the base `.env` file. This allows you to maintain your base configuration in `.env` while keeping secrets separate in `.env.local`.
 
 ### Service Authentication Setup
 
