@@ -44,6 +44,7 @@ GameHub is a **starter template** that provides everything you need to build you
 
 4. **Launch full environment**:
    ```bash
+   npm run build:admin:container
    cd ..
    ./scripts/init-mesh.sh
    cd mesh
