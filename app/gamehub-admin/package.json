@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:container": "vite build --mode container && mkdir -p ../../mesh/nginx/app/gamehub-admin && cp -r dist/* ../../mesh/nginx/app/gamehub-admin",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },

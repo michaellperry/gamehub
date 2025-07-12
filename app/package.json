@@ -16,6 +16,7 @@
     "build:model": "npm run build --workspace=gamehub-model",
     "build:player-ip": "npm run build --workspace=player-ip",
     "build:admin": "npm run build --workspace=gamehub-admin",
+    "build:admin:container": "npm run build:model && npm run build:container --workspace=gamehub-admin",
     "build:service-ip": "npm run build --workspace=service-ip",
     "build:content-store": "npm run build --workspace=content-store",
     "clean": "npm run clean --workspaces --if-present",
