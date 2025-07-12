@@ -13,9 +13,12 @@
   },
   "dependencies": {
     "gamehub-model": "*",
+    "jinaga": "^6.7.8",
+    "jinaga-react": "^5.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "jinaga": "^6.7.8"
+    "react-oauth2-code-pkce": "^1.23.1",
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.66",

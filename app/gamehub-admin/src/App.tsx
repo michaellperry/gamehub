@@ -1,132 +1,79 @@
-// Import gamehub-model components
-import { User } from 'jinaga'
-import { model, authorization, distribution, getModelInfo } from 'gamehub-model'
-import {
-  Tenant,
-  Player,
-  GameSession,
-  PlayerName,
-  GameSessionName,
-  Participant
-} from 'gamehub-model/model'
-import './App.css'
+import { useEffect } from 'react'
+import { Route, Routes, useNavigate } from 'react-router-dom'
+import NavigationMenu from "./frame/NavigationMenu"
+import Tenants from './tenants/Tenants'
+import ServicePrincipals from './service-principals/ServicePrincipals'
+import StyleGuide from './components/StyleGuide'
+import Invitations from './invitations/Invitations'
+import { AcceptInvitation } from './invitations/AcceptInvitation'
+import { ThemeProvider } from './theme/ThemeProvider'
+import { ProtectedRoute } from './auth/ProtectedRoute'
 
 function App() {
-  // Demonstrate actual gamehub-model usage
-  const modelInfo = {
-    hasModel: !!model,
-    hasAuthorization: !!authorization,
-    hasDistribution: !!distribution,
-    factTypes: Object.keys(model.given || {}).length,
-    authModules: Object.keys(authorization || {}).length,
-    distModules: Object.keys(distribution || {}).length,
-    ...getModelInfo() // Integration test: use new function from gamehub-model
-  }
-
-  // Create actual instances using gamehub-model
-  const sampleUser = new User('admin@gamehub.com')
-  const sampleTenant = new Tenant(sampleUser)
-  const samplePlayer = new Player(sampleTenant, new Date().toISOString())
-  const playerName = new PlayerName(samplePlayer, 'Admin Player', [])
-  const sampleSession = new GameSession(sampleTenant, `admin-session-${Date.now()}`)
-  const sessionName = new GameSessionName(sampleSession, 'Admin Demo Session', [])
-  const participant = new Participant(sampleUser, sampleTenant)
-  
-  // Additional data for display
-  const participantInfo = {
-    user: participant.user.publicKey,
-    tenant: participant.tenant.creator.publicKey
-  }
-
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>🎮 GameHub Admin</h1>
-        <p>Vite + React + TypeScript + GameHub Model Demo</p>
-      </header>
-
-      <main className="app-main">
-        <section className="demo-section">
-          <h2>📦 Model Import Demo</h2>
-          <div className="info-grid">
-            <div className="info-card">
-              <h3>✅ Successfully Imported</h3>
-              <ul>
-                <li>gamehub-model: {modelInfo.hasModel ? '✓' : '✗'}</li>
-                <li>authorization: {modelInfo.hasAuthorization ? '✓' : '✗'}</li>
-                <li>distribution: {modelInfo.hasDistribution ? '✓' : '✗'}</li>
-                <li>jinaga User: ✓</li>
-              </ul>
-            </div>
-            
-            <div className="info-card">
-              <h3>🏗️ Type References</h3>
-              <ul>
-                <li>Tenant: {Tenant.Type}</li>
-                <li>Player: {Player.Type}</li>
-                <li>GameSession: {GameSession.Type}</li>
-                <li>User: {sampleUser.publicKey}</li>
-              </ul>
-            </div>
-
-            <div className="info-card">
-              <h3>📊 Module Stats</h3>
-              <ul>
-                <li>Fact types: {modelInfo.factTypes}</li>
-                <li>Authorization modules: {modelInfo.authModules}</li>
-                <li>Distribution modules: {modelInfo.distModules}</li>
-                <li>Model version: {modelInfo.version}</li>
-                <li>Vite HMR: Active</li>
-                <li>TypeScript: Enabled</li>
-              </ul>
+    <ThemeProvider>
+      <div className="min-h-screen bg-gray-100 dark:bg-dark-bg transition-colors duration-200">
+        <NavigationMenu />
+        
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            <div className="bg-white dark:bg-dark-surface shadow rounded-lg p-6 dark:shadow-lg dark:shadow-gray-900/20">
+              <Routes>
+                <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
+                <Route path="/callback" element={<AuthCallback />} />
+                <Route path="/service-principals" element={<ProtectedRoute><ServicePrincipals /></ProtectedRoute>} />
+                <Route path="/invitations" element={<ProtectedRoute><Invitations /></ProtectedRoute>} />
+                <Route path="/invitations/accept/:code" element={<ProtectedRoute><AcceptInvitation /></ProtectedRoute>} />
+                <Route path="/invitations/accept" element={<ProtectedRoute><AcceptInvitation /></ProtectedRoute>} />
+                <Route path="/style-guide" element={<StyleGuide />} />
+              </Routes>
             </div>
           </div>
-        </section>
+        </main>
+      </div>
+    </ThemeProvider>
+  )
+}
 
-        <section className="demo-section">
-          <h2>🔍 Sample Data</h2>
-          <div className="data-preview">
-            <div className="data-item">
-              <h4>Sample Tenant</h4>
-              <pre>{JSON.stringify({
-                type: Tenant.Type,
-                creator: sampleTenant.creator.publicKey
-              }, null, 2)}</pre>
-            </div>
-            
-            <div className="data-item">
-              <h4>Sample Player</h4>
-              <pre>{JSON.stringify({
-                type: Player.Type,
-                createdAt: samplePlayer.createdAt,
-                name: playerName.name
-              }, null, 2)}</pre>
-            </div>
-            
-            <div className="data-item">
-              <h4>Sample Game Session</h4>
-              <pre>{JSON.stringify({
-                type: GameSession.Type,
-                id: sampleSession.id,
-                name: sessionName.value
-              }, null, 2)}</pre>
-            </div>
-            
-            <div className="data-item">
-              <h4>Sample Participant</h4>
-              <pre>{JSON.stringify({
-                type: Participant.Type,
-                user: participantInfo.user,
-                tenant: participantInfo.tenant
-              }, null, 2)}</pre>
-            </div>
-          </div>
-        </section>
-      </main>
+// This component handles the OAuth callback
+function AuthCallback() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Check if there's a stored redirect URL in session storage
+    const redirectUrl = sessionStorage.getItem('redirectUrl');
+    
+    const timeout = setTimeout(() => {
+      if (redirectUrl) {
+        // Clear the stored URL
+        sessionStorage.removeItem('redirectUrl');
+        // Navigate to the stored URL
+        navigate(redirectUrl);
+      } else {
+        // If no stored URL, redirect to the home page
+        navigate('/');
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timeout);
+  }, [navigate]);
+  
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">Authentication in progress...</h1>
+      <p className="text-gray-600 dark:text-gray-400">You will be redirected shortly.</p>
+    </div>
+  );
+}
 
-      <footer className="app-footer">
-        <p>🚀 Powered by Vite • React • TypeScript • GameHub Model</p>
-      </footer>
+function Home() {
+  return (
+    <div className="px-4 py-5 sm:px-6">
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">LaunchKings Admin</h1>
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        Welcome to the CodeLaunch administration portal. Use the navigation menu above to manage your events and tenants.
+      </p>
     </div>
   )
 }
