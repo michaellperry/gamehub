@@ -90,6 +90,8 @@ This guide provides solutions to common issues encountered when setting up, deve
     - [Performance Issues](#performance-issues)
       - [Problem: Slow application response](#problem-slow-application-response)
     - [Static File Serving Issues](#static-file-serving-issues)
+      - [Problem: Admin interface not loading](#problem-admin-interface-not-loading)
+      - [Problem: Environment variables not loading](#problem-environment-variables-not-loading-1)
       - [Problem: React apps show 404 or blank page](#problem-react-apps-show-404-or-blank-page)
       - [Problem: API calls fail from frontend](#problem-api-calls-fail-from-frontend)
   - [Getting Help](#getting-help)
@@ -1439,6 +1441,30 @@ services:
 ```
 
 ### Static File Serving Issues
+
+#### Problem: Admin interface not loading
+**Symptoms:** 404 errors when accessing `/admin`
+
+**Solution:**
+1. Ensure the admin frontend is built:
+   ```bash
+   cd app
+   npm run build:admin:container
+   ```
+2. Verify files exist in `mesh/nginx/app/gamehub-admin/`
+3. Restart nginx service:
+   ```bash
+   cd mesh
+   docker-compose restart nginx
+   ```
+
+#### Problem: Environment variables not loading
+**Symptoms:** Application shows default values or connection errors
+
+**Solution:**
+1. Check `.env.container.local` exists in `app/gamehub-admin/`
+2. Verify environment variables are prefixed with `VITE_`
+3. Rebuild the application after environment changes
 
 #### Problem: React apps show 404 or blank page
 ```bash

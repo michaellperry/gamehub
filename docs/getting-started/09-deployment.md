@@ -20,6 +20,7 @@ This guide covers the comprehensive deployment setup for the GameHub platform us
     - [Player IP Deployment](#player-ip-deployment)
     - [Content Store Deployment](#content-store-deployment)
   - [Frontend Application Deployment](#frontend-application-deployment)
+    - [Building the Admin Frontend](#building-the-admin-frontend)
     - [React Application Build Process](#react-application-build-process)
   - [Environment Configuration](#environment-configuration)
     - [Production Environment Variables](#production-environment-variables)
@@ -244,6 +245,28 @@ EOF
 ```
 
 ## Frontend Application Deployment
+
+### Building the Admin Frontend
+
+Before starting the Docker services, you need to build the admin frontend:
+
+```bash
+# From the project root
+cd app
+npm run build:admin:container
+
+# Then start the services
+cd ../mesh
+docker-compose up
+```
+
+Alternatively, you can build manually:
+```bash
+cd app/gamehub-admin
+npm run build:container
+cd ../../mesh
+docker-compose up
+```
 
 ### React Application Build Process
 
