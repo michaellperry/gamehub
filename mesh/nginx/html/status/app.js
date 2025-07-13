@@ -447,17 +447,21 @@ class StatusDashboard {
     renderServices(services, bundles = {}) {
         this.servicesGrid.innerHTML = '';
 
-        // Render service cards
-        Object.entries(services).forEach(([serviceId, serviceData]) => {
-            const card = this.createServiceCard(serviceId, serviceData);
-            this.servicesGrid.appendChild(card);
-        });
+        // Render service cards (sorted by serviceId for consistent order)
+        Object.entries(services)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .forEach(([serviceId, serviceData]) => {
+                const card = this.createServiceCard(serviceId, serviceData);
+                this.servicesGrid.appendChild(card);
+            });
 
-        // Render bundle cards
-        Object.entries(bundles).forEach(([bundleId, bundleData]) => {
-            const card = this.createBundleCard(bundleId, bundleData);
-            this.servicesGrid.appendChild(card);
-        });
+        // Render bundle cards (sorted by bundleId for consistent order)
+        Object.entries(bundles)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .forEach(([bundleId, bundleData]) => {
+                const card = this.createBundleCard(bundleId, bundleData);
+                this.servicesGrid.appendChild(card);
+            });
     }
 
     createServiceCard(serviceId, data) {
