@@ -35,9 +35,9 @@ function checkClientConfiguration(): boolean {
 function checkTenantConfiguration(): boolean {
     try {
         // Check if we have tenant-related configuration
-        const tenantId = import.meta.env.VITE_FUSIONAUTH_TENANT_ID;
+        const tenantPublicKey = import.meta.env.VITE_TENANT_PUBLIC_KEY;
 
-        return !!tenantId;
+        return !!tenantPublicKey;
     } catch (error) {
         console.warn('Error checking tenant configuration:', error);
         return false;
