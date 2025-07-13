@@ -3,6 +3,175 @@
  * Guided walkthrough for configuring the GameHub environment
  */
 
+/**
+ * Bundle Manager for loading and executing JavaScript bundles
+ */
+class BundleManager {
+    constructor() {
+        this.loadedBundles = new Map();
+        this.bundleConfigs = new Map();
+        this.bundleCache = new Map();
+    }
+
+    /**
+     * Discover bundle URL from HTML page
+     */
+    async discoverBundleFromHTML(htmlUrl) {
+        try {
+            const response = await fetch(htmlUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch HTML: ${response.status}`);
+            }
+
+            const html = await response.text();
+
+            // Create a temporary DOM element to parse HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Find the main module script
+            const scriptTag = tempDiv.querySelector('script[type="module"][crossorigin]');
+            if (!scriptTag) {
+                throw new Error('Main bundle script not found in HTML');
+            }
+
+            const src = scriptTag.getAttribute('src');
+            // Convert relative htmlUrl to absolute URL if needed
+            const baseUrl = htmlUrl.startsWith('http') ? htmlUrl : window.location.origin + htmlUrl;
+            return new URL(src, baseUrl).href;
+        } catch (error) {
+            console.error('Bundle discovery failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Load and execute a JavaScript bundle
+     */
+    async loadBundle(bundleId, config) {
+        console.log(`🔄 Loading bundle ${bundleId}...`, config);
+        try {
+            // Check cache first
+            const cacheKey = `${bundleId}_${config.discoveryUrl}`;
+            const cached = this.bundleCache.get(cacheKey);
+            if (cached && (Date.now() - cached.timestamp) < 300000) { // 5 minute cache
+                console.log(`💾 Using cached result for ${bundleId}`);
+                return cached.result;
+            }
+
+            let bundleUrl;
+
+            // Primary: HTML parsing discovery
+            if (config.discoveryMethod === 'html-parse') {
+                console.log(`🔍 Discovering bundle URL from HTML: ${config.discoveryUrl}`);
+                bundleUrl = await this.discoverBundleFromHTML(config.discoveryUrl);
+                console.log(`📍 Discovered bundle URL: ${bundleUrl}`);
+            } else {
+                throw new Error(`Unsupported discovery method: ${config.discoveryMethod}`);
+            }
+
+            // Load and execute the bundle
+            console.log(`📥 Loading script bundle: ${bundleUrl}`);
+            const result = await this.loadScriptBundle(bundleUrl, config.configFunction);
+            console.log(`✅ Bundle ${bundleId} loaded successfully:`, result);
+
+            // Cache the result
+            this.bundleCache.set(cacheKey, {
+                result,
+                timestamp: Date.now()
+            });
+
+            return result;
+
+        } catch (error) {
+            console.warn(`❌ Bundle loading failed for ${bundleId}:`, error);
+
+            // Return error status
+            return {
+                configured: false,
+                configuredGroups: {},
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Load script bundle and execute configuration function
+     */
+    async loadScriptBundle(bundleUrl, functionName) {
+        return new Promise((resolve, reject) => {
+            // Create a unique callback name to avoid conflicts
+            const callbackName = `bundleCallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.crossOrigin = 'anonymous';
+
+            // Create a timeout for the operation
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error('Bundle loading timeout'));
+            }, 10000);
+
+            const cleanup = () => {
+                clearTimeout(timeout);
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+                delete window[callbackName];
+            };
+
+            script.onload = () => {
+                try {
+                    // Try to access the function from the global scope
+                    const configFunction = window[functionName];
+                    if (typeof configFunction === 'function') {
+                        const result = configFunction();
+                        cleanup();
+                        resolve(result);
+                    } else {
+                        cleanup();
+                        reject(new Error(`Function ${functionName} not found or not callable`));
+                    }
+                } catch (error) {
+                    cleanup();
+                    reject(error);
+                }
+            };
+
+            script.onerror = () => {
+                cleanup();
+                reject(new Error(`Failed to load bundle: ${bundleUrl}`));
+            };
+
+            script.src = bundleUrl;
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Get bundle status
+     */
+    async getBundleStatus(bundleId, config) {
+        try {
+            const result = await this.loadBundle(bundleId, config);
+            return {
+                configured: result.configured || false,
+                configuredGroups: result.configuredGroups || {},
+                lastChecked: new Date().toISOString(),
+                error: result.error
+            };
+        } catch (error) {
+            return {
+                configured: false,
+                configuredGroups: {},
+                lastChecked: new Date().toISOString(),
+                error: error.message
+            };
+        }
+    }
+}
+
 class SetupWizard {
     constructor() {
         this.pollingInterval = null;
@@ -12,7 +181,11 @@ class SetupWizard {
         this.stepData = {};
         this.statusData = null;
         this.isConnected = false;
-        
+
+        // Bundle management
+        this.bundleManager = new BundleManager();
+        this.bundleData = {};
+
         // Step definitions
         this.steps = [
             {
@@ -37,7 +210,7 @@ class SetupWizard {
                 validationKey: 'servicePrincipal'
             }
         ];
-        
+
         this.initializeElements();
         this.bindEvents();
         this.loadSavedProgress();
@@ -49,13 +222,13 @@ class SetupWizard {
         this.connectionStatus = document.getElementById('connectionStatus');
         this.connectionDot = document.getElementById('connectionDot');
         this.connectionText = document.getElementById('connectionText');
-        
+
         // Progress elements
         this.currentStepSpan = document.getElementById('currentStep');
         this.totalStepsSpan = document.getElementById('totalSteps');
         this.progressFill = document.getElementById('progressFill');
         this.progressSteps = document.getElementById('progressSteps');
-        
+
         // Content elements
         this.loadingState = document.getElementById('loadingState');
         this.errorState = document.getElementById('errorState');
@@ -63,7 +236,7 @@ class SetupWizard {
         this.wizardContainer = document.getElementById('wizardContainer');
         this.completionState = document.getElementById('completionState');
         this.retryBtn = document.getElementById('retryBtn');
-        
+
         // Wizard elements
         this.stepsOverview = document.getElementById('stepsOverview');
         this.stepPanel = document.getElementById('stepPanel');
@@ -72,18 +245,18 @@ class SetupWizard {
         this.stepStatusIndicator = document.getElementById('stepStatusIndicator');
         this.stepStatusText = document.getElementById('stepStatusText');
         this.stepContent = document.getElementById('stepContent');
-        
+
         // Action buttons
         this.prevBtn = document.getElementById('prevBtn');
         this.nextBtn = document.getElementById('nextBtn');
         this.skipBtn = document.getElementById('skipBtn');
         this.completeBtn = document.getElementById('completeBtn');
-        
+
         // Modals
         this.commandModal = document.getElementById('commandModal');
         this.inputModal = document.getElementById('inputModal');
         this.tooltip = document.getElementById('tooltip');
-        
+
         // Set total steps
         this.totalStepsSpan.textContent = this.totalSteps;
     }
@@ -168,13 +341,13 @@ class SetupWizard {
     startPolling() {
         this.showLoading();
         this.updateConnectionStatus('connecting', 'Connecting...');
-        
+
         // Clear any existing polling interval
         this.stopPolling();
-        
+
         // Fetch status immediately
         this.fetchStatus();
-        
+
         // Set up periodic polling
         this.pollingInterval = setInterval(() => {
             this.fetchStatus();
@@ -194,7 +367,7 @@ class SetupWizard {
             if (response.ok) {
                 const data = await response.json();
                 this.handleStatusUpdate(data);
-                
+
                 if (!this.isConnected) {
                     this.isConnected = true;
                     this.updateConnectionStatus('connected', 'Connected');
@@ -204,12 +377,12 @@ class SetupWizard {
             }
         } catch (error) {
             console.error('Failed to fetch status:', error);
-            
+
             if (this.isConnected) {
                 this.isConnected = false;
                 this.updateConnectionStatus('disconnected', 'Disconnected');
             }
-            
+
             // Show error only if we haven't shown the wizard yet
             if (!this.statusData) {
                 this.showError('Unable to connect to the relay service. Please ensure all services are running.');
@@ -217,10 +390,58 @@ class SetupWizard {
         }
     }
 
-    handleStatusUpdate(data) {
+    async handleStatusUpdate(data) {
         this.statusData = data;
+
+        // Scan bundles independently
+        this.bundleData = await this.scanBundles();
+
         this.updateStepValidation();
         this.showWizard();
+    }
+
+    async scanBundles() {
+        console.log('🔍 Starting bundle scanning...');
+        const bundleStatuses = {};
+
+        // Bundle configurations for setup application - targeting admin portal
+        const bundleConfigs = {
+            'admin-portal': {
+                name: 'Admin Portal',
+                discoveryUrl: '/portal/',
+                discoveryMethod: 'html-parse',
+                configFunction: 'getConfigured'
+            }
+        };
+
+        console.log('📦 Bundle configurations:', JSON.stringify(bundleConfigs, null, 2));
+
+        // Scan each configured bundle
+        for (const [bundleId, config] of Object.entries(bundleConfigs)) {
+            console.log(`🔎 Scanning bundle: ${bundleId}`, JSON.stringify(config, null, 2));
+            try {
+                const status = await this.bundleManager.getBundleStatus(bundleId, config);
+                console.log(`✅ Bundle ${bundleId} status:`, JSON.stringify(status, null, 2));
+                bundleStatuses[bundleId] = {
+                    ...status,
+                    name: config.name,
+                    type: 'bundle'
+                };
+            } catch (error) {
+                console.error(`❌ Failed to scan bundle ${bundleId}:`, error);
+                bundleStatuses[bundleId] = {
+                    configured: false,
+                    configuredGroups: {},
+                    lastChecked: new Date().toISOString(),
+                    error: error.message,
+                    name: config.name,
+                    type: 'bundle'
+                };
+            }
+        }
+
+        console.log('📊 Final bundle scan results:', JSON.stringify(bundleStatuses, null, 2));
+        return bundleStatuses;
     }
 
     updateConnectionStatus(status, text) {
@@ -246,19 +467,19 @@ class SetupWizard {
     showWizard() {
         this.loadingState.style.display = 'none';
         this.errorState.style.display = 'none';
-        
+
         // Check if all steps are completed
         if (this.allStepsCompleted()) {
             this.showCompletion();
             return;
         }
-        
+
         // Find and set the first incomplete step
         this.currentStep = this.getFirstIncompleteStep();
-        
+
         this.wizardContainer.style.display = 'flex';
         this.completionState.style.display = 'none';
-        
+
         this.renderProgressSteps();
         this.renderStepsOverview();
         this.renderCurrentStep();
@@ -273,34 +494,34 @@ class SetupWizard {
 
     renderProgressSteps() {
         this.progressSteps.innerHTML = '';
-        
+
         this.steps.forEach((step, index) => {
             const stepElement = document.createElement('div');
             stepElement.className = 'progress-step';
-            
+
             const isCompleted = this.isStepCompleted(step.id);
             const isCurrent = step.id === this.currentStep;
-            
+
             if (isCompleted) stepElement.classList.add('completed');
             if (isCurrent) stepElement.classList.add('current');
-            
+
             const circle = document.createElement('div');
             circle.className = 'step-circle';
             if (isCompleted) circle.classList.add('completed');
             if (isCurrent) circle.classList.add('current');
             circle.textContent = isCompleted ? '✓' : step.id;
-            
+
             const label = document.createElement('div');
             label.className = 'step-label';
             if (isCompleted) label.classList.add('completed');
             if (isCurrent) label.classList.add('current');
             label.textContent = step.title.split(' ')[0]; // First word only for space
-            
+
             stepElement.appendChild(circle);
             stepElement.appendChild(label);
             this.progressSteps.appendChild(stepElement);
         });
-        
+
         // Update progress bar
         const completedSteps = this.steps.filter(step => this.isStepCompleted(step.id)).length;
         const progress = (completedSteps / this.totalSteps) * 100;
@@ -309,19 +530,19 @@ class SetupWizard {
 
     renderStepsOverview() {
         this.stepsOverview.innerHTML = '';
-        
+
         this.steps.forEach(step => {
             const card = document.createElement('div');
             card.className = 'step-card';
-            
+
             const isCompleted = this.isStepCompleted(step.id);
             const isCurrent = step.id === this.currentStep;
-            
+
             if (isCompleted) card.classList.add('completed');
             if (isCurrent) card.classList.add('current');
-            
+
             // Remove click event handler - no manual navigation
-            
+
             card.innerHTML = `
                 <div class="step-card-header">
                     <div class="step-card-number">${isCompleted ? '✓' : step.id}</div>
@@ -334,7 +555,7 @@ class SetupWizard {
                     <span>${this.getStepStatusText(step.id)}</span>
                 </div>
             `;
-            
+
             this.stepsOverview.appendChild(card);
         });
     }
@@ -342,20 +563,20 @@ class SetupWizard {
     renderCurrentStep() {
         const step = this.steps.find(s => s.id === this.currentStep);
         if (!step) return;
-        
+
         this.currentStepSpan.textContent = this.currentStep;
         this.stepTitle.textContent = step.title;
-        
+
         const isCompleted = this.isStepCompleted(step.id);
         this.stepStatusIndicator.textContent = this.getStepStatusIcon(step.id);
         this.stepStatusText.textContent = this.getStepStatusText(step.id);
-        
+
         // Hide all navigation buttons
         this.prevBtn.style.display = 'none';
         this.nextBtn.style.display = 'none';
         this.completeBtn.style.display = 'none';
         this.skipBtn.style.display = 'none';
-        
+
         // Render step content
         this.renderStepContent(step);
     }
@@ -443,16 +664,29 @@ class SetupWizard {
 
     // Step validation methods
     isStepCompleted(stepId) {
-        if (!this.statusData) return false;
-        
+        console.log(`🔍 Checking step ${stepId} completion...`);
+        console.log('📊 Current bundleData:', JSON.stringify(this.bundleData, null, 2));
+        console.log('📊 Current statusData:', JSON.stringify(this.statusData, null, 2));
+
+        let result;
         switch (stepId) {
             case 1: // FusionAuth Configuration
-                return this.statusData.bundles?.['admin-portal']?.configuredGroups?.client === true;
+                result = this.bundleData?.['admin-portal']?.configuredGroups?.client === true;
+                console.log(`✅ Step 1 (FusionAuth) - client configured: ${result}`);
+                console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
+                return result;
             case 2: // Tenant Creation
-                return this.statusData.bundles?.['admin-portal']?.configuredGroups?.tenant === true;
+                result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true;
+                console.log(`✅ Step 2 (Tenant) - tenant configured: ${result}`);
+                console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
+                return result;
             case 3: // Service Principal Authorization
-                return this.statusData.services?.['player-ip']?.ready === true;
+                result = this.statusData?.services?.['player-ip']?.ready === true;
+                console.log(`✅ Step 3 (Service Principal) - player-ip ready: ${result}`);
+                console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
+                return result;
             default:
+                console.log(`❓ Unknown step ${stepId}`);
                 return false;
         }
     }
@@ -488,13 +722,13 @@ class SetupWizard {
         // Update step completion status based on current service status
         this.renderProgressSteps();
         this.renderStepsOverview();
-        
+
         // Check if all steps are complete
         if (this.allStepsCompleted()) {
             this.showCompletion();
             return;
         }
-        
+
         // Auto-advance to first incomplete step if current step is now complete
         const firstIncompleteStep = this.getFirstIncompleteStep();
         if (this.currentStep !== firstIncompleteStep) {
@@ -548,7 +782,7 @@ class SetupWizard {
         document.getElementById('inputModalDescription').textContent = description;
         document.getElementById('inputModalLabel').textContent = label;
         document.getElementById('inputModalField').placeholder = placeholder;
-        
+
         const helpElement = document.getElementById('inputModalHelp');
         if (help) {
             helpElement.textContent = help;
@@ -556,7 +790,7 @@ class SetupWizard {
         } else {
             helpElement.style.display = 'none';
         }
-        
+
         this.inputCallback = callback;
         this.showModal(this.inputModal);
         document.getElementById('inputModalField').focus();
