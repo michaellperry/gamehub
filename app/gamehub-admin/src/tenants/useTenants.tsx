@@ -30,7 +30,7 @@ async function createTenant(user: User) {
 
 export function useTenants() {
     const { user, error: userError } = useUser();
-    const { data, error } = useSpecification(j, tenantsOfAdministrator, user);
+    const { data, error, loading } = useSpecification(j, tenantsOfAdministrator, user);
     const [ actionError, setActionError ] = useState<Error | null>(null);
 
     function addTenant() {
@@ -42,6 +42,7 @@ export function useTenants() {
     }
 
     return {
+        loading,
         tenants: data,
         error: userError || actionError || error,
         canAddTenant: !!user,

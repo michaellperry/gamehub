@@ -5,7 +5,7 @@ import { ResourceList } from "../components/organisms";
 import { TenantViewModel, useTenants } from "./useTenants";
 
 function Tenants() {
-    const { tenants, error, addTenant, canAddTenant } = useTenants();
+    const { tenants, loading, error, addTenant, canAddTenant } = useTenants();
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     
@@ -83,7 +83,7 @@ function Tenants() {
             <ResourceList
                 items={tenants}
                 isError={!!error}
-                isLoading={!tenants}
+                isLoading={loading}
                 emptyState={{
                     iconName: "info",
                     title: "No tenants found",
