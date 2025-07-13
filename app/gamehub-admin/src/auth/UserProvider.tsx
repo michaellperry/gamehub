@@ -26,11 +26,7 @@ export function UserProvider({ j, authProvider, children }: PropsWithChildren<Us
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (import.meta.env.DEV) {
-            setUser(new User("-----ADMIN USER-----"));
-            setError(null);
-        }
-        else if (token) {
+        if (token) {
             authProvider.setToken(token);
             j.login<User>()
                 .then(({userFact}) => setUser(userFact))
