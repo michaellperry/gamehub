@@ -290,15 +290,10 @@ class SetupWizard {
         // Command modal
         const commandModal = this.commandModal;
         const commandModalClose = document.getElementById('modalClose');
-        const commandModalCancel = document.getElementById('modalCancelBtn');
         const commandModalDone = document.getElementById('modalDoneBtn');
         const commandCopyBtn = document.getElementById('modalCopyBtn');
 
         commandModalClose.addEventListener('click', () => {
-            this.hideModal(commandModal);
-        });
-
-        commandModalCancel.addEventListener('click', () => {
             this.hideModal(commandModal);
         });
 

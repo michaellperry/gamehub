@@ -329,6 +329,6 @@ fi
 print_success "GameHub tenant setup completed successfully!"
 echo ""
 print_info "Next steps:"
-print_info "Return to http://localhost/setup to complete the setup process"
+print_info "Return to http://localhost/setup and refresh to complete the setup process"
 echo ""
 print_success "Tenant setup process completed!"
