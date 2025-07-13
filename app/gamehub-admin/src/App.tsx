@@ -12,7 +12,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute'
 function App() {
   return (
     <ThemeProvider>
-      <div className="min-h-screen bg-gray-100 dark:bg-dark-bg transition-colors duration-200">
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
         <NavigationMenu />
         
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
