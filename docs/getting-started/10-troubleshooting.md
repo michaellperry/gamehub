@@ -686,6 +686,8 @@ JWT_SECRET=your-shared-secret-here
 
 # Restart services after changing JWT_SECRET
 docker compose restart service-ip
+# Also rebuild admin application if JWT_SECRET affects frontend
+cd app && npm run build:admin:container
 ```
 
 #### Problem: Client credentials file not found
@@ -1045,6 +1047,8 @@ cat ../../mesh/front-end/policies/gamehub.policy
 # Restart replicator to reload policies
 cd ../../mesh
 docker compose restart front-end-replicator
+# Also rebuild admin application to pick up policy changes
+cd ../app && npm run build:admin:container
 
 # Check replicator logs for policy loading
 docker compose logs front-end-replicator | grep -i policy
@@ -1452,11 +1456,7 @@ services:
    npm run build:admin:container
    ```
 2. Verify files exist in `mesh/nginx/app/gamehub-admin/`
-3. Restart nginx service:
-   ```bash
-   cd mesh
-   docker-compose restart nginx
-   ```
+3. The build process automatically updates the container, no restart needed
 
 #### Problem: Environment variables not loading
 **Symptoms:** Application shows default values or connection errors
@@ -1473,20 +1473,15 @@ services:
 
 **Solution:**
 ```bash
-# Build React applications first
-cd app/gamehub-admin
-npm run build
+# Build React applications using container build process
+cd app
+npm run build:admin:container
 
-cd ../gamehub-player
-npm run build
+# For player application (if exists)
+npm run build:player:container
 
-# Copy built files to nginx directory
-cp -r dist/* ../../mesh/nginx/app/gamehub-admin/
-cp -r dist/* ../../mesh/nginx/app/gamehub-player/
-
-# Restart nginx to pick up new files
-cd ../../mesh
-docker compose restart nginx
+# The container build process automatically handles deployment
+# No manual copying or nginx restart needed
 
 # Check nginx configuration
 docker compose exec nginx cat /etc/nginx/conf.d/default.conf

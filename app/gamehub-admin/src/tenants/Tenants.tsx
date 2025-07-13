@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Alert, Button, Icon } from "../components/atoms";
-import { ConfirmModal, ListItem, PageHeader } from "../components/molecules";
-import { ResourceList } from "../components/organisms";
-import { TenantViewModel, useTenants } from "./useTenants";
+import { useState } from 'react';
+import { Alert, Button, Icon } from '../components/atoms';
+import { ConfirmModal, ListItem, PageHeader } from '../components/molecules';
+import { ResourceList } from '../components/organisms';
+import { TenantViewModel, useTenants } from './useTenants';
 
 function Tenants() {
-    const { tenants, error, addTenant, canAddTenant } = useTenants();
+    const { tenants, loading, error, addTenant, canAddTenant } = useTenants();
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
+
     const copyToClipboard = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
         setCopiedId(id);
@@ -21,8 +21,8 @@ function Tenants() {
     };
 
     const addTenantButton = (
-        <Button 
-            onClick={() => setIsModalOpen(true)} 
+        <Button
+            onClick={() => setIsModalOpen(true)}
             disabled={!canAddTenant}
             icon="add"
             variant="primary"
@@ -36,11 +36,11 @@ function Tenants() {
         <ListItem
             key={tenant.hash}
             action={
-                <Button 
+                <Button
                     onClick={() => copyToClipboard(JSON.stringify(tenant.publicKey), tenant.hash)}
                     variant="secondary"
                     size="sm"
-                    icon={copiedId === tenant.hash ? undefined : "edit"}
+                    icon={copiedId === tenant.hash ? undefined : 'edit'}
                 >
                     {copiedId === tenant.hash ? (
                         <>
@@ -48,17 +48,23 @@ function Tenants() {
                             Copied
                         </>
                     ) : (
-                        "Copy Key"
+                        'Copy Key'
                     )}
                 </Button>
             }
         >
             <div>
-                <div className="text-sm font-medium text-gray-900">
-                    Tenant ID: <span className="font-mono">{tenant.hash ? tenant.hash.substring(0, 7) : ''}</span>
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    Tenant ID:{' '}
+                    <span className="font-mono">
+                        {tenant.hash ? tenant.hash.substring(0, 7) : ''}
+                    </span>
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
-                    Created by: <span className="font-mono">{tenant.publicKey ? tenant.publicKey.substring(28, 48) : ''}...</span>
+                <div className="text-sm text-gray-500 mt-1 dark:text-gray-400">
+                    Created by:{' '}
+                    <span className="font-mono">
+                        {tenant.publicKey ? tenant.publicKey.substring(28, 48) : ''}...
+                    </span>
                 </div>
             </div>
         </ListItem>
@@ -68,26 +74,20 @@ function Tenants() {
         <div>
             <PageHeader
                 title="Tenants"
-                description="Manage tenants in your CodeLaunch instance"
+                description="Manage tenants in your GameHub instance"
                 action={addTenantButton}
             />
-            
-            {error && (
-                <Alert 
-                    variant="error" 
-                    title="Error" 
-                    message={error.message} 
-                />
-            )}
+
+            {error && <Alert variant="error" title="Error" message={error.message} />}
 
             <ResourceList
                 items={tenants}
                 isError={!!error}
-                isLoading={!tenants}
+                isLoading={loading}
                 emptyState={{
-                    iconName: "info",
-                    title: "No tenants found",
-                    description: "Create a tenant to get started with CodeLaunch.",
+                    iconName: 'info',
+                    title: 'No tenants found',
+                    description: 'Create a tenant to get started with GameHub.',
                     action: (
                         <Button
                             onClick={() => setIsModalOpen(true)}
@@ -96,7 +96,7 @@ function Tenants() {
                         >
                             Create tenant
                         </Button>
-                    )
+                    ),
                 }}
                 renderItem={renderTenantItem}
                 keyExtractor={(tenant) => tenant.hash}
@@ -111,8 +111,8 @@ function Tenants() {
                 cancelText="Cancel"
             >
                 <p className="text-sm text-gray-500">
-                    Are you sure you want to create a new tenant? This will create a new isolated environment
-                    within your CodeLaunch instance.
+                    Are you sure you want to create a new tenant? This will create a new isolated
+                    environment within your GameHub instance.
                 </p>
             </ConfirmModal>
         </div>

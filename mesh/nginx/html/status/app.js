@@ -3,6 +3,169 @@
  * HTTP polling-based service monitoring dashboard
  */
 
+/**
+ * Bundle Manager for loading and executing JavaScript bundles
+ */
+class BundleManager {
+    constructor() {
+        this.loadedBundles = new Map();
+        this.bundleConfigs = new Map();
+        this.bundleCache = new Map();
+    }
+
+    /**
+     * Discover bundle URL from HTML page
+     */
+    async discoverBundleFromHTML(htmlUrl) {
+        try {
+            const response = await fetch(htmlUrl);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch HTML: ${response.status}`);
+            }
+
+            const html = await response.text();
+
+            // Create a temporary DOM element to parse HTML
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Find the main module script
+            const scriptTag = tempDiv.querySelector('script[type="module"][crossorigin]');
+            if (!scriptTag) {
+                throw new Error('Main bundle script not found in HTML');
+            }
+
+            const src = scriptTag.getAttribute('src');
+            // Convert relative htmlUrl to absolute URL if needed
+            const baseUrl = htmlUrl.startsWith('http') ? htmlUrl : window.location.origin + htmlUrl;
+            return new URL(src, baseUrl).href;
+        } catch (error) {
+            console.error('Bundle discovery failed:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Load and execute a JavaScript bundle
+     */
+    async loadBundle(bundleId, config) {
+        try {
+            // Check cache first
+            const cacheKey = `${bundleId}_${config.discoveryUrl}`;
+            const cached = this.bundleCache.get(cacheKey);
+            if (cached && (Date.now() - cached.timestamp) < 300000) { // 5 minute cache
+                return cached.result;
+            }
+
+            let bundleUrl;
+
+            // Primary: HTML parsing discovery
+            if (config.discoveryMethod === 'html-parse') {
+                bundleUrl = await this.discoverBundleFromHTML(config.discoveryUrl);
+            } else {
+                throw new Error(`Unsupported discovery method: ${config.discoveryMethod}`);
+            }
+
+            // Load and execute the bundle
+            const result = await this.loadScriptBundle(bundleUrl, config.configFunction);
+
+            // Cache the result
+            this.bundleCache.set(cacheKey, {
+                result,
+                timestamp: Date.now()
+            });
+
+            return result;
+
+        } catch (error) {
+            console.warn(`Bundle loading failed for ${bundleId}:`, error);
+
+            // Return error status
+            return {
+                configured: false,
+                configuredGroups: {},
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Load script bundle and execute configuration function
+     */
+    async loadScriptBundle(bundleUrl, functionName) {
+        return new Promise((resolve, reject) => {
+            // Create a unique callback name to avoid conflicts
+            const callbackName = `bundleCallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.crossOrigin = 'anonymous';
+
+            // Create a timeout for the operation
+            const timeout = setTimeout(() => {
+                cleanup();
+                reject(new Error('Bundle loading timeout'));
+            }, 10000);
+
+            const cleanup = () => {
+                clearTimeout(timeout);
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+                delete window[callbackName];
+            };
+
+            script.onload = () => {
+                try {
+                    // Try to access the function from the global scope
+                    const configFunction = window[functionName];
+                    if (typeof configFunction === 'function') {
+                        const result = configFunction();
+                        cleanup();
+                        resolve(result);
+                    } else {
+                        cleanup();
+                        reject(new Error(`Function ${functionName} not found or not callable`));
+                    }
+                } catch (error) {
+                    cleanup();
+                    reject(error);
+                }
+            };
+
+            script.onerror = () => {
+                cleanup();
+                reject(new Error(`Failed to load bundle: ${bundleUrl}`));
+            };
+
+            script.src = bundleUrl;
+            document.head.appendChild(script);
+        });
+    }
+
+    /**
+     * Get bundle status
+     */
+    async getBundleStatus(bundleId, config) {
+        try {
+            const result = await this.loadBundle(bundleId, config);
+            return {
+                configured: result.configured || false,
+                configuredGroups: result.configuredGroups || {},
+                lastChecked: new Date().toISOString(),
+                error: result.error
+            };
+        } catch (error) {
+            return {
+                configured: false,
+                configuredGroups: {},
+                lastChecked: new Date().toISOString(),
+                error: error.message
+            };
+        }
+    }
+}
+
 class StatusDashboard {
     constructor() {
         this.pollingInterval = null;
@@ -13,7 +176,11 @@ class StatusDashboard {
         this.consecutiveErrors = 0;
         this.maxConsecutiveErrors = 5;
         this.retryDelayMs = 5000; // 5 seconds retry delay
-        
+
+        // Bundle management
+        this.bundleManager = new BundleManager();
+        this.bundleCache = new Map();
+
         this.initializeElements();
         this.bindEvents();
         this.startPolling();
@@ -24,12 +191,12 @@ class StatusDashboard {
         this.connectionStatus = document.getElementById('connectionStatus');
         this.connectionDot = document.getElementById('connectionDot');
         this.connectionText = document.getElementById('connectionText');
-        
+
         // Control elements
         this.refreshBtn = document.getElementById('refreshBtn');
         this.autoRefreshToggle = document.getElementById('autoRefreshToggle');
         this.retryBtn = document.getElementById('retryBtn');
-        
+
         // Content elements
         this.loadingState = document.getElementById('loadingState');
         this.errorState = document.getElementById('errorState');
@@ -37,14 +204,14 @@ class StatusDashboard {
         this.servicesGrid = document.getElementById('servicesGrid');
         this.summarySection = document.getElementById('summarySection');
         this.lastUpdated = document.getElementById('lastUpdated');
-        
+
         // Summary elements
         this.totalServices = document.getElementById('totalServices');
         this.healthyServices = document.getElementById('healthyServices');
         this.configuredServices = document.getElementById('configuredServices');
         this.readyServices = document.getElementById('readyServices');
         this.overallStatus = document.getElementById('overallStatus');
-        
+
         // Tooltip
         this.tooltip = document.getElementById('tooltip');
         this.tooltipContent = document.getElementById('tooltipContent');
@@ -99,10 +266,10 @@ class StatusDashboard {
         this.stopPolling(); // Clear any existing interval
         this.updateConnectionStatus('connecting', 'Connecting...');
         this.showLoading();
-        
+
         // Initial fetch
         this.fetchStatus();
-        
+
         // Set up polling interval if auto-refresh is enabled
         if (this.autoRefresh) {
             this.pollingInterval = setInterval(() => {
@@ -110,7 +277,7 @@ class StatusDashboard {
                     this.fetchStatus();
                 }
             }, this.pollingIntervalMs);
-            
+
             console.log(`HTTP polling started with ${this.pollingIntervalMs / 1000}s interval`);
         }
     }
@@ -126,13 +293,13 @@ class StatusDashboard {
 
     async fetchStatus() {
         if (this.isPolling) return; // Prevent concurrent requests
-        
+
         this.isPolling = true;
-        
+
         try {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-            
+
             const response = await fetch('/relay', {
                 method: 'GET',
                 headers: {
@@ -142,22 +309,22 @@ class StatusDashboard {
                 },
                 signal: controller.signal
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            
+
             const data = await response.json();
             this.handleStatusUpdate(data);
             this.consecutiveErrors = 0;
             this.updateConnectionStatus('connected', `Polling every ${this.pollingIntervalMs / 1000}s`);
-            
+
         } catch (error) {
             console.error('Status fetch failed:', error);
             this.consecutiveErrors++;
-            
+
             if (error.name === 'AbortError') {
                 console.warn('Request timed out');
                 this.updateConnectionStatus('connecting', 'Request timeout, retrying...');
@@ -165,7 +332,7 @@ class StatusDashboard {
                 this.stopPolling();
                 this.showError(`Failed to fetch status after ${this.maxConsecutiveErrors} attempts: ${error.message}`);
                 this.updateConnectionStatus('disconnected', 'Connection failed');
-                
+
                 // Schedule a retry after delay
                 setTimeout(() => {
                     if (this.autoRefresh) {
@@ -184,19 +351,19 @@ class StatusDashboard {
 
     async refreshStatus() {
         if (this.refreshBtn.classList.contains('loading')) return;
-        
+
         this.refreshBtn.classList.add('loading');
-        
+
         try {
             // Try force refresh via HTTP POST to relay service first
-            const refreshResponse = await fetch('/relay/refresh', { 
+            const refreshResponse = await fetch('/relay/refresh', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
                 }
             });
-            
+
             if (refreshResponse.ok) {
                 const data = await refreshResponse.json();
                 this.handleStatusUpdate(data);
@@ -217,30 +384,84 @@ class StatusDashboard {
         }
     }
 
-    handleStatusUpdate(data) {
+    async handleStatusUpdate(data) {
         this.lastData = data;
         this.hideLoading();
         this.hideError();
         this.showContent();
-        
+
         this.updateLastUpdated(data.timestamp);
-        this.renderServices(data.services || {});
+
+        // Always scan for bundles independently of relay service
+        const bundleStatuses = await this.scanBundles();
+
+        this.renderServices(data.services || {}, bundleStatuses);
         this.renderSummary(data.summary || {});
-        
+
         console.log('Status updated:', {
             timestamp: data.timestamp,
             services: Object.keys(data.services || {}).length,
+            bundles: Object.keys(bundleStatuses).length,
             overallStatus: data.summary?.overallStatus
         });
     }
 
-    renderServices(services) {
+    async scanBundles() {
+        const bundleStatuses = {};
+
+        // Bundle configurations defined in status page
+        const bundleConfigs = {
+            'admin-portal': {
+                name: 'Admin Portal',
+                discoveryUrl: '/portal/',
+                discoveryMethod: 'html-parse',
+                configFunction: 'getConfigured'
+            }
+        };
+
+        // Scan each configured bundle
+        for (const [bundleId, config] of Object.entries(bundleConfigs)) {
+            try {
+                const status = await this.bundleManager.getBundleStatus(bundleId, config);
+                bundleStatuses[bundleId] = {
+                    ...status,
+                    name: config.name,
+                    type: 'bundle'
+                };
+            } catch (error) {
+                console.error(`Failed to scan bundle ${bundleId}:`, error);
+                bundleStatuses[bundleId] = {
+                    configured: false,
+                    configuredGroups: {},
+                    lastChecked: new Date().toISOString(),
+                    error: error.message,
+                    name: config.name,
+                    type: 'bundle'
+                };
+            }
+        }
+
+        return bundleStatuses;
+    }
+
+    renderServices(services, bundles = {}) {
         this.servicesGrid.innerHTML = '';
-        
-        Object.entries(services).forEach(([serviceId, serviceData]) => {
-            const card = this.createServiceCard(serviceId, serviceData);
-            this.servicesGrid.appendChild(card);
-        });
+
+        // Render service cards (sorted by serviceId for consistent order)
+        Object.entries(services)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .forEach(([serviceId, serviceData]) => {
+                const card = this.createServiceCard(serviceId, serviceData);
+                this.servicesGrid.appendChild(card);
+            });
+
+        // Render bundle cards (sorted by bundleId for consistent order)
+        Object.entries(bundles)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .forEach(([bundleId, bundleData]) => {
+                const card = this.createBundleCard(bundleId, bundleData);
+                this.servicesGrid.appendChild(card);
+            });
     }
 
     createServiceCard(serviceId, data) {
@@ -294,12 +515,62 @@ class StatusDashboard {
         return card;
     }
 
+    createBundleCard(bundleId, data) {
+        const card = document.createElement('div');
+        card.className = 'service-card bundle-card';
+        card.setAttribute('data-bundle', bundleId);
+
+        const bundleName = data.name || this.getBundleDisplayName(bundleId);
+        const bundleIcon = this.getBundleIcon(bundleId);
+
+        card.innerHTML = `
+            <div class="service-header">
+                <h3 class="service-name">${bundleName}</h3>
+                <div class="service-icon">${bundleIcon}</div>
+            </div>
+            <div class="service-status">
+                <div class="status-item">
+                    <span class="status-label">Health</span>
+                    <div class="status-indicator">
+                        <span class="status-text">N/A</span>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Configuration</span>
+                    <div class="status-indicator">
+                        <span class="status-dot-large ${this.getConfigClass(data.configured, data.configuredGroups)}"></span>
+                        <span class="status-text">${this.getConfigText(data.configured, data.configuredGroups)}</span>
+                        ${data.configuredGroups && Object.keys(data.configuredGroups).length > 0 ? '<span class="info-icon" data-tooltip="config">ⓘ</span>' : ''}
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Ready</span>
+                    <div class="status-indicator">
+                        <span class="status-text">N/A</span>
+                    </div>
+                </div>
+            </div>
+            <div class="service-meta">
+                <span>Last checked: ${this.formatTime(data.lastChecked)}</span>
+                <span>Type: Bundle</span>
+                ${data.error ? `<span class="error-text">Error: ${data.error}</span>` : ''}
+            </div>
+        `;
+
+        // Store configuration data for tooltip
+        if (data.configuredGroups && Object.keys(data.configuredGroups).length > 0) {
+            card.setAttribute('data-config', JSON.stringify(data.configuredGroups));
+        }
+
+        return card;
+    }
+
     renderSummary(summary) {
         this.totalServices.textContent = summary.totalServices || 0;
         this.healthyServices.textContent = summary.healthyServices || 0;
         this.configuredServices.textContent = summary.configuredServices || 0;
         this.readyServices.textContent = summary.readyServices || 0;
-        
+
         const overallStatus = summary.overallStatus || 'unknown';
         this.overallStatus.textContent = this.capitalizeFirst(overallStatus);
         this.overallStatus.className = `stat-value ${overallStatus}`;
@@ -308,7 +579,7 @@ class StatusDashboard {
     showTooltip(event) {
         const target = event.target;
         const serviceCard = target.closest('.service-card');
-        
+
         if (!serviceCard) return;
 
         const configData = serviceCard.getAttribute('data-config');
@@ -317,15 +588,15 @@ class StatusDashboard {
         try {
             const config = JSON.parse(configData);
             const content = this.generateTooltipContent(config);
-            
+
             this.tooltipContent.innerHTML = content;
             this.tooltip.style.display = 'block';
-            
+
             // Position tooltip
             const rect = target.getBoundingClientRect();
             this.tooltip.style.left = `${rect.left + window.scrollX}px`;
             this.tooltip.style.top = `${rect.top + window.scrollY - this.tooltip.offsetHeight - 10}px`;
-            
+
         } catch (error) {
             console.error('Error showing tooltip:', error);
         }
@@ -337,11 +608,11 @@ class StatusDashboard {
 
     generateTooltipContent(configGroups) {
         let content = '<div class="config-groups">';
-        
+
         Object.entries(configGroups).forEach(([groupName, groupValue]) => {
             content += `<div class="config-group">`;
             content += `<div class="config-group-name">${this.capitalizeFirst(groupName)}:</div>`;
-            
+
             if (Array.isArray(groupValue)) {
                 groupValue.forEach(item => {
                     content += `<div class="config-item">`;
@@ -355,10 +626,10 @@ class StatusDashboard {
                 content += `<span>${groupValue ? 'Configured' : 'Not configured'}</span>`;
                 content += `</div>`;
             }
-            
+
             content += `</div>`;
         });
-        
+
         content += '</div>';
         return content;
     }
@@ -384,6 +655,20 @@ class StatusDashboard {
             'replicator': '🔄'
         };
         return icons[serviceId] || '🔧';
+    }
+
+    getBundleDisplayName(bundleId) {
+        const names = {
+            'admin-portal': 'Admin Portal'
+        };
+        return names[bundleId] || this.capitalizeFirst(bundleId.replace('-', ' '));
+    }
+
+    getBundleIcon(bundleId) {
+        const icons = {
+            'admin-portal': '⚙️'
+        };
+        return icons[bundleId] || '📦';
     }
 
     getHealthClass(health) {

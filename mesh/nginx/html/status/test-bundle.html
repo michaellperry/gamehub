@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Loading Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>GameHub Status Page Bundle Loading Test</h1>
+
+    <div class="test-section info">
+        <h3>Test Overview</h3>
+        <p>This page tests the bundle loading functionality for the GameHub status page.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>Bundle Manager Test</h3>
+        <button class="btn-primary" onclick="testBundleManager()">Test Bundle Manager</button>
+        <div id="bundleTestResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Bundle Scanning Test</h3>
+        <button class="btn-primary" onclick="testBundleScanning()">Test Independent Bundle Scanning</button>
+        <div id="scanTestResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Mock Function Test</h3>
+        <button class="btn-primary" onclick="testMockFunction()">Test Mock getConfigured</button>
+        <div id="mockTestResults"></div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Mock getConfigured function for testing
+        window.getConfigured = function () {
+            return {
+                configured: true,
+                configuredGroups: {
+                    client: true,
+                    tenant: false,
+                    servicePrincipal: true
+                }
+            };
+        };
+
+        function logResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = isSuccess ? 'success' : 'error';
+            div.innerHTML = '<strong>' + (isSuccess ? 'SUCCESS' : 'ERROR') + ':</strong> ' + message;
+            element.appendChild(div);
+        }
+
+        function testBundleManager() {
+            const resultsEl = document.getElementById('bundleTestResults');
+            resultsEl.innerHTML = '';
+
+            try {
+                const bundleManager = new BundleManager();
+                logResult('bundleTestResults', 'BundleManager class instantiated successfully', true);
+
+                bundleManager.bundleCache.set('test', { result: 'cached', timestamp: Date.now() });
+                const cached = bundleManager.bundleCache.get('test');
+                if (cached && cached.result === 'cached') {
+                    logResult('bundleTestResults', 'Bundle cache working correctly', true);
+                } else {
+                    logResult('bundleTestResults', 'Bundle cache test failed', false);
+                }
+
+            } catch (error) {
+                logResult('bundleTestResults', 'BundleManager test failed: ' + error.message, false);
+            }
+        }
+
+        async function testBundleScanning() {
+            const resultsEl = document.getElementById('scanTestResults');
+            resultsEl.innerHTML = '';
+
+            try {
+                // Test if StatusDashboard class exists and has scanBundles method
+                if (typeof StatusDashboard === 'function') {
+                    logResult('scanTestResults', 'StatusDashboard class found', true);
+
+                    const dashboard = new StatusDashboard();
+                    if (typeof dashboard.scanBundles === 'function') {
+                        logResult('scanTestResults', 'scanBundles method found', true);
+
+                        // Test independent bundle scanning
+                        const bundleStatuses = await dashboard.scanBundles();
+
+                        if (bundleStatuses && typeof bundleStatuses === 'object') {
+                            logResult('scanTestResults', 'Bundle scanning completed successfully', true);
+
+                            const bundleCount = Object.keys(bundleStatuses).length;
+                            logResult('scanTestResults', 'Found ' + bundleCount + ' bundle(s)', true);
+
+                            // Display results
+                            const pre = document.createElement('pre');
+                            pre.textContent = JSON.stringify(bundleStatuses, null, 2);
+                            resultsEl.appendChild(pre);
+
+                            // Check if admin-portal bundle was found
+                            if (bundleStatuses['admin-portal']) {
+                                logResult('scanTestResults', 'Admin Portal bundle detected', true);
+                            } else {
+                                logResult('scanTestResults', 'Admin Portal bundle not found', false);
+                            }
+                        } else {
+                            logResult('scanTestResults', 'Bundle scanning returned invalid result', false);
+                        }
+                    } else {
+                        logResult('scanTestResults', 'scanBundles method not found', false);
+                    }
+                } else {
+                    logResult('scanTestResults', 'StatusDashboard class not found', false);
+                }
+            } catch (error) {
+                logResult('scanTestResults', 'Bundle scanning test failed: ' + error.message, false);
+            }
+        }
+
+        function testMockFunction() {
+            const resultsEl = document.getElementById('mockTestResults');
+            resultsEl.innerHTML = '';
+
+            try {
+                if (typeof window.getConfigured === 'function') {
+                    const result = window.getConfigured();
+                    logResult('mockTestResults', 'getConfigured function found and callable', true);
+
+                    const pre = document.createElement('pre');
+                    pre.textContent = JSON.stringify(result, null, 2);
+                    resultsEl.appendChild(pre);
+
+                    if (result.configured !== undefined && result.configuredGroups) {
+                        logResult('mockTestResults', 'Function returned expected structure', true);
+                    } else {
+                        logResult('mockTestResults', 'Function returned unexpected structure', false);
+                    }
+                } else {
+                    logResult('mockTestResults', 'getConfigured function not found', false);
+                }
+            } catch (error) {
+                logResult('mockTestResults', 'Mock function test failed: ' + error.message, false);
+            }
+        }
+    </script>
+</body>
+
+</html>

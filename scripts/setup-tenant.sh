@@ -41,19 +41,19 @@ show_usage() {
     echo "Options:"
     echo "  --force                 Force update even if configuration files don't exist"
     echo "  --verbose               Enable verbose logging"
-    echo "  --no-restart            Skip Docker service restart"
+    echo "  --no-rebuild            Skip admin application rebuild"
     echo "  --help                  Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0 \"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...\n-----END PUBLIC KEY-----\""
     echo "  $0 \"<TENANT_PUBLIC_KEY>\" --verbose --force"
-    echo "  $0 \"<TENANT_PUBLIC_KEY>\" --no-restart"
+    echo "  $0 \"<TENANT_PUBLIC_KEY>\" --no-rebuild"
     echo ""
     echo "Script Functionality:"
     echo "  - Validates tenant public key format"
     echo "  - Updates mesh/.env.local with TENANT_PUBLIC_KEY"
     echo "  - Updates app/gamehub-admin/.env.container.local with VITE_TENANT_PUBLIC_KEY"
-    echo "  - Restarts necessary Docker services to apply changes"
+    echo "  - Rebuilds the admin application container to apply changes"
     echo "  - Validates tenant configuration"
 }
 
@@ -75,49 +75,56 @@ validate_tenant_key() {
     return 0
 }
 
-# Function to check Docker services
-check_docker_services() {
-    print_info "Checking Docker services..."
+# Function to check npm build requirements
+check_build_requirements() {
+    print_info "Checking build requirements..."
     
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed or not in PATH"
+    # Check if we're in the correct directory structure
+    if [[ ! -d "app" ]]; then
+        print_error "app/ directory not found"
         return 1
     fi
     
-    if ! docker info &> /dev/null; then
-        print_error "Docker daemon is not running"
+    if [[ ! -f "app/package.json" ]]; then
+        print_error "package.json not found in app/ directory"
         return 1
     fi
     
-    # Check if we're in a directory with docker-compose.yml
-    if [[ ! -f "mesh/docker-compose.yml" ]]; then
-        print_error "docker-compose.yml not found in mesh/ directory"
+    # Check if npm is available
+    if ! command -v npm &> /dev/null; then
+        print_error "npm is not installed or not in PATH"
         return 1
     fi
     
     return 0
 }
 
-# Function to restart Docker services
-restart_docker_services() {
-    print_info "Restarting Docker services to apply tenant configuration..."
+# Function to rebuild admin container
+rebuild_admin_container() {
+    print_info "Rebuilding admin application container to apply tenant configuration..."
     
-    cd mesh
+    # Navigate to app directory
+    cd app
     
-    # Stop services that need the tenant key
-    print_info "Stopping services that require tenant configuration..."
-    if docker compose stop gamehub-admin player-ip service-ip; then
-        print_success "Services stopped successfully"
-    else
-        print_warning "Some services may not have stopped cleanly"
+    # Check if node_modules exists, if not install dependencies
+    if [[ ! -d "node_modules" ]]; then
+        print_info "Installing dependencies in app directory..."
+        if npm install; then
+            print_success "Dependencies installed successfully"
+        else
+            print_error "Failed to install dependencies"
+            cd ..
+            return 1
+        fi
     fi
     
-    # Start services back up
-    print_info "Starting services with new tenant configuration..."
-    if docker compose up -d gamehub-admin player-ip service-ip; then
-        print_success "Services restarted successfully"
+    # Run the build command
+    print_info "Running npm run build:admin:container..."
+    if npm run build:admin:container; then
+        print_success "Admin application container rebuilt successfully"
     else
-        print_error "Failed to restart services"
+        print_error "Failed to rebuild admin application container"
+        cd ..
         return 1
     fi
     
@@ -128,19 +135,6 @@ restart_docker_services() {
 # Function to validate configuration
 validate_configuration() {
     print_info "Validating tenant configuration..."
-    
-    # Check if .env.local was updated
-    if [[ -f "mesh/.env.local" ]]; then
-        if grep -q "TENANT_PUBLIC_KEY=" "mesh/.env.local"; then
-            print_success "TENANT_PUBLIC_KEY found in mesh/.env.local"
-        else
-            print_error "TENANT_PUBLIC_KEY not found in mesh/.env.local"
-            return 1
-        fi
-    else
-        print_error "mesh/.env.local not found"
-        return 1
-    fi
     
     # Check if admin app env was updated
     if [[ -f "app/gamehub-admin/.env.container.local" ]]; then
@@ -178,7 +172,7 @@ shift  # Remove the tenant key from arguments
 # Parse additional options
 FORCE_FLAG=""
 VERBOSE_FLAG=""
-NO_RESTART=false
+NO_REBUILD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -190,8 +184,8 @@ while [[ $# -gt 0 ]]; do
             VERBOSE_FLAG="--verbose"
             shift
             ;;
-        --no-restart)
-            NO_RESTART=true
+        --no-rebuild)
+            NO_REBUILD=true
             shift
             ;;
         *)
@@ -300,27 +294,27 @@ else
     exit 1
 fi
 
-# Navigate back to project root for Docker operations
+# Navigate back to project root for build operations
 cd "$PROJECT_ROOT"
 
-# Check Docker services and restart if not disabled
-if [[ "$NO_RESTART" == false ]]; then
-    if check_docker_services; then
-        if restart_docker_services; then
-            print_success "Docker services restarted successfully"
+# Check build requirements and rebuild admin container if not disabled
+if [[ "$NO_REBUILD" == false ]]; then
+    if check_build_requirements; then
+        if rebuild_admin_container; then
+            print_success "Admin application container rebuilt successfully"
         else
-            print_error "Failed to restart Docker services"
+            print_error "Failed to rebuild admin application container"
             exit 1
         fi
     else
-        print_warning "Docker services check failed. Skipping restart."
-        print_info "You may need to manually restart the services with:"
-        print_info "cd mesh && docker compose down && docker compose up -d"
+        print_warning "Build requirements check failed. Skipping rebuild."
+        print_info "You may need to manually rebuild the admin container with:"
+        print_info "cd app && npm run build:admin:container"
     fi
 else
-    print_info "Skipping Docker service restart (--no-restart flag specified)"
-    print_info "Remember to restart services manually with:"
-    print_info "cd mesh && docker compose down && docker compose up -d"
+    print_info "Skipping admin application rebuild (--no-rebuild flag specified)"
+    print_info "Remember to rebuild the admin container manually with:"
+    print_info "cd app && npm run build:admin:container"
 fi
 
 # Validate the configuration
@@ -335,9 +329,6 @@ fi
 print_success "GameHub tenant setup completed successfully!"
 echo ""
 print_info "Next steps:"
-print_info "1. Verify services are running: docker compose ps"
-print_info "2. Check service logs if needed: docker compose logs <service-name>"
-print_info "3. Navigate to http://localhost/portal/service-principals to complete Step 3"
-print_info "4. Create a service principal for Player-IP service"
+print_info "Return to http://localhost/setup to complete the setup process"
 echo ""
 print_success "Tenant setup process completed!"

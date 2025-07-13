@@ -1,7 +1,7 @@
-import { Jinaga, User } from "jinaga";
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
-import { AuthContext } from "react-oauth2-code-pkce";
-import { BearerAuthenticationProvider } from "./BearerAuthenticationProvider";
+import { Jinaga, User } from 'jinaga';
+import { createContext, PropsWithChildren, useContext, useEffect, useState } from 'react';
+import { AuthContext } from 'react-oauth2-code-pkce';
+import { BearerAuthenticationProvider } from './BearerAuthenticationProvider';
 
 interface UserContextValue {
     user: User | null;
@@ -26,13 +26,15 @@ export function UserProvider({ j, authProvider, children }: PropsWithChildren<Us
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (token) {
+        if (import.meta.env.DEV) {
+            setUser(new User('------ADMIN USER------'));
+            setError(null);
+        } else if (token) {
             authProvider.setToken(token);
             j.login<User>()
-                .then(({userFact}) => setUser(userFact))
-                .catch(error => setError(error));
-        }
-        else {
+                .then(({ userFact }) => setUser(userFact))
+                .catch((error) => setError(error));
+        } else {
             setUser(null);
             setError(null);
         }
@@ -41,12 +43,8 @@ export function UserProvider({ j, authProvider, children }: PropsWithChildren<Us
             // Don't flash the user fact when the token is removed
             // setUser(null);
             setError(null);
-        }
+        };
     }, [token, j, authProvider]);
 
-    return (
-        <UserContext.Provider value={{ user, error }}>
-            {children}
-        </UserContext.Provider>
-    );
+    return <UserContext.Provider value={{ user, error }}>{children}</UserContext.Provider>;
 }

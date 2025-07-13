@@ -6,12 +6,12 @@ import {
     InvitationClosure,
     InvitationDecline,
     model,
-    Tenant
-} from "@model/model";
-import { useSpecification } from "jinaga-react";
-import { useState } from "react";
-import { useUser } from "../auth/UserProvider";
-import { j } from "../jinaga-config";
+    Tenant,
+} from '@model/model';
+import { useSpecification } from 'jinaga-react';
+import { useState } from 'react';
+import { useUser } from '../auth/UserProvider';
+import { j } from '../jinaga-config';
 
 export interface InvitationViewModel {
     code: string;
@@ -24,18 +24,16 @@ export interface AcceptanceViewModel {
 }
 
 // Get active invitations for the current tenant
-const invitationsForTenant = model.given(Tenant).match(tenant =>
-    Invitation.in(tenant)
-        .select(invitation => ({
-            code: invitation.code,
-            acceptances: InvitationAcceptance.for(invitation)
-                .selectMany(acceptance => acceptance.user.predecessor()
-                    .select(user => ({
-                        acceptance: acceptance,
-                        userPublicKey: user.publicKey
-                    }))
-                )
-        }))
+const invitationsForTenant = model.given(Tenant).match((tenant) =>
+    Invitation.in(tenant).select((invitation) => ({
+        code: invitation.code,
+        acceptances: InvitationAcceptance.for(invitation).selectMany((acceptance) =>
+            acceptance.user.predecessor().select((user) => ({
+                acceptance: acceptance,
+                userPublicKey: user.publicKey,
+            }))
+        ),
+    }))
 );
 
 // Generate a random code for new invitations
@@ -60,10 +58,10 @@ export function useInvitations(tenant: Tenant | null) {
 
         try {
             const code = generateRandomCode();
-            
+
             // Create the invitation
             await j.fact(new Invitation(tenant, code));
-            
+
             setActionError(null);
         } catch (err) {
             setActionError(err instanceof Error ? err : new Error(String(err)));
@@ -77,10 +75,10 @@ export function useInvitations(tenant: Tenant | null) {
         try {
             // Create the approval
             await j.fact(new InvitationApproval(acceptance));
-            
+
             // Create an Administrator fact for the accepted user
             await j.fact(new Administrator(tenant, acceptance.user, new Date()));
-            
+
             setActionError(null);
         } catch (err) {
             setActionError(err instanceof Error ? err : new Error(String(err)));
@@ -94,7 +92,7 @@ export function useInvitations(tenant: Tenant | null) {
         try {
             // Create the decline
             await j.fact(new InvitationDecline(acceptance));
-            
+
             setActionError(null);
         } catch (err) {
             setActionError(err instanceof Error ? err : new Error(String(err)));
@@ -108,7 +106,7 @@ export function useInvitations(tenant: Tenant | null) {
         try {
             // Create the closure
             await j.fact(new InvitationClosure(invitation));
-            
+
             setActionError(null);
         } catch (err) {
             setActionError(err instanceof Error ? err : new Error(String(err)));
@@ -122,6 +120,6 @@ export function useInvitations(tenant: Tenant | null) {
         createInvitation,
         approveAcceptance,
         declineAcceptance,
-        closeInvitation
+        closeInvitation,
     };
 }

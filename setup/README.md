@@ -66,22 +66,22 @@ npm run dev -- \
 
 ### Command Line Options
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--api-key` | FusionAuth API key (required) | - |
-| `--fusion-auth-url` | FusionAuth URL | `http://localhost/auth` |
-| `--app-name` | Application name | `GameHub` |
-| `--admin-redirect-uri` | Admin redirect URI | `http://localhost/admin/callback` |
-| `--player-redirect-uri` | Player redirect URI | `http://localhost/player/callback` |
-| `--content-store-url` | Content store URL | `http://localhost/content` |
-| `--replicator-url` | Replicator URL | `http://localhost/replicator/jinaga` |
-| `--player-ip-url` | Player IP URL | `http://localhost/player-ip` |
-| `--jwt-secret` | JWT secret | `development-secret-key` |
-| `--jwt-issuer` | JWT issuer | `player-ip` |
-| `--jwt-audience` | JWT audience | `gamehub-player` |
-| `--player-app-url` | Player app URL | `http://localhost/player` |
-| `--force` | Force overwrite existing files | `false` |
-| `--verbose` | Enable verbose logging | `false` |
+| Option                  | Description                    | Default                              |
+| ----------------------- | ------------------------------ | ------------------------------------ |
+| `--api-key`             | FusionAuth API key (required)  | -                                    |
+| `--fusion-auth-url`     | FusionAuth URL                 | `http://localhost/auth`              |
+| `--app-name`            | Application name               | `GameHub`                            |
+| `--admin-redirect-uri`  | Admin redirect URI             | `http://localhost/admin/callback`    |
+| `--player-redirect-uri` | Player redirect URI            | `http://localhost/player/callback`   |
+| `--content-store-url`   | Content store URL              | `http://localhost/content`           |
+| `--replicator-url`      | Replicator URL                 | `http://localhost/replicator/jinaga` |
+| `--player-ip-url`       | Player IP URL                  | `http://localhost/player-ip`         |
+| `--jwt-secret`          | JWT secret                     | `development-secret-key`             |
+| `--jwt-issuer`          | JWT issuer                     | `player-ip`                          |
+| `--jwt-audience`        | JWT audience                   | `gamehub-player`                     |
+| `--player-app-url`      | Player app URL                 | `http://localhost/player`            |
+| `--force`               | Force overwrite existing files | `false`                              |
+| `--verbose`             | Enable verbose logging         | `false`                              |
 
 ## What the Script Does
 
@@ -104,18 +104,35 @@ The script creates the following files:
 After running the setup script, you'll need to:
 
 1. **Create a tenant** in the admin app by navigating to `http://localhost/portal/tenants`
-2. **Copy the tenant public key** to the following files:
-   - `mesh/.env.local`
+2. **Update tenant configuration** using the setup script:
+   ```bash
+   ./scripts/setup-tenant.sh "YOUR_TENANT_PUBLIC_KEY"
+   ```
+   Or manually copy the tenant public key to the following files:
    - `app/gamehub-admin/.env.container.local`
-3. **Restart the stack** with `docker compose down && docker compose up -d`
+3. **Rebuild the admin application** to apply the tenant configuration:
+   ```bash
+   cd app && npm run build:admin:container
+   ```
 4. **Authorize the Service Principal** by viewing the logs of the player-ip app, copying the public key, and adding it in the admin app's Service Principals page
 
 ## Updating Tenant Keys
 
-Use the included utility to update tenant public keys across all configuration files:
+Use the setup script to update tenant public keys and rebuild the admin application:
+
+```bash
+./scripts/setup-tenant.sh "YOUR_TENANT_PUBLIC_KEY"
+```
+
+Alternatively, use the included utility to update tenant public keys across configuration files only:
 
 ```bash
 npm run update-tenant-key -- --tenant-key "YOUR_TENANT_PUBLIC_KEY"
+```
+
+Note: When using the utility directly, you'll need to manually rebuild the admin application:
+```bash
+cd ../app && npm run build:admin:container
 ```
 
 Options:
