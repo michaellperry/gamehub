@@ -1,6 +1,6 @@
 import { AuthenticationProvider, HttpHeaders } from "jinaga";
 
-export class AuthProvider implements AuthenticationProvider {
+export class BearerAuthenticationProvider implements AuthenticationProvider {
     private accessToken: string | null = null;
 
     setToken(token: string) {

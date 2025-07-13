@@ -4,6 +4,18 @@ import { useContext } from "react";
 export function LoginButton() {
   const { logIn, logOut, token, error } = useContext(AuthContext);
 
+  if (import.meta.env.DEV) {
+    // In development, we can skip the authentication provider
+    return (
+      <button 
+        onClick={() => {}} 
+        className="bg-gray-600 hover:bg-gray-700 text-white px-3 py-2 rounded-md text-sm font-medium"
+      >
+        Log Out
+      </button>
+    );
+  }
+
   if (error) {
     return (
       <button 

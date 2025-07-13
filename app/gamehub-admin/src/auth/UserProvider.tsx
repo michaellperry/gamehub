@@ -1,7 +1,7 @@
 import { Jinaga, User } from "jinaga";
 import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
 import { AuthContext } from "react-oauth2-code-pkce";
-import { AuthProvider } from "./AuthProvider";
+import { BearerAuthenticationProvider } from "./BearerAuthenticationProvider";
 
 interface UserContextValue {
     user: User | null;
@@ -17,7 +17,7 @@ export const useUser = () => useContext(UserContext);
 
 interface UserProviderProps {
     j: Jinaga;
-    authProvider: AuthProvider;
+    authProvider: BearerAuthenticationProvider;
 }
 
 export function UserProvider({ j, authProvider, children }: PropsWithChildren<UserProviderProps>) {
@@ -26,7 +26,11 @@ export function UserProvider({ j, authProvider, children }: PropsWithChildren<Us
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        if (token) {
+        if (import.meta.env.DEV) {
+            setUser(new User("-----ADMIN USER-----"));
+            setError(null);
+        }
+        else if (token) {
             authProvider.setToken(token);
             j.login<User>()
                 .then(({userFact}) => setUser(userFact))

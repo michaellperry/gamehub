@@ -11,6 +11,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const location = useLocation();
 
   useEffect(() => {
+    if (import.meta.env.DEV) {
+      // In development, we can skip the authentication provider
+      return;
+    }
     if (!token) {
       // Store the current URL in session storage for redirect after login
       sessionStorage.setItem('redirectUrl', location.pathname + location.search);
@@ -19,7 +23,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }, [token, location, logIn]);
 
   // If we have a token, render the protected content
-  if (token) {
+  if (import.meta.env.DEV || token) {
     return <>{children}</>;
   }
 

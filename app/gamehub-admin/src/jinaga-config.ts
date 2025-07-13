@@ -1,8 +1,8 @@
 import { authorization } from "@model";
 import { JinagaBrowser } from "jinaga";
-import { AuthProvider } from "./auth/AuthProvider";
+import { BearerAuthenticationProvider } from "./auth/BearerAuthenticationProvider";
 
-export const authProvider = new AuthProvider();
+export const authProvider = new BearerAuthenticationProvider();
 
 export const j = JinagaBrowser.create({
     indexedDb: "jinaga-launchkings-admin",
