@@ -193,6 +193,22 @@ print_info "Setup arguments: $SETUP_ARGS"
 
 # Run the setup application
 if npm start -- $SETUP_ARGS; then
+    # Build admin container before restarting Docker Compose
+    print_info "Building admin container..."
+    APP_DIR="$PROJECT_ROOT/app"
+    if [[ -d "$APP_DIR" && -f "$APP_DIR/package.json" ]]; then
+        print_info "Navigating to app directory: $APP_DIR"
+        if (cd "$APP_DIR" && npm run build:admin:container); then
+            print_success "Admin container build completed successfully"
+        else
+            print_warning "Failed to build admin container, but continuing setup process"
+            print_info "You may need to manually build with: cd $APP_DIR && npm run build:admin:container"
+        fi
+    else
+        print_warning "App directory or package.json not found at $APP_DIR"
+        print_info "Skipping admin container build"
+    fi
+    
     # Stop and recreate the Docker Compose stack to pick up new environment variables
     print_info "Stopping and recreating Docker Compose stack..."
     # Navigate to mesh directory and recreate Docker Compose stack
@@ -211,7 +227,7 @@ if npm start -- $SETUP_ARGS; then
     fi
     print_success "GameHub FusionAuth setup completed successfully!"
     echo ""
-    print_info "Return to http://localhost to continue the setup process."
+    print_info "Return to http://localhost/setup/ to continue the setup process."
     echo ""
     print_success "FusionAuth setup process completed!"
 else

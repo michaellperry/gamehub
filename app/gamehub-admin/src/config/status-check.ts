@@ -20,10 +20,9 @@ interface ConfigurationStatus {
 function checkClientConfiguration(): boolean {
     try {
         // Check if we have the necessary environment variables for FusionAuth client
-        const clientId = import.meta.env.VITE_FUSIONAUTH_CLIENT_ID;
-        const fusionAuthUrl = import.meta.env.VITE_FUSIONAUTH_URL;
+        const clientId = import.meta.env.VITE_CLIENT_ID;
 
-        return !!(clientId && fusionAuthUrl);
+        return clientId !== 'gamehub-admin';
     } catch (error) {
         console.warn('Error checking client configuration:', error);
         return false;
