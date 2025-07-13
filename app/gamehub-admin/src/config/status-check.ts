@@ -37,7 +37,7 @@ function checkTenantConfiguration(): boolean {
         // Check if we have tenant-related configuration
         const tenantPublicKey = import.meta.env.VITE_TENANT_PUBLIC_KEY;
 
-        return !!tenantPublicKey;
+        return tenantPublicKey !== '-----FAKE PUBLIC KEY-----';
     } catch (error) {
         console.warn('Error checking tenant configuration:', error);
         return false;
