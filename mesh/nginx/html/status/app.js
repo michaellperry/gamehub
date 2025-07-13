@@ -523,7 +523,6 @@ class StatusDashboard {
             <div class="service-header">
                 <h3 class="service-name">${bundleName}</h3>
                 <div class="service-icon">${bundleIcon}</div>
-                <div class="bundle-indicator">Bundle</div>
             </div>
             <div class="service-status">
                 <div class="status-item">

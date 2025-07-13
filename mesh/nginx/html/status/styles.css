@@ -384,20 +384,6 @@ body {
     position: relative;
 }
 
-.bundle-indicator {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #8b5cf6;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
 .bundle-card .service-icon {
     background: #f3e8ff;
     border: 1px solid #e9d5ff;
