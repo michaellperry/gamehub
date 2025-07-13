@@ -338,14 +338,19 @@ After the FusionAuth setup completes, you must complete these additional steps:
 
 2. **Update Configuration with Tenant Key**:
    ```bash
+   ./scripts/setup-tenant.sh "YOUR_TENANT_PUBLIC_KEY"
+   ```
+
+   **Alternative method**:
+   ```bash
    cd setup
    npm run update-tenant-key -- --tenant-key "YOUR_TENANT_PUBLIC_KEY"
    ```
 
-3. **Restart the Docker Stack**:
+3. **Rebuild the Admin Application**:
    ```bash
-   cd mesh
-   docker compose down && docker compose up -d
+   cd app
+   npm run build:admin:container
    ```
 
 4. **Authorize Service Principal**:
@@ -496,15 +501,15 @@ docker compose logs -f [service-name]
 
 The new infrastructure provides the following endpoints through NGINX reverse proxy:
 
-| Service | Endpoint | Description |
-|---------|----------|-------------|
-| **Main Gateway** | http://localhost | NGINX reverse proxy |
-| **Admin Portal** | http://localhost/admin/ | GameHub admin interface |
-| **FusionAuth** | http://localhost/auth/ | Identity management |
-| **Replicator** | http://localhost/replicator/ | Real-time data sync |
-| **Player API** | http://localhost/player-ip/ | Player authentication |
-| **Service API** | http://localhost/service-ip/ | Service authentication |
-| **Content Store** | http://localhost/content/ | File storage |
+| Service           | Endpoint                     | Description             |
+| ----------------- | ---------------------------- | ----------------------- |
+| **Main Gateway**  | http://localhost             | NGINX reverse proxy     |
+| **Admin Portal**  | http://localhost/admin/      | GameHub admin interface |
+| **FusionAuth**    | http://localhost/auth/       | Identity management     |
+| **Replicator**    | http://localhost/replicator/ | Real-time data sync     |
+| **Player API**    | http://localhost/player-ip/  | Player authentication   |
+| **Service API**   | http://localhost/service-ip/ | Service authentication  |
+| **Content Store** | http://localhost/content/    | File storage            |
 
 #### Service Health Checks
 
@@ -547,15 +552,15 @@ When you make changes to the admin application:
 
 ```bash
 cd app
+npm run build:admin:container
+```
+
+**Alternative method for development:**
+```bash
+cd app
 npm run build:admin
 cd ../mesh
 docker compose restart nginx
-```
-
-**Or build and deploy to container:**
-```bash
-cd app/gamehub-admin
-npm run build:container
 ```
 
 ## Next Steps

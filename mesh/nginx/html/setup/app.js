@@ -764,7 +764,7 @@ class SetupWizard {
             'Copy the public key from the tenant you created in the admin portal',
             (value) => {
                 this.stepData.tenantKey = value;
-                this.showCommand(`cd setup && npm run update-tenant-key -- --tenant-key "${value}"`, 'Update Tenant Configuration');
+                this.showCommand(`./scripts/setup-tenant.sh ${value}`, 'Update Tenant Configuration');
             }
         );
     }
@@ -782,6 +782,7 @@ class SetupWizard {
         document.getElementById('inputModalDescription').textContent = description;
         document.getElementById('inputModalLabel').textContent = label;
         document.getElementById('inputModalField').placeholder = placeholder;
+        document.getElementById('inputModalField').value = '';
 
         const helpElement = document.getElementById('inputModalHelp');
         if (help) {

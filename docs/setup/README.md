@@ -191,37 +191,37 @@ The setup application supports extensive configuration through command-line opti
 
 ### Required Options
 
-| Option | Description | Example |
-|--------|-------------|---------|
+| Option      | Description        | Example               |
+| ----------- | ------------------ | --------------------- |
 | `--api-key` | FusionAuth API key | `--api-key abc123...` |
 
 ### URL Configuration
 
-| Option | Description | Default | Example |
-|--------|-------------|---------|---------|
-| `--fusion-auth-url` | FusionAuth base URL | `http://localhost/auth` | `--fusion-auth-url http://fusionauth.example.com` |
-| `--admin-redirect-uri` | Admin OAuth callback | `http://localhost/admin/callback` | `--admin-redirect-uri https://admin.example.com/callback` |
-| `--player-redirect-uri` | Player OAuth callback | `http://localhost/player/callback` | `--player-redirect-uri https://app.example.com/callback` |
-| `--content-store-url` | Content store URL | `http://localhost/content` | `--content-store-url https://content.example.com` |
-| `--replicator-url` | Jinaga replicator URL | `http://localhost/replicator/jinaga` | `--replicator-url https://sync.example.com/jinaga` |
-| `--player-ip-url` | Player IP service URL | `http://localhost/player-ip` | `--player-ip-url https://auth.example.com` |
-| `--player-app-url` | Player application URL | `http://localhost/player` | `--player-app-url https://app.example.com` |
+| Option                  | Description            | Default                              | Example                                                   |
+| ----------------------- | ---------------------- | ------------------------------------ | --------------------------------------------------------- |
+| `--fusion-auth-url`     | FusionAuth base URL    | `http://localhost/auth`              | `--fusion-auth-url http://fusionauth.example.com`         |
+| `--admin-redirect-uri`  | Admin OAuth callback   | `http://localhost/admin/callback`    | `--admin-redirect-uri https://admin.example.com/callback` |
+| `--player-redirect-uri` | Player OAuth callback  | `http://localhost/player/callback`   | `--player-redirect-uri https://app.example.com/callback`  |
+| `--content-store-url`   | Content store URL      | `http://localhost/content`           | `--content-store-url https://content.example.com`         |
+| `--replicator-url`      | Jinaga replicator URL  | `http://localhost/replicator/jinaga` | `--replicator-url https://sync.example.com/jinaga`        |
+| `--player-ip-url`       | Player IP service URL  | `http://localhost/player-ip`         | `--player-ip-url https://auth.example.com`                |
+| `--player-app-url`      | Player application URL | `http://localhost/player`            | `--player-app-url https://app.example.com`                |
 
 ### Application Configuration
 
-| Option | Description | Default | Example |
-|--------|-------------|---------|---------|
-| `--app-name` | FusionAuth application name | `GameHub` | `--app-name "My Game Platform"` |
-| `--jwt-secret` | JWT signing secret | `development-secret-key` | `--jwt-secret "prod-secret-123"` |
-| `--jwt-issuer` | JWT token issuer | `player-ip` | `--jwt-issuer "my-game-auth"` |
-| `--jwt-audience` | JWT token audience | `gamehub-player` | `--jwt-audience "my-game-players"` |
+| Option           | Description                 | Default                  | Example                            |
+| ---------------- | --------------------------- | ------------------------ | ---------------------------------- |
+| `--app-name`     | FusionAuth application name | `GameHub`                | `--app-name "My Game Platform"`    |
+| `--jwt-secret`   | JWT signing secret          | `development-secret-key` | `--jwt-secret "prod-secret-123"`   |
+| `--jwt-issuer`   | JWT token issuer            | `player-ip`              | `--jwt-issuer "my-game-auth"`      |
+| `--jwt-audience` | JWT token audience          | `gamehub-player`         | `--jwt-audience "my-game-players"` |
 
 ### Behavior Options
 
-| Option | Description | Default | Example |
-|--------|-------------|---------|---------|
-| `--force` | Overwrite existing files | `false` | `--force` |
-| `--verbose` | Enable detailed logging | `false` | `--verbose` |
+| Option      | Description              | Default | Example     |
+| ----------- | ------------------------ | ------- | ----------- |
+| `--force`   | Overwrite existing files | `false` | `--force`   |
+| `--verbose` | Enable detailed logging  | `false` | `--verbose` |
 
 ### Configuration Examples
 
@@ -373,30 +373,37 @@ VITE_TENANT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
 ```
 
 **Automated Method**:
-Use the included utility script:
+Use the included setup script:
+```bash
+./scripts/setup-tenant.sh "YOUR_TENANT_PUBLIC_KEY"
+```
+
+**Alternative Method**:
+Use the utility script directly:
 ```bash
 cd setup
 npm run update-tenant-key -- --tenant-key "YOUR_TENANT_PUBLIC_KEY"
 ```
 
-### 3. Restart the Docker Stack
+### 3. Rebuild the Admin Application
 
-**Purpose**: Apply the new configuration to all services
+**Purpose**: Apply the new tenant configuration to the admin application
 
 **Commands**:
 ```bash
-cd mesh
-docker compose down
-docker compose up -d
+cd app
+npm run build:admin:container
 ```
 
 **Verification**:
 ```bash
-# Check all services are running
-docker compose ps
+# Check build completed successfully
+cd app
+npm run build:admin:container
 
 # Check service logs
-docker compose logs -f
+cd ../mesh
+docker compose logs -f gamehub-admin
 ```
 
 ### 4. Authorize the Service Principal
@@ -626,7 +633,7 @@ npm run build
 **Solutions**:
 - Verify environment files were created correctly
 - Check file paths and names
-- Restart Docker services after file changes
+- Rebuild admin application after file changes
 
 **Verification**:
 ```bash
