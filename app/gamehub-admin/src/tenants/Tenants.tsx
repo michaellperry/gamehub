@@ -68,7 +68,7 @@ function Tenants() {
         <div>
             <PageHeader
                 title="Tenants"
-                description="Manage tenants in your CodeLaunch instance"
+                description="Manage tenants in your GameHub instance"
                 action={addTenantButton}
             />
             
@@ -87,7 +87,7 @@ function Tenants() {
                 emptyState={{
                     iconName: "info",
                     title: "No tenants found",
-                    description: "Create a tenant to get started with CodeLaunch.",
+                    description: "Create a tenant to get started with GameHub.",
                     action: (
                         <Button
                             onClick={() => setIsModalOpen(true)}
@@ -112,7 +112,7 @@ function Tenants() {
             >
                 <p className="text-sm text-gray-500">
                     Are you sure you want to create a new tenant? This will create a new isolated environment
-                    within your CodeLaunch instance.
+                    within your GameHub instance.
                 </p>
             </ConfirmModal>
         </div>

@@ -17,7 +17,7 @@ const StyleGuide: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="heading-1 mb-8">CodeLaunch Style Guide</h1>
+      <h1 className="heading-1 mb-8">GameHub Style Guide</h1>
       
       {/* Colors Section */}
       <section className="mb-12">

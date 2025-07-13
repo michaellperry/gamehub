@@ -1,6 +1,6 @@
-# CodeLaunch Design System
+# GameHub Design System
 
-This directory contains the components and styles that make up the CodeLaunch design system. The design system is organized using the Atomic Design methodology, which helps create consistent, reusable, and maintainable UI components.
+This directory contains the components and styles that make up the GameHub design system. The design system is organized using the Atomic Design methodology, which helps create consistent, reusable, and maintainable UI components.
 
 ## Structure
 

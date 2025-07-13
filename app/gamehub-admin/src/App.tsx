@@ -70,9 +70,9 @@ function AuthCallback() {
 function Home() {
   return (
     <div className="px-4 py-5 sm:px-6">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">LaunchKings Admin</h1>
+      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">GameHub Admin</h1>
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-        Welcome to the CodeLaunch administration portal. Use the navigation menu above to manage your events and tenants.
+        Welcome to the GameHub administration portal. Use the navigation menu above to manage your events and tenants.
       </p>
     </div>
   )

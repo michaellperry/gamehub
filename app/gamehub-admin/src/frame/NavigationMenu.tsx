@@ -16,7 +16,7 @@ function NavigationMenu() {
                 <div className="flex justify-between h-16">
                     <div className="flex">
                         <div className="flex-shrink-0 flex items-center">
-                            <span className="text-white font-bold text-xl">LaunchKings Admin</span>
+                            <span className="text-white font-bold text-xl">GameHub Admin</span>
                         </div>
                         <div className="hidden sm:ml-6 sm:flex sm:items-center">
                             <div className="flex space-x-4">
