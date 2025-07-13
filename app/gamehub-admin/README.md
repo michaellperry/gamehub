@@ -5,6 +5,7 @@ A modern React web application built with Vite that demonstrates integration wit
 ## Overview
 
 This application serves as an admin interface for the GameHub system, showcasing:
+
 - **Vite + React + TypeScript** modern web development stack
 - **GameHub Model Integration** - demonstrates importing and using the gamehub-model package
 - **Type Safety** - proper TypeScript integration with GameHub entities
@@ -29,14 +30,16 @@ This application serves as an admin interface for the GameHub system, showcasing
 ### Installation
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 2. Start the development server:
-   ```bash
-   npm run dev
-   ```
+
+    ```bash
+    npm run dev
+    ```
 
 3. Open your browser to [http://localhost:3000](http://localhost:3000)
 
@@ -71,19 +74,19 @@ The application demonstrates importing from the gamehub-model package:
 
 ```typescript
 // Import the model modules
-import { model, authorization, distribution } from 'gamehub-model'
-import { Tenant, Player, GameSession } from 'gamehub-model/model'
-import { User } from 'jinaga'
+import { model, authorization, distribution } from 'gamehub-model';
+import { Tenant, Player, GameSession } from 'gamehub-model/model';
+import { User } from 'jinaga';
 ```
 
 ### Type Usage Examples
 
 ```typescript
 // Create GameHub entities
-const sampleUser = new User('admin@gamehub.com')
-const sampleTenant = new Tenant(sampleUser)
-const samplePlayer = new Player(sampleTenant, new Date().toISOString())
-const sampleSession = new GameSession(sampleTenant, 'demo-session')
+const sampleUser = new User('admin@gamehub.com');
+const sampleTenant = new Tenant(sampleUser);
+const samplePlayer = new Player(sampleTenant, new Date().toISOString());
+const sampleSession = new GameSession(sampleTenant, 'demo-session');
 ```
 
 ## Development Notes

@@ -1,31 +1,32 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Alert, Button } from "../components/atoms";
-import { ListItem, Modal, ModalFooter, PageHeader } from "../components/molecules";
-import { ResourceList } from "../components/organisms";
-import { useServicePrincipals } from "./useServicePrincipals";
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Alert, Button } from '../components/atoms';
+import { ListItem, Modal, ModalFooter, PageHeader } from '../components/molecules';
+import { ResourceList } from '../components/organisms';
+import { useServicePrincipals } from './useServicePrincipals';
 
 function ServicePrincipals() {
-    const { isConfigured, servicePrincipals, error, canAddServicePrincipal, addServicePrincipal } = useServicePrincipals();
+    const { isConfigured, servicePrincipals, error, canAddServicePrincipal, addServicePrincipal } =
+        useServicePrincipals();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [publicKey, setPublicKey] = useState("");
+    const [publicKey, setPublicKey] = useState('');
 
     const handleAddServicePrincipal = () => {
         if (publicKey.trim()) {
             addServicePrincipal(publicKey);
             setIsModalOpen(false);
-            setPublicKey("");
+            setPublicKey('');
         }
     };
 
     const closeModal = () => {
         setIsModalOpen(false);
-        setPublicKey("");
+        setPublicKey('');
     };
 
     const addServicePrincipalButton = (
-        <Button 
-            onClick={() => setIsModalOpen(true)} 
+        <Button
+            onClick={() => setIsModalOpen(true)}
             disabled={!canAddServicePrincipal}
             icon="add"
             variant="primary"
@@ -36,10 +37,10 @@ function ServicePrincipals() {
 
     // Function to truncate the public key for display
     const truncatePublicKey = (key: string) => {
-        if (!key) return "";
-        const lines = key.split("\n");
+        if (!key) return '';
+        const lines = key.split('\n');
         if (lines.length <= 2) return key;
-        
+
         // Return first line, ellipsis, and last line
         return `${lines[0]}${lines[1]}...${lines[lines.length - 2]}`;
     };
@@ -53,7 +54,7 @@ function ServicePrincipals() {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
-            timeZoneName: 'short'
+            timeZoneName: 'short',
         });
     };
 
@@ -81,14 +82,8 @@ function ServicePrincipals() {
                 description="Manage service principals for your application"
                 action={addServicePrincipalButton}
             />
-            
-            {error && (
-                <Alert 
-                    variant="error" 
-                    title="Error" 
-                    message={error.message} 
-                />
-            )}
+
+            {error && <Alert variant="error" title="Error" message={error.message} />}
 
             {!isConfigured && (
                 <Alert
@@ -96,10 +91,13 @@ function ServicePrincipals() {
                     title="Configuration Required"
                     message={
                         <div>
-                            You need to set the VITE_TENANT_PUBLIC_KEY to a valid public key. Go to{" "}
-                            <Link to='/tenants' className="font-medium text-yellow-800 underline hover:text-yellow-900">
+                            You need to set the VITE_TENANT_PUBLIC_KEY to a valid public key. Go to{' '}
+                            <Link
+                                to="/tenants"
+                                className="font-medium text-yellow-800 underline hover:text-yellow-900"
+                            >
                                 Tenants
-                            </Link>{" "}
+                            </Link>{' '}
                             to get started.
                         </div>
                     }
@@ -111,9 +109,9 @@ function ServicePrincipals() {
                 isError={!!error}
                 isLoading={!servicePrincipals}
                 emptyState={{
-                    iconName: "user",
-                    title: "No service principals found",
-                    description: "Get started by adding your first service principal.",
+                    iconName: 'user',
+                    title: 'No service principals found',
+                    description: 'Get started by adding your first service principal.',
                     action: (
                         <Button
                             onClick={() => setIsModalOpen(true)}
@@ -122,12 +120,12 @@ function ServicePrincipals() {
                         >
                             Add Service Principal
                         </Button>
-                    )
+                    ),
                 }}
                 renderItem={renderServicePrincipalItem}
                 keyExtractor={(servicePrincipal) => servicePrincipal.id}
             />
-            
+
             <Modal
                 isOpen={isModalOpen}
                 onClose={closeModal}
@@ -139,7 +137,8 @@ function ServicePrincipals() {
                         onCancel={closeModal}
                         confirmText="Save"
                         cancelText="Cancel"
-                        isConfirmDisabled={!publicKey.trim()} />
+                        isConfirmDisabled={!publicKey.trim()}
+                    />
                 }
             >
                 <div className="mt-4">
