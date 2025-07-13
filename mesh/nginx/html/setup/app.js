@@ -624,14 +624,14 @@ class SetupWizard {
                 <h3>Tenant Creation</h3>
                 <p>Create a tenant for your organization and configure public keys:</p>
                 <ol>
-                    <li><strong>Access tenant management interface</strong> at <a href="/admin" target="_blank">http://localhost/admin</a></li>
+                    <li><strong>Access tenant management interface</strong> at <a href="/portal/tenants" target="_blank">http://localhost/portal/tenants</a></li>
                     <li><strong>Create a new tenant</strong> for your game/organization</li>
                     <li><strong>Copy the tenant public key</strong> from the created tenant</li>
                     <li><strong>Update configuration</strong> with the tenant key</li>
                 </ol>
                 <div style="margin-top: 20px;">
                     <button class="action-button" onclick="setupWizard.promptForTenantKey()">Enter Tenant Key</button>
-                    <a href="/admin" target="_blank" class="action-button secondary">Open Admin Portal</a>
+                    <a href="/portal/tenants" target="_blank" class="action-button secondary">Open Admin Portal</a>
                 </div>
                 <div style="margin-top: 15px;">
                     <p><strong>Validation:</strong> This step is complete when the Admin Portal tenant configuration group is true.</p>
@@ -653,7 +653,7 @@ class SetupWizard {
                 </ol>
                 <div style="margin-top: 20px;">
                     <button class="action-button" onclick="setupWizard.showCommand('cd mesh && docker compose logs player-ip | grep \\'service principal\\'', 'Get Service Principal Key')">Get Service Principal Key</button>
-                    <a href="/admin" target="_blank" class="action-button secondary">Open Admin Portal</a>
+                    <a href="/portal/service-principals" target="_blank" class="action-button secondary">Open Admin Portal</a>
                 </div>
                 <div style="margin-top: 15px;">
                     <p><strong>Validation:</strong> This step is complete when the Player IP ready endpoint returns true.</p>

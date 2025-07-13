@@ -34,7 +34,7 @@ export class CLI {
             .requiredOption('-k, --api-key <key>', 'FusionAuth API key')
             .option('-u, --fusion-auth-url <url>', 'FusionAuth URL', 'http://localhost/auth')
             .option('-n, --app-name <name>', 'Application name', 'GameHub')
-            .option('-a, --admin-redirect-uri <uri>', 'Admin redirect URI', 'http://localhost/admin/callback')
+            .option('-a, --admin-redirect-uri <uri>', 'Admin redirect URI', 'http://localhost/portal/callback')
             .option('-p, --player-redirect-uri <uri>', 'Player redirect URI', 'http://localhost/player/callback')
             .option('-c, --content-store-url <url>', 'Content store URL', 'http://localhost/content')
             .option('-r, --replicator-url <url>', 'Replicator URL', 'http://localhost/replicator/jinaga')
