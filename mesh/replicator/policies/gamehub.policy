@@ -52,6 +52,14 @@ authorization {
             u2 = u1->user: Jinaga.User
         ]
     } => u2
+    (p1: GameHub.ServicePrincipal) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1->tenant: GameHub.Tenant
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
 }
 
 distribution {
@@ -85,5 +93,18 @@ distribution {
             u1 = p1
         ]
     } => u1
+    share (p1: GameHub.Tenant) {
+        u1: GameHub.ServicePrincipal [
+            u1->tenant: GameHub.Tenant = p1
+        ]
+    } => u1
+    with (p1: GameHub.Tenant) {
+        u1: GameHub.Tenant.Administrator [
+            u1->tenant: GameHub.Tenant = p1
+        ]
+        u2: Jinaga.User [
+            u2 = u1->user: Jinaga.User
+        ]
+    } => u2
 }
 
