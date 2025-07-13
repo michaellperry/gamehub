@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx';
 import AccessProvider from './auth/AccessProvider.tsx';
 import './index.css';
+// Import status check to make getConfigured function available globally
+import './config/status-check.ts';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
