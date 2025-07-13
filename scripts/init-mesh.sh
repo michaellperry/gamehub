@@ -3,6 +3,12 @@
 # GameHub Mesh Initialization Script
 # This script initializes the Docker Compose mesh configuration
 # It is idempotent and safe to run multiple times
+#
+# Features:
+# - Generates secure random secrets for environment variables
+# - Creates synchronized client secrets for service-ip and player-ip
+# - Generates provider configuration files with shared authentication keys
+# - Creates necessary directory structure for secrets and authentication
 
 set -euo pipefail
 
@@ -20,6 +26,9 @@ ENV_FILE="$MESH_DIR/.env"
 SECRETS_DIR="$MESH_DIR/secrets"
 SERVICE_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/service-ip/clients/player-ip"
 PLAYER_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/player-ip/player-ip-client-secret"
+PROVIDER_DIR="$MESH_DIR/replicator/authentication"
+PLAYER_PROVIDER_FILE="$PROVIDER_DIR/player.provider"
+SERVICE_PROVIDER_FILE="$PROVIDER_DIR/service.provider"
 
 # Example values that need to be replaced
 POSTGRES_PASSWORD_EXAMPLE="secure_password_change_in_production"
@@ -98,6 +107,38 @@ get_env_var() {
     grep "^${var_name}=" "$file" | cut -d'=' -f2- || echo ""
 }
 
+# Function to write provider configuration file with shared secret
+write_provider_file() {
+    local provider_file=$1
+    local provider_name=$2
+    local issuer=$3
+    local audience=$4
+    local key_id=$5
+    local shared_secret=$6
+    
+    # Check if file exists and already has the correct key
+    if [[ -f "$provider_file" ]]; then
+        # Check if the file already contains the shared secret
+        if grep -q "\"key\": \"$shared_secret\"" "$provider_file" 2>/dev/null; then
+            print_success "Provider file already configured with correct key: $provider_file"
+            return 0
+        fi
+    fi
+    
+    # Write the provider configuration file
+    cat > "$provider_file" << EOF
+{
+  "provider": "$provider_name",
+  "issuer": "$issuer",
+  "audience": "$audience",
+  "key_id": "$key_id",
+  "key": "$shared_secret"
+}
+EOF
+    
+    print_warning "Updated provider file: $provider_file"
+}
+
 # Main initialization function
 main() {
     print_info "Starting GameHub Mesh initialization..."
@@ -162,6 +203,7 @@ main() {
         "$SECRETS_DIR/content-store"
         "$SECRETS_DIR/fusionauth"
         "$SECRETS_DIR/fusionauth/application-config"
+        "$PROVIDER_DIR"
     )
     
     for dir in "${directories[@]}"; do
@@ -222,6 +264,18 @@ main() {
         print_success "Client secrets are synchronized"
     fi
     
+    # Step 6: Generate provider configuration files with shared secret
+    print_info "Checking provider configuration files..."
+    
+    # Get the synchronized shared secret
+    shared_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
+    
+    # Write player provider file
+    write_provider_file "$PLAYER_PROVIDER_FILE" "Player" "player-ip" "gamehub-players" "player-ip-key" "$shared_secret"
+    
+    # Write service provider file
+    write_provider_file "$SERVICE_PROVIDER_FILE" "Service" "service-ip" "service-clients" "service-ip-key" "$shared_secret"
+    
     echo
     print_success "GameHub Mesh initialization completed successfully!"
     print_info "You can now run 'docker-compose up' in the mesh directory to start the services."
@@ -233,6 +287,9 @@ main() {
     echo "  🔐 Secrets directory: $SECRETS_DIR"
     echo "  🔑 Service-IP client secret: $SERVICE_IP_CLIENT_SECRET_FILE"
     echo "  🔑 Player-IP client secret: $PLAYER_IP_CLIENT_SECRET_FILE"
+    echo "  🔧 Provider configuration directory: $PROVIDER_DIR"
+    echo "  🔧 Player provider file: $PLAYER_PROVIDER_FILE"
+    echo "  🔧 Service provider file: $SERVICE_PROVIDER_FILE"
 }
 
 # Error handling

@@ -1,6 +1,0 @@
-{
-  "provider": "Service",
-  "issuer": "service-ip",
-  "audience": "service-clients",
-  "key_id": "service-ip-key"
-}
