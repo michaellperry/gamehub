@@ -54,10 +54,10 @@ function Tenants() {
             }
         >
             <div>
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     Tenant ID: <span className="font-mono">{tenant.hash ? tenant.hash.substring(0, 7) : ''}</span>
                 </div>
-                <div className="text-sm text-gray-500 mt-1">
+                <div className="text-sm text-gray-500 mt-1 dark:text-gray-400">
                     Created by: <span className="font-mono">{tenant.publicKey ? tenant.publicKey.substring(28, 48) : ''}...</span>
                 </div>
             </div>
