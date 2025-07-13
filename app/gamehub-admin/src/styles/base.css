@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component classes */
+@layer components {
+  /* Button variants */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-white border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-blue-500 dark:bg-dark-surface dark:border-dark-border dark:text-gray-200 dark:hover:bg-gray-700;
+  }
+  
+  .btn-danger {
+    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  }
+  
+  .btn-disabled {
+    @apply btn bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400;
+  }
+  
+  /* Form controls */
+  .form-input {
+    @apply shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md dark:bg-dark-surface dark:border-dark-border dark:text-white;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-white shadow overflow-hidden sm:rounded-lg dark:bg-dark-surface dark:border dark:border-dark-border;
+  }
+  
+  .card-header {
+    @apply px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-dark-border;
+  }
+  
+  .card-body {
+    @apply px-4 py-5 sm:p-6;
+  }
+
+  .list-item {
+    @apply border-b border-gray-200 dark:border-dark-border hover:bg-gray-50 dark:hover:bg-gray-700;
+  }
+  
+  /* Alert styles */
+  .alert {
+    @apply rounded-md p-4 mb-4;
+  }
+  
+  .alert-error {
+    @apply alert bg-red-50 dark:bg-red-900/20 dark:text-red-200;
+  }
+  
+  .alert-warning {
+    @apply alert bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-200;
+  }
+  
+  .alert-info {
+    @apply alert bg-blue-50 dark:bg-blue-900/20 dark:text-blue-200;
+  }
+  
+  /* Typography */
+  .heading-1 {
+    @apply text-2xl font-semibold text-gray-900 dark:text-white;
+  }
+  
+  .heading-2 {
+    @apply text-lg font-medium text-gray-900 dark:text-white;
+  }
+
+  .heading-3 {
+    @apply text-base font-medium text-gray-900 dark:text-white;
+  }
+  
+  .text-body {
+    @apply text-sm text-gray-700 dark:text-gray-300;
+  }
+  
+  .text-muted {
+    @apply text-sm text-gray-500 dark:text-gray-400;
+  }
+  
+  /* Layout utilities */
+  .page-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+  }
+  
+  .section-header {
+    @apply sm:flex sm:items-center sm:justify-between mb-8;
+  }
+}
