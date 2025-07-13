@@ -7,7 +7,11 @@ import { authProvider, j } from "../jinaga-config";
 export default function AccessProvider({ children }: React.PropsWithChildren<{}>) {
     if (import.meta.env.DEV) {
         // In development, we can skip the authentication provider
-        return <>{children}</>;
+        return (
+            <UserProvider j={j} authProvider={authProvider}>
+                {children}
+            </UserProvider>
+        )
     }
 
     return (
