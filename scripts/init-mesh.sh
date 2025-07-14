@@ -143,11 +143,7 @@ main() {
     print_info "Starting GameHub Mesh initialization..."
     echo
     
-    # Check if we're in the right directory
-    if [[ ! -f "$ENV_FILE" ]]; then
-        print_error "Could not find $ENV_FILE. Please run this script from the project root directory."
-        exit 1
-    fi
+    # Note: .env file will be created if it doesn't exist
     
     # Step 1: Create .env file for secrets if it doesn't exist
     if [[ ! -f "$ENV_FILE" ]]; then
@@ -161,35 +157,20 @@ main() {
     # Step 2: Generate random secrets for environment variables and write to .env
     print_info "Checking environment variables for secrets in .env..."
     
-    # Check POSTGRES_PASSWORD
-    current_postgres_password=$(get_env_var "POSTGRES_PASSWORD" "$ENV_FILE")
-    if [[ -z "$current_postgres_password" ]] || is_example_value "$current_postgres_password"; then
-        new_postgres_password=$(generate_secret)
-        update_env_var "POSTGRES_PASSWORD" "$new_postgres_password" "$ENV_FILE"
-        print_warning "Generated new POSTGRES_PASSWORD in .env"
-    else
-        print_success "POSTGRES_PASSWORD already configured in .env"
-    fi
+    # Generate POSTGRES_PASSWORD (always overwrite)
+    new_postgres_password=$(generate_secret)
+    update_env_var "POSTGRES_PASSWORD" "$new_postgres_password" "$ENV_FILE"
+    print_warning "Generated new POSTGRES_PASSWORD in .env"
     
-    # Check JWT_SECRET
-    current_jwt_secret=$(get_env_var "JWT_SECRET" "$ENV_FILE")
-    if [[ -z "$current_jwt_secret" ]] || is_example_value "$current_jwt_secret"; then
-        new_jwt_secret=$(generate_secret)
-        update_env_var "JWT_SECRET" "$new_jwt_secret" "$ENV_FILE"
-        print_warning "Generated new JWT_SECRET in .env"
-    else
-        print_success "JWT_SECRET already configured in .env"
-    fi
+    # Generate JWT_SECRET (always overwrite)
+    new_jwt_secret=$(generate_secret)
+    update_env_var "JWT_SECRET" "$new_jwt_secret" "$ENV_FILE"
+    print_warning "Generated new JWT_SECRET in .env"
     
-    # Check PLAYER_JWT_SECRET
-    current_player_jwt_secret=$(get_env_var "PLAYER_JWT_SECRET" "$ENV_FILE")
-    if [[ -z "$current_player_jwt_secret" ]] || is_example_value "$current_player_jwt_secret"; then
-        new_player_jwt_secret=$(generate_secret)
-        update_env_var "PLAYER_JWT_SECRET" "$new_player_jwt_secret" "$ENV_FILE"
-        print_warning "Generated new PLAYER_JWT_SECRET in .env"
-    else
-        print_success "PLAYER_JWT_SECRET already configured in .env"
-    fi
+    # Generate PLAYER_JWT_SECRET (always overwrite)
+    new_player_jwt_secret=$(generate_secret)
+    update_env_var "PLAYER_JWT_SECRET" "$new_player_jwt_secret" "$ENV_FILE"
+    print_warning "Generated new PLAYER_JWT_SECRET in .env"
     
     # Step 3: Create necessary directories
     print_info "Checking required directories..."
@@ -217,39 +198,15 @@ main() {
     # Step 4: Generate client secrets if they contain example values
     print_info "Checking client secret files..."
     
-    # Check service-ip client secret
-    if [[ -f "$SERVICE_IP_CLIENT_SECRET_FILE" ]]; then
-        current_service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
-        if [[ "$current_service_secret" == "$SERVICE_IP_CLIENT_SECRET_EXAMPLE" ]]; then
-            new_client_secret=$(generate_secret)
-            echo "$new_client_secret" > "$SERVICE_IP_CLIENT_SECRET_FILE"
-            print_warning "Generated new service-ip client secret"
-        else
-            print_success "Service-ip client secret already configured"
-        fi
-    else
-        new_client_secret=$(generate_secret)
-        echo "$new_client_secret" > "$SERVICE_IP_CLIENT_SECRET_FILE"
-        print_warning "Created service-ip client secret file"
-    fi
+    # Generate service-ip client secret (always overwrite)
+    new_client_secret=$(generate_secret)
+    echo "$new_client_secret" > "$SERVICE_IP_CLIENT_SECRET_FILE"
+    print_warning "Generated new service-ip client secret"
     
-    # Check player-ip client secret
-    if [[ -f "$PLAYER_IP_CLIENT_SECRET_FILE" ]]; then
-        current_player_secret=$(cat "$PLAYER_IP_CLIENT_SECRET_FILE")
-        if [[ "$current_player_secret" == "$PLAYER_IP_CLIENT_SECRET_EXAMPLE" ]]; then
-            # Use the same secret as service-ip for consistency
-            service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
-            echo "$service_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
-            print_warning "Updated player-ip client secret to match service-ip"
-        else
-            print_success "Player-ip client secret already configured"
-        fi
-    else
-        # Use the same secret as service-ip for consistency
-        service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
-        echo "$service_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
-        print_warning "Created player-ip client secret file"
-    fi
+    # Generate player-ip client secret (always overwrite, use same as service-ip for consistency)
+    service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
+    echo "$service_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
+    print_warning "Generated player-ip client secret to match service-ip"
     
     # Step 5: Verify secrets match
     service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")

@@ -165,7 +165,7 @@ The recommended way to initialize the mesh environment is using the automated se
 - Service-to-service authentication secrets
 - All required directory structures
 
-**Note:** The script writes secrets to `.env` and does not modify the base `.env` file. This allows you to maintain your base configuration in `.env` while keeping secrets separate in `.env`.
+**Note:** The script creates `/mesh/.env` if it doesn't exist, or overwrites it with newly generated secrets if it does exist. This ensures all required environment variables are properly configured for the mesh services.
 
 ### Service Authentication Setup
 

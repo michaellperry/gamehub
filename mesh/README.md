@@ -27,25 +27,18 @@ The infrastructure uses three segregated networks:
 
 ## Quick Start
 
-1. **Copy environment configuration:**
+1. **Initialize the mesh environment:**
    ```bash
-   cp .env.example .env
+   ../scripts/init-mesh.sh
    ```
+   This script automatically creates and configures the `.env` file with all required environment variables including secure secrets.
 
-2. **Update environment variables:**
-   Edit `.env` and update the following critical values:
-   - `POSTGRES_PASSWORD`: Strong database password
-   - `JWT_SECRET`: Secure JWT signing key
-   - `PLAYER_JWT_SECRET`: Secure player JWT signing key
-   - `FUSIONAUTH_APPLICATION_ID`: FusionAuth application ID
-   - `FUSIONAUTH_KEY_ID`: FusionAuth key ID
-
-3. **Start the infrastructure:**
+2. **Start the infrastructure:**
    ```bash
    docker compose up -d
    ```
 
-4. **Verify services:**
+3. **Verify services:**
    ```bash
    docker compose ps
    ```

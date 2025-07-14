@@ -427,8 +427,9 @@ docker compose logs player-ip | grep -i auth
    **Alternative manual setup:**
    ```bash
    cd mesh
-   cp .env.example .env
-   # Update .env with production values
+   ../scripts/init-mesh.sh
+   # The script automatically creates .env with secure defaults
+   # Edit .env to update any production-specific values as needed
    ```
 
 2. **Verify Configuration:**
