@@ -671,9 +671,11 @@ class SetupWizard {
                 console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
                 return result;
             case 2: // Tenant Creation
-                result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true;
+                result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true &&
+                    this.statusData?.services?.['player-ip']?.configuredGroups?.tenant === true;
                 console.log(`✅ Step 2 (Tenant) - tenant configured: ${result}`);
                 console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
+                console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
                 return result;
             case 3: // Service Principal Authorization
                 result = this.statusData?.services?.['player-ip']?.ready === true;
