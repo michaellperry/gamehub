@@ -53,7 +53,7 @@ export async function updateTenantKey(): Promise<void> {
                 quoted: true
             },
             {
-                path: '../mesh/.env.local',
+                path: '../mesh/.env',
                 variableName: 'TENANT_PUBLIC_KEY',
                 exists: false,
                 quoted: false

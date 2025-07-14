@@ -51,7 +51,7 @@ show_usage() {
     echo ""
     echo "Script Functionality:"
     echo "  - Validates tenant public key format"
-    echo "  - Updates mesh/.env.local with TENANT_PUBLIC_KEY"
+    echo "  - Updates mesh/.env with TENANT_PUBLIC_KEY"
     echo "  - Updates app/gamehub-admin/.env.container.local with VITE_TENANT_PUBLIC_KEY"
     echo "  - Rebuilds the Docker Compose stack to apply tenant key to services"
     echo "  - Rebuilds the admin application container to apply changes"
@@ -209,15 +209,15 @@ validate_configuration() {
     fi
     
     # Check if mesh env was updated
-    if [[ -f "mesh/.env.local" ]]; then
-        if grep -q "TENANT_PUBLIC_KEY=" "mesh/.env.local"; then
-            print_success "TENANT_PUBLIC_KEY found in mesh/.env.local"
+    if [[ -f "mesh/.env" ]]; then
+        if grep -q "TENANT_PUBLIC_KEY=" "mesh/.env"; then
+            print_success "TENANT_PUBLIC_KEY found in mesh/.env"
         else
-            print_error "TENANT_PUBLIC_KEY not found in mesh/.env.local"
+            print_error "TENANT_PUBLIC_KEY not found in mesh/.env"
             return 1
         fi
     else
-        print_error "mesh/.env.local not found"
+        print_error "mesh/.env not found"
         return 1
     fi
     

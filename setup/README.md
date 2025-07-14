@@ -96,7 +96,7 @@ npm run dev -- \
 The script creates the following files:
 
 - `../mesh/replicator/authentication/fusionauth.provider` - FusionAuth provider configuration
-- `../mesh/.env.local` - Mesh environment variables
+- `../mesh/.env` - Mesh environment variables
 - `../app/gamehub-admin/.env.container.local` - Admin app environment variables
 
 ## Post-Setup Steps

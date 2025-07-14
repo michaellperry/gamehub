@@ -329,7 +329,7 @@ Use the automated initialization script for initial secret generation:
 ```
 
 The script automatically:
-- Generates secure random secrets for all services and writes them to `.env.local`
+- Generates secure random secrets for all services and writes them to `.env`
 - Creates the required directory structure
 - Sets up service authentication credentials
 - Ensures secrets are properly synchronized
@@ -337,7 +337,7 @@ The script automatically:
 
 **Security Best Practices:**
 - Use different JWT secrets for each service
-- Secrets are stored in `.env.local` separate from base configuration
+- Secrets are stored in `.env` separate from base configuration
 - Restrict file permissions on secret files (600)
 - Never commit secrets to version control
 - Rotate secrets regularly in production

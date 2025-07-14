@@ -21,7 +21,6 @@ NC='\033[0m' # No Color
 
 # Configuration
 MESH_DIR="mesh"
-ENV_LOCAL_FILE="$MESH_DIR/.env.local"
 ENV_FILE="$MESH_DIR/.env"
 SECRETS_DIR="$MESH_DIR/secrets"
 SERVICE_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/service-ip/clients/player-ip"
@@ -150,46 +149,46 @@ main() {
         exit 1
     fi
     
-    # Step 1: Create .env.local file for secrets if it doesn't exist
-    if [[ ! -f "$ENV_LOCAL_FILE" ]]; then
-        print_warning "Creating .env.local file for secrets"
-        touch "$ENV_LOCAL_FILE"
-        print_success ".env.local file created"
+    # Step 1: Create .env file for secrets if it doesn't exist
+    if [[ ! -f "$ENV_FILE" ]]; then
+        print_warning "Creating .env file for secrets"
+        touch "$ENV_FILE"
+        print_success ".env file created"
     else
-        print_success ".env.local file already exists"
+        print_success ".env file already exists"
     fi
     
-    # Step 2: Generate random secrets for environment variables and write to .env.local
-    print_info "Checking environment variables for secrets in .env.local..."
+    # Step 2: Generate random secrets for environment variables and write to .env
+    print_info "Checking environment variables for secrets in .env..."
     
     # Check POSTGRES_PASSWORD
-    current_postgres_password=$(get_env_var "POSTGRES_PASSWORD" "$ENV_LOCAL_FILE")
+    current_postgres_password=$(get_env_var "POSTGRES_PASSWORD" "$ENV_FILE")
     if [[ -z "$current_postgres_password" ]] || is_example_value "$current_postgres_password"; then
         new_postgres_password=$(generate_secret)
-        update_env_var "POSTGRES_PASSWORD" "$new_postgres_password" "$ENV_LOCAL_FILE"
-        print_warning "Generated new POSTGRES_PASSWORD in .env.local"
+        update_env_var "POSTGRES_PASSWORD" "$new_postgres_password" "$ENV_FILE"
+        print_warning "Generated new POSTGRES_PASSWORD in .env"
     else
-        print_success "POSTGRES_PASSWORD already configured in .env.local"
+        print_success "POSTGRES_PASSWORD already configured in .env"
     fi
     
     # Check JWT_SECRET
-    current_jwt_secret=$(get_env_var "JWT_SECRET" "$ENV_LOCAL_FILE")
+    current_jwt_secret=$(get_env_var "JWT_SECRET" "$ENV_FILE")
     if [[ -z "$current_jwt_secret" ]] || is_example_value "$current_jwt_secret"; then
         new_jwt_secret=$(generate_secret)
-        update_env_var "JWT_SECRET" "$new_jwt_secret" "$ENV_LOCAL_FILE"
-        print_warning "Generated new JWT_SECRET in .env.local"
+        update_env_var "JWT_SECRET" "$new_jwt_secret" "$ENV_FILE"
+        print_warning "Generated new JWT_SECRET in .env"
     else
-        print_success "JWT_SECRET already configured in .env.local"
+        print_success "JWT_SECRET already configured in .env"
     fi
     
     # Check PLAYER_JWT_SECRET
-    current_player_jwt_secret=$(get_env_var "PLAYER_JWT_SECRET" "$ENV_LOCAL_FILE")
+    current_player_jwt_secret=$(get_env_var "PLAYER_JWT_SECRET" "$ENV_FILE")
     if [[ -z "$current_player_jwt_secret" ]] || is_example_value "$current_player_jwt_secret"; then
         new_player_jwt_secret=$(generate_secret)
-        update_env_var "PLAYER_JWT_SECRET" "$new_player_jwt_secret" "$ENV_LOCAL_FILE"
-        print_warning "Generated new PLAYER_JWT_SECRET in .env.local"
+        update_env_var "PLAYER_JWT_SECRET" "$new_player_jwt_secret" "$ENV_FILE"
+        print_warning "Generated new PLAYER_JWT_SECRET in .env"
     else
-        print_success "PLAYER_JWT_SECRET already configured in .env.local"
+        print_success "PLAYER_JWT_SECRET already configured in .env"
     fi
     
     # Step 3: Create necessary directories
@@ -283,7 +282,7 @@ main() {
     # Summary of what was configured
     echo
     print_info "Configuration Summary:"
-    echo "  📁 Environment secrets file: $ENV_LOCAL_FILE"
+    echo "  📁 Environment secrets file: $ENV_FILE"
     echo "  🔐 Secrets directory: $SECRETS_DIR"
     echo "  🔑 Service-IP client secret: $SERVICE_IP_CLIENT_SECRET_FILE"
     echo "  🔑 Player-IP client secret: $PLAYER_IP_CLIENT_SECRET_FILE"

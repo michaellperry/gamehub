@@ -140,6 +140,7 @@ Thumbs.db
 .dockerignore
 docker-compose.override.yml
 .docker/
+/mesh/.env
 
 # Database files
 *.db

@@ -68,7 +68,7 @@ Each step provides:
 ### 2. `scripts/setup-tenant.sh` (new)
 - **Purpose**: Configure tenant settings across mesh services
 - **Parameters**: `<TENANT_PUBLIC_KEY>`
-- **Updates**: [`mesh/.env.local`](mesh/.env.local:3) with tenant key
+- **Updates**: [`mesh/.env`](mesh/.enf:3) with tenant key
 
 ### 3. `scripts/validate-setup.sh` (new)
 - **Purpose**: Validate complete mesh setup
@@ -78,7 +78,7 @@ Each step provides:
 
 ### Environment File Updates:
 - **Step 1**: Updates `FUSIONAUTH_APPLICATION_ID` and `FUSIONAUTH_KEY_ID` in [`mesh/.env`](mesh/.env:1)
-- **Step 2**: Updates `TENANT_PUBLIC_KEY` in [`mesh/.env.local`](mesh/.env.local:1)
+- **Step 2**: Updates `TENANT_PUBLIC_KEY` in [`mesh/.enf`](mesh/.enf:1)
 - **Step 3**: Handled through service APIs, no direct file updates
 
 ### Service Dependencies:

@@ -702,8 +702,6 @@ Error: ENOENT: no such file or directory, open 'clients/client-name'
 ./scripts/init-mesh.sh
 ```
 
-**Note:** The script now writes secrets to `.env.local` instead of modifying `.env`.
-
 **Manual setup (for custom client configurations):**
 ```bash
 # Create client credentials directory

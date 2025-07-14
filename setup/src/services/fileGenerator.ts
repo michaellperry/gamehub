@@ -67,14 +67,14 @@ export class FileGenerator {
         try {
             logger.info('Creating environment files');
 
-            // Create .env.local file content
+            // Create .env file content
             const envContent = `CLIENT_ID=${appResult.clientId}
 # Add TENANT_PUBLIC_KEY after creating a tenant in the admin app
 # TENANT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\\r\\nMIIBIjANB...QIDAQAB\\r\\n-----END PUBLIC KEY-----\\r\\n"
 `;
 
             // Environment file path
-            const envFilePath = '../mesh/.env.local';
+            const envFilePath = '../mesh/.env';
 
             // Check if file exists
             if (fileExists(envFilePath) && !overwrite) {
