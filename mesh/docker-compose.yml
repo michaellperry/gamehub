@@ -5,6 +5,9 @@ services:
   postgres:
     image: postgres:16.0-bookworm
     container_name: gamehub-postgres
+    env_file:
+      - .env
+      - .env.local
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-gamehub}
       POSTGRES_USER: ${POSTGRES_USER:-gamehub_admin}
@@ -26,6 +29,9 @@ services:
   fusionauth:
     image: fusionauth/fusionauth-app:latest
     container_name: gamehub-fusionauth
+    env_file:
+      - .env
+      - .env.local
     environment:
       DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-gamehub}
       DATABASE_ROOT_USERNAME: ${POSTGRES_USER:-gamehub_admin}
@@ -76,6 +82,9 @@ services:
     container_name: gamehub-service-ip
     ports:
       - "8083:8083"
+    env_file:
+      - .env
+      - .env.local
     environment:
       - NODE_ENV=production
       - SERVER_PORT=8083
@@ -107,6 +116,9 @@ services:
     container_name: gamehub-player-ip
     ports:
       - "8082:8082"
+    env_file:
+      - .env
+      - .env.local
     environment:
       - NODE_ENV=production
       - SERVER_PORT=8082
