@@ -1,4 +1,5 @@
 authorization {
+    any Jinaga.User
     (p1: GameHub.Tenant) {
         u1: Jinaga.User [
             u1 = p1->creator: Jinaga.User
