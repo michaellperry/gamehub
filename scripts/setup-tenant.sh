@@ -53,6 +53,7 @@ show_usage() {
     echo "  - Validates tenant public key format"
     echo "  - Updates mesh/.env.local with TENANT_PUBLIC_KEY"
     echo "  - Updates app/gamehub-admin/.env.container.local with VITE_TENANT_PUBLIC_KEY"
+    echo "  - Rebuilds the Docker Compose stack to apply tenant key to services"
     echo "  - Rebuilds the admin application container to apply changes"
     echo "  - Validates tenant configuration"
 }
@@ -96,6 +97,64 @@ check_build_requirements() {
         return 1
     fi
     
+    return 0
+}
+
+# Function to rebuild Docker Compose stack
+rebuild_docker_compose() {
+    print_info "Rebuilding Docker Compose stack to apply tenant configuration..."
+    
+    # Store current directory
+    local original_dir=$(pwd)
+    
+    # Navigate to mesh directory
+    if ! cd "$PROJECT_ROOT/mesh"; then
+        print_error "Failed to navigate to mesh directory: $PROJECT_ROOT/mesh"
+        return 1
+    fi
+    
+    # Check if docker-compose.yml exists
+    if [[ ! -f "docker-compose.yml" ]]; then
+        print_error "docker-compose.yml not found in mesh directory"
+        cd "$original_dir"
+        return 1
+    fi
+    
+    # Check if Docker Compose is available
+    if ! command -v docker &> /dev/null; then
+        print_error "Docker is not installed or not in PATH"
+        cd "$original_dir"
+        return 1
+    fi
+    
+    if ! docker compose version &> /dev/null; then
+        print_error "Docker Compose is not available"
+        cd "$original_dir"
+        return 1
+    fi
+    
+    # Stop the current stack
+    print_info "Stopping Docker Compose stack..."
+    if docker compose down; then
+        print_success "Docker Compose stack stopped successfully"
+    else
+        print_error "Failed to stop Docker Compose stack"
+        cd "$original_dir"
+        return 1
+    fi
+    
+    # Rebuild and restart the stack
+    print_info "Rebuilding and starting Docker Compose stack..."
+    if docker compose up -d --build; then
+        print_success "Docker Compose stack rebuilt and started successfully"
+    else
+        print_error "Failed to rebuild and start Docker Compose stack"
+        cd "$original_dir"
+        return 1
+    fi
+    
+    # Return to original directory
+    cd "$original_dir"
     return 0
 }
 
@@ -146,6 +205,19 @@ validate_configuration() {
         fi
     else
         print_error "app/gamehub-admin/.env.container.local not found"
+        return 1
+    fi
+    
+    # Check if mesh env was updated
+    if [[ -f "mesh/.env.local" ]]; then
+        if grep -q "TENANT_PUBLIC_KEY=" "mesh/.env.local"; then
+            print_success "TENANT_PUBLIC_KEY found in mesh/.env.local"
+        else
+            print_error "TENANT_PUBLIC_KEY not found in mesh/.env.local"
+            return 1
+        fi
+    else
+        print_error "mesh/.env.local not found"
         return 1
     fi
     
@@ -315,6 +387,15 @@ else
     print_info "Skipping admin application rebuild (--no-rebuild flag specified)"
     print_info "Remember to rebuild the admin container manually with:"
     print_info "cd app && npm run build:admin:container"
+fi
+
+# Rebuild Docker Compose stack to apply the new tenant key
+print_info "Rebuilding Docker Compose stack to apply tenant configuration..."
+if rebuild_docker_compose; then
+    print_success "Docker Compose stack rebuilt successfully"
+else
+    print_error "Failed to rebuild Docker Compose stack"
+    exit 1
 fi
 
 # Validate the configuration
