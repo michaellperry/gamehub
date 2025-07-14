@@ -6,6 +6,11 @@ authorization {
         ]
     } => u1
     (p1: GameHub.Tenant.Administrator) {
+        u1: Jinaga.User [
+            u1 = p1->tenant: GameHub.Tenant->creator: Jinaga.User
+        ]
+    } => u1
+    (p1: GameHub.Tenant.Administrator) {
         u1: GameHub.Tenant.Administrator [
             u1->tenant: GameHub.Tenant = p1->tenant: GameHub.Tenant
         ]
