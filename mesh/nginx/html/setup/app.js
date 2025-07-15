@@ -678,7 +678,7 @@ class SetupWizard {
                 console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
                 return result;
             case 3: // Service Principal Authorization
-                result = this.statusData?.services?.['player-ip']?.ready === true;
+                result = false;
                 console.log(`✅ Step 3 (Service Principal) - player-ip ready: ${result}`);
                 console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
                 return result;

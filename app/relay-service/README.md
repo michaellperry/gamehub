@@ -13,6 +13,7 @@ The Relay Service is a centralized observability aggregation service that monito
 - **Configuration-driven service discovery** using JSON configuration
 - **Parallel health checks** to all configured services
 - **Unified response format** combining all service statuses
+- **Public key aggregation** from services with public key endpoints
 - **Error handling** for unreachable services
 - **Caching** to prevent overwhelming backend services (30-second default)
 - **Admin Portal integration** for frontend bundle status
@@ -70,6 +71,29 @@ Force refresh of cached status (clears cache).
 ### GET /relay/cache/stats
 Get cache statistics for debugging purposes.
 
+### GET /public-key
+Returns aggregated public keys from all configured services that have public key endpoints.
+
+**Response Format:**
+```json
+{
+  "timestamp": "2025-01-15T12:30:15.123Z",
+  "services": {
+    "player-ip": {
+      "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...\n-----END PUBLIC KEY-----",
+      "lastChecked": "2025-01-15T12:30:14.890Z",
+      "responseTime": 45
+    }
+  }
+}
+```
+
+### POST /public-key/refresh
+Force refresh of cached public keys (clears public key cache).
+
+### GET /public-key/cache/stats
+Get public key cache statistics for debugging purposes.
+
 
 ## Configuration
 
@@ -102,6 +126,7 @@ The service is configured via environment variables:
       "healthEndpoint": "http://player-ip:8082/health",
       "configuredEndpoint": "http://player-ip:8082/configured",
       "readyEndpoint": "http://player-ip:8082/ready",
+      "publicKeyEndpoint": "http://player-ip:8082/public-key",
       "timeout": 5000,
       "retries": 3
     },
@@ -123,6 +148,18 @@ The service is configured via environment variables:
   }
 }
 ```
+
+#### Service Configuration Fields
+
+- `name`: Display name for the service
+- `healthEndpoint`: URL for health check endpoint
+- `configuredEndpoint`: URL for configuration status endpoint
+- `readyEndpoint`: URL for readiness check endpoint
+- `publicKeyEndpoint`: (Optional) URL for public key endpoint - services without this field are ignored for public key aggregation
+- `timeout`: Request timeout in milliseconds
+- `retries`: Number of retry attempts for failed requests
+
+**Note**: The `publicKeyEndpoint` field is optional and provides backward compatibility. Services without this field will not be included in public key aggregation but will continue to work normally for health, configuration, and readiness checks.
 
 ## Development
 
@@ -165,9 +202,11 @@ docker-compose up relay-service
 The Relay Service integrates with:
 
 1. **All GameHub Services**: Monitors their `/health`, `/configured`, and `/ready` endpoints
-2. **NGINX**: Accessible via `/relay` route
-3. **Status Page**: Provides data for the dashboard
-4. **Setup Page**: Provides status information during setup process
+2. **Services with Public Keys**: Aggregates public keys from services that provide `/public-key` endpoints
+3. **NGINX**: Accessible via `/relay` and `/public-key` routes
+4. **Status Page**: Provides data for the dashboard
+5. **Setup Page**: Provides status information during setup process
+6. **Authentication Systems**: Provides aggregated public keys for JWT verification and service-to-service authentication
 
 ## Error Handling
 
