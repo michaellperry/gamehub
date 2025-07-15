@@ -175,6 +175,63 @@ The deployment script (`scripts/deploy-player-ip.sh`) handles production deploym
 
 ## Monitoring and Health Checks
 
+### Enhanced Health Endpoints
+
+The Player-IP service provides comprehensive health monitoring through multiple endpoints designed for different monitoring scenarios:
+
+#### General Health Endpoint (`/health`)
+- **Purpose**: Overall service health status including subscription monitoring
+- **Response**: Always returns HTTP 200 (service operational) with detailed status
+- **Use Case**: Load balancer health checks, general service monitoring
+
+```bash
+# Basic health check
+curl http://localhost:8082/health
+
+# Expected response format:
+{
+  "status": "ok",
+  "timestamp": "2025-07-15T02:36:20.625Z",
+  "services": {
+    "http": "healthy",
+    "subscription": {
+      "status": "connected|connecting|retrying|failed|disconnected",
+      "healthy": true|false,
+      "degraded": true|false
+    }
+  }
+}
+```
+
+#### Subscription Health Endpoint (`/health/subscription`)
+- **Purpose**: Detailed subscription diagnostics and troubleshooting
+- **Response**: HTTP 200 (healthy) or 503 (unhealthy) based on subscription state
+- **Use Case**: Subscription-specific monitoring, alerting, and diagnostics
+
+```bash
+# Subscription health check
+curl http://localhost:8082/health/subscription
+
+# Healthy response (HTTP 200):
+{
+  "status": "connected",
+  "healthy": true,
+  "retryCount": 0,
+  "connectedAt": "2025-07-15T02:35:45.123Z",
+  "timestamp": "2025-07-15T02:36:27.823Z"
+}
+
+# Unhealthy response (HTTP 503):
+{
+  "status": "failed",
+  "healthy": false,
+  "retryCount": 3,
+  "lastError": "Failed to get service token",
+  "lastRetryAt": "2025-07-15T02:36:01.836Z",
+  "timestamp": "2025-07-15T02:36:27.823Z"
+}
+```
+
 ### Health Check Script
 The health check script (`scripts/health-check.js`) provides comprehensive service monitoring:
 
@@ -187,24 +244,95 @@ node scripts/health-check.js --url=https://player-ip.example.com
 
 # Health check with custom thresholds
 MAX_RESPONSE_TIME=500 node scripts/health-check.js
+
+# Check both endpoints
+node scripts/health-check.js --check-subscription
 ```
 
 #### Health Check Features
 - **Service Availability**: Basic connectivity and response
 - **Health Endpoint**: Structured health response validation
+- **Subscription Monitoring**: Detailed subscription status checking
 - **Database Connectivity**: Indirect database health verification
 - **JWT Functionality**: Authentication system validation
 - **Response Times**: Performance monitoring
 - **Resource Usage**: Memory and CPU monitoring
 
 ### Monitoring Integration
-The health check script can be integrated with monitoring systems:
 
+#### Automated Monitoring
 ```javascript
 import { getHealthMetrics } from './scripts/health-check.js';
 
 const metrics = await getHealthMetrics('https://player-ip.example.com');
 // Send metrics to monitoring system
+
+// Example monitoring integration
+const healthResponse = await fetch('/health');
+const health = await healthResponse.json();
+
+if (health.services.subscription.degraded) {
+    // Alert: Service running in degraded mode
+    // HTTP functionality available, subscription unavailable
+    await sendAlert('Player-IP subscription degraded', health);
+}
+```
+
+#### Monitoring Strategies
+
+**Load Balancer Health Checks**
+- Use `/health` endpoint (always returns 200 for HTTP availability)
+- Configure appropriate timeout and retry settings
+- Monitor for consistent response format
+
+**Application Monitoring**
+- Use `/health/subscription` for detailed subscription monitoring
+- Set up alerts for subscription failures (HTTP 503 responses)
+- Monitor retry patterns and error frequencies
+
+**Container Orchestration**
+```yaml
+# Kubernetes example
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8082
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health/subscription
+    port: 8082
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 3
+```
+
+#### Monitoring Metrics
+
+**Service-Level Metrics**
+- HTTP endpoint availability (from `/health`)
+- Response time trends
+- Error rate monitoring
+- Resource utilization
+
+**Subscription-Level Metrics**
+- Connection state transitions
+- Retry attempt frequency
+- Error pattern analysis
+- Recovery time measurement
+
+```bash
+# Example monitoring queries
+# Check service degradation frequency
+curl -s http://localhost:8082/health | jq '.services.subscription.degraded' | grep -c true
+
+# Monitor subscription retry patterns
+curl -s http://localhost:8082/health/subscription | jq '.retryCount, .lastError'
+
+# Track connection stability
+watch -n 10 'curl -s http://localhost:8082/health/subscription | jq ".status, .connectedAt"'
 ```
 
 ## Security Considerations
@@ -311,15 +439,75 @@ docker images | grep gamehub-player-ip
 ```
 
 #### Health Check Failures
+
+**General Health Check Issues**
 ```bash
 # Manual health check
 curl -f http://localhost:8082/health
 
+# Check detailed response
+curl -v http://localhost:8082/health | jq '.'
+
+# Expected healthy response:
+# HTTP/1.1 200 OK
+# {"status":"ok","services":{"http":"healthy","subscription":{"status":"connected","healthy":true}}}
+```
+
+**Subscription Health Check Issues**
+```bash
+# Check subscription-specific health
+curl -f http://localhost:8082/health/subscription
+
+# Detailed subscription diagnostics
+curl -v http://localhost:8082/health/subscription | jq '.'
+
+# Healthy subscription (HTTP 200):
+# {"status":"connected","healthy":true,"retryCount":0}
+
+# Unhealthy subscription (HTTP 503):
+# {"status":"failed","healthy":false,"retryCount":3,"lastError":"..."}
+```
+
+**Troubleshooting Subscription Health**
+```bash
+# Monitor subscription state changes
+watch -n 5 'curl -s http://localhost:8082/health/subscription | jq ".status, .healthy, .retryCount"'
+
+# Check for specific error patterns
+curl -s http://localhost:8082/health/subscription | jq '.lastError'
+
+# Verify service dependencies
+curl http://service-ip:8083/health
+
+# Check environment configuration
+echo $TENANT_PUBLIC_KEY | head -1
+```
+
+**Service Logs Analysis**
+```bash
 # Check service logs
 docker compose logs player-ip
 
+# Filter subscription-related logs
+docker compose logs player-ip | grep "SUBSCRIPTION"
+
+# Monitor retry attempts
+docker compose logs -f player-ip | grep "RETRY"
+
+# Check for error patterns
+docker compose logs player-ip | grep "ERROR\|FAILED"
+```
+
+**Database Verification**
+```bash
 # Verify database
 sqlite3 data/player-ip.db ".tables"
+
+# Check database permissions
+ls -la data/player-ip.db
+
+# Test database connectivity
+sqlite3 data/player-ip.db "SELECT COUNT(*) FROM users;"
 ```
 
 ### Debug Mode

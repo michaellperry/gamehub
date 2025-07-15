@@ -1,1 +1,1 @@
-export { startSubscription } from './subscription.js';
+export { startSubscription, getSubscriptionStatus, SubscriptionState } from './subscription.js';
