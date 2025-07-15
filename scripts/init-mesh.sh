@@ -199,38 +199,24 @@ main() {
     print_info "Checking client secret files..."
     
     # Generate service-ip client secret (always overwrite)
-    new_client_secret=$(generate_secret)
-    echo "$new_client_secret" > "$SERVICE_IP_CLIENT_SECRET_FILE"
+    shared_secret=$(generate_secret)
+    echo -n "$shared_secret" > "$SERVICE_IP_CLIENT_SECRET_FILE"
     print_warning "Generated new service-ip client secret"
     
-    # Generate player-ip client secret (always overwrite, use same as service-ip for consistency)
-    service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
-    echo "$service_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
-    print_warning "Generated player-ip client secret to match service-ip"
-    
-    # Step 5: Verify secrets match
-    service_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
-    player_secret=$(cat "$PLAYER_IP_CLIENT_SECRET_FILE")
-    
-    if [[ "$service_secret" != "$player_secret" ]]; then
-        print_warning "Client secrets don't match, synchronizing..."
-        echo "$service_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
-        print_success "Client secrets synchronized"
-    else
-        print_success "Client secrets are synchronized"
-    fi
+    # Generate player-ip client secret (always overwrite)
+    echo -n "$shared_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
+    print_warning "Generated player-ip client secret"
+
+    print_success "Client secrets are synchronized"
     
     # Step 6: Generate provider configuration files with shared secret
     print_info "Checking provider configuration files..."
     
-    # Get the synchronized shared secret
-    shared_secret=$(cat "$SERVICE_IP_CLIENT_SECRET_FILE")
-    
     # Write player provider file
-    write_provider_file "$PLAYER_PROVIDER_FILE" "Player" "player-ip" "gamehub-players" "player-ip-key" "$shared_secret"
+    write_provider_file "$PLAYER_PROVIDER_FILE" "Player" "player-ip" "gamehub-players" "player-ip-key" "$new_player_jwt_secret"
     
     # Write service provider file
-    write_provider_file "$SERVICE_PROVIDER_FILE" "Service" "service-ip" "service-clients" "service-ip-key" "$shared_secret"
+    write_provider_file "$SERVICE_PROVIDER_FILE" "Service" "service-ip" "service-clients" "service-ip-key" "$new_jwt_secret"
     
     echo
     print_success "GameHub Mesh initialization completed successfully!"
