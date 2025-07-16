@@ -353,9 +353,11 @@ After the FusionAuth setup completes, you must complete these additional steps:
    npm run build:admin:container
    ```
 
-4. **Authorize Service Principal**:
-   - Check player-ip logs for the service principal public key
-   - Add it in the admin app's Service Principals page
+4. **Provision Service Principals**:
+   - Open the Admin Portal Service Principals page
+   - Click "Provision Known Services" to automatically discover available services
+   - Select the services you want to provision from the list
+   - Click "Provision Selected Services" to automatically add them to your tenant
 
 For detailed post-setup instructions, see the [FusionAuth Setup Documentation](../setup/README.md#post-setup-steps).
 
@@ -571,7 +573,7 @@ After completing the project setup, including the FusionAuth configuration, you 
 
 1. **Complete FusionAuth Setup** (if not already done):
    - Follow the [FusionAuth Setup Documentation](../setup/README.md) for detailed instructions
-   - Ensure all post-setup steps are completed, including tenant creation and service principal authorization
+   - Ensure all post-setup steps are completed, including tenant creation and automated service principal provisioning
 
 2. **Verify Setup**:
    ```bash
