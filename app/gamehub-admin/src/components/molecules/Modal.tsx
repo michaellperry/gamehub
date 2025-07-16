@@ -86,7 +86,7 @@ const Modal: React.FC<ModalProps> = ({
 
                 {/* Modal panel */}
                 <div
-                    className={`inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle ${sizeClasses[size]} sm:w-full sm:p-6`}
+                    className={`inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle ${sizeClasses[size]} sm:w-full sm:p-6`}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="modal-title"
@@ -94,7 +94,7 @@ const Modal: React.FC<ModalProps> = ({
                     {/* Header */}
                     <div className="flex items-start justify-between">
                         <h3
-                            className="text-lg leading-6 font-medium text-gray-900"
+                            className="text-lg leading-6 font-medium text-gray-900 dark:text-white"
                             id="modal-title"
                         >
                             {title}

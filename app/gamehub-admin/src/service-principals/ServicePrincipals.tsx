@@ -4,11 +4,23 @@ import { Alert, Button } from '../components/atoms';
 import { ListItem, Modal, ModalFooter, PageHeader } from '../components/molecules';
 import { ResourceList } from '../components/organisms';
 import { useServicePrincipals } from './useServicePrincipals';
+import KnownServicesModal from './KnownServicesModal';
 
 function ServicePrincipals() {
-    const { isConfigured, servicePrincipals, error, canAddServicePrincipal, addServicePrincipal } =
-        useServicePrincipals();
+    const {
+        isConfigured,
+        servicePrincipals,
+        error,
+        canAddServicePrincipal,
+        addServicePrincipal,
+        knownServices,
+        knownServicesLoading,
+        knownServicesError,
+        bulkProvisionServices,
+        bulkProvisioningLoading
+    } = useServicePrincipals();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
     const [publicKey, setPublicKey] = useState('');
 
     const handleAddServicePrincipal = () => {
@@ -33,6 +45,24 @@ function ServicePrincipals() {
         >
             Add Service Principal
         </Button>
+    );
+
+    const provisionKnownServicesButton = (
+        <Button
+            onClick={() => setIsProvisionModalOpen(true)}
+            disabled={!isConfigured}
+            icon="upload"
+            variant="secondary"
+        >
+            Provision Known Services
+        </Button>
+    );
+
+    const headerActions = (
+        <div className="flex space-x-3">
+            {provisionKnownServicesButton}
+            {addServicePrincipalButton}
+        </div>
     );
 
     // Function to truncate the public key for display
@@ -80,7 +110,7 @@ function ServicePrincipals() {
             <PageHeader
                 title="Service Principals"
                 description="Manage service principals for your application"
-                action={addServicePrincipalButton}
+                action={headerActions}
             />
 
             {error && <Alert variant="error" title="Error" message={error.message} />}
@@ -111,15 +141,25 @@ function ServicePrincipals() {
                 emptyState={{
                     iconName: 'user',
                     title: 'No service principals found',
-                    description: 'Get started by adding your first service principal.',
+                    description: 'Get started by adding your first service principal or provisioning known services.',
                     action: (
-                        <Button
-                            onClick={() => setIsModalOpen(true)}
-                            disabled={!canAddServicePrincipal}
-                            variant="primary"
-                        >
-                            Add Service Principal
-                        </Button>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <Button
+                                onClick={() => setIsProvisionModalOpen(true)}
+                                disabled={!isConfigured}
+                                icon="upload"
+                                variant="secondary"
+                            >
+                                Provision Known Services
+                            </Button>
+                            <Button
+                                onClick={() => setIsModalOpen(true)}
+                                disabled={!canAddServicePrincipal}
+                                variant="primary"
+                            >
+                                Add Service Principal
+                            </Button>
+                        </div>
                     ),
                 }}
                 renderItem={renderServicePrincipalItem}
@@ -158,6 +198,16 @@ function ServicePrincipals() {
                     </div>
                 </div>
             </Modal>
+
+            <KnownServicesModal
+                isOpen={isProvisionModalOpen}
+                onClose={() => setIsProvisionModalOpen(false)}
+                knownServices={knownServices}
+                knownServicesLoading={knownServicesLoading}
+                knownServicesError={knownServicesError}
+                bulkProvisioningLoading={bulkProvisioningLoading}
+                onProvisionServices={bulkProvisionServices}
+            />
         </>
     );
 }
