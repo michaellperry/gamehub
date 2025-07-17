@@ -69,31 +69,88 @@ Follow our comprehensive getting started guides:
 
 ## 🏗️ Architecture
 
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        Admin[GameHub Admin Portal]
+        Setup[Setup Wizard]
+        Status[Status Dashboard]
+    end
+    
+    subgraph "NGINX Reverse Proxy"
+        NGINX[NGINX Gateway<br/>Port 80]
+    end
+    
+    subgraph "Accessible Services"
+        PlayerIP[Player IP Service<br/>Port 8082]
+        ContentStore[Content Store<br/>Port 8081]
+        Replicator[Jinaga Replicator<br/>Port 8080]
+        FusionAuth[FusionAuth<br/>Port 9011]
+        Relay[Relay Service<br/>Port 8084]
+    end
+    
+    subgraph "Internal Services"
+        ServiceIP[Service IP Provider<br/>Port 8083]
+        PostgreSQL[PostgreSQL Database<br/>Port 5432]
+    end
+    
+    %% Frontend connections
+    Admin --> NGINX
+    Setup --> NGINX
+    Status --> NGINX
+    
+    %% NGINX routing
+    NGINX --> PlayerIP
+    NGINX --> ContentStore
+    NGINX --> Replicator
+    NGINX --> FusionAuth
+    NGINX --> Relay
+    
+    %% Service dependencies
+    PlayerIP --> ServiceIP
+    PlayerIP --> Replicator
+    ContentStore --> ServiceIP
+    ContentStore --> PlayerIP
+    Relay --> ServiceIP
+    Relay --> PlayerIP
+    Relay --> ContentStore
+    FusionAuth --> PostgreSQL
 ```
-Frontend (React + Vite)     Backend Services (Node.js)     Data & Auth Layer
-┌─────────────────────┐    ┌─────────────────────────┐    ┌─────────────────────┐
-│  Admin Portal       │    │  Player IP Service      │    │  PostgreSQL         │
-│  Player Interface   │───▶│  Service IP Provider    │───▶│  FusionAuth         │
-│  Real-time Updates  │    │  Content Store          │    │  Jinaga Replicator  │
-└─────────────────────┘    └─────────────────────────┘    └─────────────────────┘
-                                        │                           │
-                                        └───────────────────────────┘
-                                           NGINX Reverse Proxy
-```
+
+### Architecture Layers
+
+**Frontend Layer** - Client applications served by NGINX:
+- **GameHub Admin Portal** - React-based administration interface
+- **Setup Wizard** - Initial configuration and onboarding
+- **Status Dashboard** - Real-time system monitoring
+
+**Accessible Services** - APIs exposed through NGINX reverse proxy:
+- **Player IP Service** - Player authentication and session management
+- **Content Store** - File storage and content management
+- **Jinaga Replicator** - Real-time data synchronization engine
+- **FusionAuth** - Identity and access management
+- **Relay Service** - Observability and metrics aggregation
+
+**Internal Services** - Backend services not directly exposed:
+- **Service IP Provider** - Internal service-to-service authentication
+- **PostgreSQL Database** - Primary data storage for auth and application data
 
 ### Service Endpoints
 
 When running locally with Docker Compose:
 
-| Service | Endpoint | Description |
-|---------|----------|-------------|
-| Main Gateway | http://localhost | NGINX reverse proxy |
-| Admin Panel | http://localhost/admin/ | GameHub admin interface |
-| FusionAuth | http://localhost/auth/ | Identity management |
-| Replicator | http://localhost/replicator/ | Real-time data sync |
-| Player API | http://localhost/player-ip/ | Player authentication |
-| Service API | http://localhost/service-ip/ | Service authentication |
-| Content Store | http://localhost/content/ | File storage |
+| Service          | Endpoint                     | Description                       |
+| ---------------- | ---------------------------- | --------------------------------- |
+| Main Gateway     | http://localhost             | NGINX reverse proxy               |
+| Admin Portal     | http://localhost/portal/     | GameHub admin interface           |
+| Setup Wizard     | http://localhost/setup/      | Initial configuration             |
+| Status Dashboard | http://localhost/status/     | System monitoring                 |
+| FusionAuth       | http://localhost/auth/       | Identity management               |
+| Replicator       | http://localhost/replicator/ | Real-time data sync               |
+| Player API       | http://localhost/player-ip/  | Player authentication             |
+| Content Store    | http://localhost/content/    | File storage                      |
+| Relay Service    | http://localhost/relay/      | Observability aggregation         |
+| Service API      | Internal only                | Service-to-service authentication |
 
 ### Repository Structure
 
