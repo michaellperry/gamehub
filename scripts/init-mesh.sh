@@ -28,6 +28,8 @@ PLAYER_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/player-ip/player-ip-client-secret"
 PROVIDER_DIR="$MESH_DIR/replicator/authentication"
 PLAYER_PROVIDER_FILE="$PROVIDER_DIR/player.provider"
 SERVICE_PROVIDER_FILE="$PROVIDER_DIR/service.provider"
+CONTENT_PROVIDER_DIR="$SECRETS_DIR/content-store"
+CONTENT_PLAYER_PROVIDER_FILE="$CONTENT_PROVIDER_DIR/player.provider"
 
 # Example values that need to be replaced
 POSTGRES_PASSWORD_EXAMPLE="secure_password_change_in_production"
@@ -217,7 +219,10 @@ main() {
     
     # Write service provider file
     write_provider_file "$SERVICE_PROVIDER_FILE" "Service" "service-ip" "service-clients" "service-ip-key" "$new_jwt_secret"
-    
+
+    # Write content provider file
+    write_provider_file "$CONTENT_PLAYER_PROVIDER_FILE" "Content" "content-store" "gamehub-content" "content-store-key" "$new_jwt_secret"
+
     echo
     print_success "GameHub Mesh initialization completed successfully!"
     print_info "You can now run 'docker-compose up' in the mesh directory to start the services."
