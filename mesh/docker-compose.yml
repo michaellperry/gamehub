@@ -120,6 +120,7 @@ services:
       - SQLITE_DB_PATH=/app/data/player-ip.db
       - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN:-14d}
       - ROTATE_REFRESH_TOKENS=${ROTATE_REFRESH_TOKENS:-false}
+      - TENANT_PUBLIC_KEY=${TENANT_PUBLIC_KEY}
       - SERVICE_IP_URL=http://service-ip:8083
       - SERVICE_IP_CLIENT_ID=player-ip
       - SERVICE_IP_CLIENT_SECRET_FILE=/app/secrets/player-ip-client-secret

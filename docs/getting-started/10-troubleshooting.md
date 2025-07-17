@@ -663,8 +663,9 @@ curl -X POST http://localhost:8083/oauth/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials&client_id=your-client-id&client_secret=$(cat mesh/secrets/service-ip/clients/your-client-id)"
 
-# Check service-ip logs
-docker compose logs service-ip
+# Check service provisioning status in Admin Portal
+# Navigate to Service Principals page and verify automated provisioning completed
+# If services are missing, use "Provision Known Services" to retry discovery
 ```
 
 #### Problem: JWT token validation fails
@@ -701,8 +702,6 @@ Error: ENOENT: no such file or directory, open 'clients/client-name'
 ```bash
 ./scripts/init-mesh.sh
 ```
-
-**Note:** The script now writes secrets to `.env.local` instead of modifying `.env`.
 
 **Manual setup (for custom client configurations):**
 ```bash
@@ -771,9 +770,9 @@ curl -H "Authorization: Bearer $TOKEN" http://localhost:8081/api/protected-endpo
 # Verify token payload
 echo $TOKEN | cut -d. -f2 | base64 -d | jq .
 
-# Check service logs for authentication errors
-docker compose logs player-ip
-docker compose logs content-store
+# Verify service principal provisioning in Admin Portal
+# Check Service Principals page for missing or failed provisioning
+# Use "Provision Known Services" to re-discover and provision services
 ```
 
 ### Content Store Issues
@@ -1564,9 +1563,9 @@ npm run build 2>&1 | tee player-build.log
 #### Backend Service Issues
 ```bash
 cd mesh/
-docker compose logs service-ip > service-ip.log
-docker compose logs player-ip > player-ip.log
-docker compose logs content-store > content-store.log
+# For service principal provisioning issues, check Admin Portal Service Principals page
+# Use "Provision Known Services" to retry automated discovery and provisioning
+# Verify services appear in the provisioned list after successful setup
 docker compose logs front-end-replicator > replicator.log
 ```
 

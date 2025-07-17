@@ -51,6 +51,12 @@ export async function updateTenantKey(): Promise<void> {
                 variableName: 'VITE_TENANT_PUBLIC_KEY',
                 exists: false,
                 quoted: true
+            },
+            {
+                path: '../mesh/.env',
+                variableName: 'TENANT_PUBLIC_KEY',
+                exists: false,
+                quoted: false
             }
         ];
 

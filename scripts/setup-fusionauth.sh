@@ -227,7 +227,7 @@ if npm start -- $SETUP_ARGS; then
     fi
     print_success "GameHub FusionAuth setup completed successfully!"
     echo ""
-    print_info "Return to http://localhost/setup/ to continue the setup process."
+    print_info "Return to http://localhost/setup/ and refresh to continue the setup process."
     echo ""
     print_success "FusionAuth setup process completed!"
 else

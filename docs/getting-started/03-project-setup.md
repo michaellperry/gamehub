@@ -151,21 +151,21 @@ The recommended way to initialize the mesh environment is using the automated se
 ```
 
 **What the script does:**
-- Creates `.env.local` file for secrets
+- Creates `.env` file for secrets
 - Generates secure random secrets for production use
 - Creates all required directories in the `mesh/secrets/` structure
 - Sets up service authentication credentials
 - Ensures client secrets are synchronized between services
 - Is idempotent and safe to run multiple times
 
-**The script automatically configures in `.env.local`:**
+**The script automatically configures in `.env`:**
 - `POSTGRES_PASSWORD` - Database password for PostgreSQL
 - `JWT_SECRET` - JWT signing secret for service-ip
 - `PLAYER_JWT_SECRET` - JWT signing secret for player-ip
 - Service-to-service authentication secrets
 - All required directory structures
 
-**Note:** The script writes secrets to `.env.local` and does not modify the base `.env` file. This allows you to maintain your base configuration in `.env` while keeping secrets separate in `.env.local`.
+**Note:** The script creates `/mesh/.env` if it doesn't exist, or overwrites it with newly generated secrets if it does exist. This ensures all required environment variables are properly configured for the mesh services.
 
 ### Service Authentication Setup
 
@@ -324,7 +324,7 @@ The automated setup performs the following operations:
 The setup creates these configuration files:
 
 - `mesh/replicator/authentication/fusionauth.provider` - Replicator authentication provider
-- `mesh/.env.local` - Mesh environment variables
+- `mesh/.env` - Mesh environment variables
 - `app/gamehub-admin/.env.container.local` - Admin application environment
 
 ### Post-FusionAuth Setup Steps
@@ -353,9 +353,11 @@ After the FusionAuth setup completes, you must complete these additional steps:
    npm run build:admin:container
    ```
 
-4. **Authorize Service Principal**:
-   - Check player-ip logs for the service principal public key
-   - Add it in the admin app's Service Principals page
+4. **Provision Service Principals**:
+   - Open the Admin Portal Service Principals page
+   - Click "Provision Known Services" to automatically discover available services
+   - Select the services you want to provision from the list
+   - Click "Provision Selected Services" to automatically add them to your tenant
 
 For detailed post-setup instructions, see the [FusionAuth Setup Documentation](../setup/README.md#post-setup-steps).
 
@@ -571,7 +573,7 @@ After completing the project setup, including the FusionAuth configuration, you 
 
 1. **Complete FusionAuth Setup** (if not already done):
    - Follow the [FusionAuth Setup Documentation](../setup/README.md) for detailed instructions
-   - Ensure all post-setup steps are completed, including tenant creation and service principal authorization
+   - Ensure all post-setup steps are completed, including tenant creation and automated service principal provisioning
 
 2. **Verify Setup**:
    ```bash

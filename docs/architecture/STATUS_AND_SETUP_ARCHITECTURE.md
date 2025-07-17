@@ -267,7 +267,7 @@ The status and setup system adds three new components that integrate seamlessly 
 2. **Repository Setup**
    - Clone verification
    - Dependency installation
-   - Environment initialization with `init-mesh.sh` (creates `.env.local` with secrets)
+   - Environment initialization with `init-mesh.sh` (creates `.env` with secrets)
 
 3. **FusionAuth Configuration**
    - API key collection
@@ -512,7 +512,7 @@ Readiness check endpoint.
    - Create progress tracking system
 
 2. **Integration with Existing Scripts**
-   - Integrate with `init-mesh.sh` (which now writes to `.env.local`)
+   - Integrate with `init-mesh.sh` (which now writes to `.env`)
    - Connect to FusionAuth setup process
    - Add tenant creation guidance
    - Implement service principal workflow

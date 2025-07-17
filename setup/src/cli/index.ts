@@ -144,7 +144,7 @@ export class CLI {
                 message: "FusionAuth setup completed successfully",
                 clientId: appResult.clientId,
                 nextSteps: [
-                    "Return to http://localhost/setup/ to continue the setup process."
+                    "Return to http://localhost/setup/ and refresh to continue the setup process."
                 ]
             };
         } catch (error) {

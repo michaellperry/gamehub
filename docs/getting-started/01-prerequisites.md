@@ -54,8 +54,7 @@ This guide covers the system requirements and prerequisites needed to develop an
 
 ### Environment Variables
 Create the following environment files in the `mesh/` directory:
-- `.env`: Main environment configuration
-- `.env.local`: Local overrides (optional, not committed to git)
+- `.env`: Local environment configuration overrides (optional, not committed to git)
 
 ### Network Configuration
 - **Port 80**: Nginx reverse proxy (main entry point)

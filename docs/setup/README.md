@@ -283,7 +283,7 @@ key=<public-key-pem>
 
 ### 2. Mesh Environment File
 
-**Location**: `mesh/.env.local`
+**Location**: `mesh/.env`
 
 **Purpose**: Environment variables for Docker Compose infrastructure
 
@@ -356,7 +356,7 @@ After the setup application completes successfully, follow these steps to comple
 
 **Files to Update**:
 
-#### Update `mesh/.env.local`
+#### Update `mesh/.env`
 Add the tenant public key:
 ```env
 TENANT_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----
@@ -476,7 +476,7 @@ The setup application includes built-in verification steps:
 cat mesh/replicator/authentication/fusionauth.provider
 
 # Check environment files exist
-ls -la mesh/.env.local
+ls -la mesh/.env
 ls -la app/gamehub-admin/.env.container.local
 
 # Verify file permissions
@@ -500,7 +500,7 @@ Check that JWT settings are properly configured:
 
 ```bash
 # Check JWT issuer in environment
-grep JWT_ISSUER mesh/.env.local
+grep JWT_ISSUER mesh/.env
 
 # Verify signing key is present
 grep -A 10 "key=" mesh/replicator/authentication/fusionauth.provider
@@ -638,11 +638,11 @@ npm run build
 **Verification**:
 ```bash
 # Check environment files exist
-ls -la mesh/.env.local
+ls -la mesh/.env
 ls -la app/gamehub-admin/.env.container.local
 
 # Verify content
-cat mesh/.env.local
+cat mesh/.env
 ```
 
 ### Debug Mode
@@ -857,7 +857,7 @@ BACKUP_DIR="backups/$(date +%Y%m%d_%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Backup generated files
-cp mesh/.env.local "$BACKUP_DIR/"
+cp mesh/.env "$BACKUP_DIR/"
 cp app/gamehub-admin/.env.container.local "$BACKUP_DIR/"
 cp mesh/replicator/authentication/fusionauth.provider "$BACKUP_DIR/"
 
@@ -878,7 +878,7 @@ if [[ -z "$BACKUP_DIR" ]]; then
 fi
 
 # Restore files
-cp "$BACKUP_DIR/.env.local" mesh/
+cp "$BACKUP_DIR/.env" mesh/
 cp "$BACKUP_DIR/.env.container.local" app/gamehub-admin/
 cp "$BACKUP_DIR/fusionauth.provider" mesh/replicator/authentication/
 

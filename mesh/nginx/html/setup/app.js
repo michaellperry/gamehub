@@ -290,15 +290,10 @@ class SetupWizard {
         // Command modal
         const commandModal = this.commandModal;
         const commandModalClose = document.getElementById('modalClose');
-        const commandModalCancel = document.getElementById('modalCancelBtn');
         const commandModalDone = document.getElementById('modalDoneBtn');
         const commandCopyBtn = document.getElementById('modalCopyBtn');
 
         commandModalClose.addEventListener('click', () => {
-            this.hideModal(commandModal);
-        });
-
-        commandModalCancel.addEventListener('click', () => {
             this.hideModal(commandModal);
         });
 
@@ -644,19 +639,18 @@ class SetupWizard {
         this.stepContent.innerHTML = `
             <div class="step-instructions">
                 <h3>Service Principal Authorization</h3>
-                <p>Authorize the service principal for tenant access:</p>
+                <p>Use the automated service provisioning workflow to set up service principals:</p>
                 <ol>
-                    <li><strong>Check player-ip logs</strong> for the service principal public key</li>
-                    <li><strong>Add the service principal</strong> in the admin app's Service Principals page</li>
-                    <li><strong>Authorize the service principal</strong> for your tenant</li>
-                    <li><strong>Verify the configuration</strong> is complete</li>
+                    <li><strong>Open the Admin Portal</strong> Service Principals page</li>
+                    <li><strong>Click "Provision Known Services"</strong> to automatically discover available services</li>
+                    <li><strong>Select the services</strong> you want to provision from the list</li>
+                    <li><strong>Click "Provision Selected Services"</strong> to automatically add them to your tenant</li>
                 </ol>
                 <div style="margin-top: 20px;">
-                    <button class="action-button" onclick="setupWizard.showCommand('cd mesh && docker compose logs player-ip | grep \\'service principal\\'', 'Get Service Principal Key')">Get Service Principal Key</button>
-                    <a href="/portal/service-principals" target="_blank" class="action-button secondary">Open Admin Portal</a>
+                    <a href="/portal/service-principals" target="_blank" class="action-button">Open Service Principals Page</a>
                 </div>
                 <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when the Player IP ready endpoint returns true.</p>
+                    <p><strong>Validation:</strong> This step is complete when the automated workflow has successfully configured service principal authorization for the Player IP service.</p>
                 </div>
             </div>
         `;
@@ -676,14 +670,16 @@ class SetupWizard {
                 console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
                 return result;
             case 2: // Tenant Creation
-                result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true;
+                result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true &&
+                    this.statusData?.services?.['player-ip']?.configuredGroups?.tenant === true;
                 console.log(`✅ Step 2 (Tenant) - tenant configured: ${result}`);
                 console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
+                console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
                 return result;
             case 3: // Service Principal Authorization
-                result = this.statusData?.services?.['player-ip']?.ready === true;
-                console.log(`✅ Step 3 (Service Principal) - player-ip ready: ${result}`);
-                console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
+                result = this.statusData?.services?.['player-ip']?.configuredGroups?.servicePrincipal === true;
+                console.log(`✅ Step 3 (Service Principal) - service principal configured: ${result}`);
+                console.log(`   Player IP service principal data:`, JSON.stringify(this.statusData?.services?.['player-ip']?.configuredGroups, null, 2));
                 return result;
             default:
                 console.log(`❓ Unknown step ${stepId}`);
