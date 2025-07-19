@@ -255,20 +255,22 @@ class APIContractTestRunner {
                 // gap_id intentionally missing
             });
 
-            const qrResponse = await fetch(`${TEST_CONFIG.baseUrl}/authenticate?${params}`);
+            const missingGapIdUrl = new URL(`${TEST_CONFIG.baseUrl}/authenticate`);
+            missingGapIdUrl.searchParams.set('client_id', 'test-client');
+            missingGapIdUrl.searchParams.set('redirect_uri', 'http://localhost:3000/callback');
+            missingGapIdUrl.searchParams.set('response_type', 'code');
+            missingGapIdUrl.searchParams.set('scope', 'openid profile');
+            missingGapIdUrl.searchParams.set('code_challenge', 'test-challenge');
+            missingGapIdUrl.searchParams.set('code_challenge_method', 'S256');
+            // gap_id parameter is no longer required
 
-            // Should return 400 with HTML for QR code required
-            assert.strictEqual(qrResponse.status, 400, 'Should return 400 for missing gap_id');
+            const qrResponse = await fetch(missingGapIdUrl.toString(), {
+                method: 'GET',
+                redirect: 'manual',
+            });
 
-            const qrContentType = qrResponse.headers.get('content-type');
-            assert.ok(qrContentType.includes('text/html'), 'QR response should be HTML');
-
-            const htmlContent = await qrResponse.text();
-            assert.ok(
-                htmlContent.includes('QR Code Required'),
-                'Should show QR code required message'
-            );
-            assert.ok(htmlContent.includes('<!DOCTYPE html>'), 'Should be valid HTML');
+            // Should now work without gap_id since it's no longer required
+            assert.strictEqual(qrResponse.status === 200 || qrResponse.status === 302, true, 'Should return 200 or 302 without gap_id');
 
             console.log(
                 `${colors.green}  ✓ Authenticate endpoint contract verified${colors.reset}`

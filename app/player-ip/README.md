@@ -1,6 +1,6 @@
 # GameHub Player Identity Provider
 
-A complete OAuth 2.0 identity provider for GameHub players, built with Express.js, TypeScript, and Jinaga for real-time synchronization.
+A complete OAuth 2.0 identity provider for GameHub players, built with Express.js, TypeScript, and SQLite for data storage.
 
 ## Overview
 
@@ -11,7 +11,6 @@ The Player Identity Provider (player-ip) is a web service that provides OAuth 2.
 - **OAuth 2.0 Authorization Server**: Complete implementation supporting Authorization Code flow
 - **JWT Token Management**: Secure token generation and validation
 - **Refresh Token Support**: Long-lived refresh tokens with optional rotation
-- **Real-time Synchronization**: Jinaga integration for distributed state management
 - **SQLite Database**: Persistent storage for users, sessions, and tokens
 - **Docker Support**: Containerized deployment with health checks
 - **Service Discovery**: Integration with service-ip for inter-service communication
@@ -291,22 +290,11 @@ import { getServiceToken } from './utils/service-client';
 const token = await getServiceToken();
 ```
 
-### With GameHub Model
-
-Integrates with the shared GameHub model for data synchronization:
-
-```typescript
-import { startSubscription } from './gap';
-
-// Start Jinaga subscription for real-time updates
-const stopSubscription = await startSubscription();
-```
-
 ## Monitoring
 
 ### Health Checks
 
-The service provides comprehensive health monitoring through multiple endpoints:
+The service provides comprehensive health monitoring through the health endpoint:
 
 #### Container Health Checks
 
@@ -320,9 +308,6 @@ The service provides comprehensive health monitoring through multiple endpoints:
 # Basic service availability
 curl -f http://localhost:8082/health
 
-# Detailed subscription diagnostics
-curl -f http://localhost:8082/health/subscription
-
 # Automated monitoring script
 node scripts/health-check.js --url=http://localhost:8082
 ```
@@ -334,9 +319,8 @@ node scripts/health-check.js --url=http://localhost:8082
 const healthResponse = await fetch('/health');
 const health = await healthResponse.json();
 
-if (health.services.subscription.degraded) {
-    // Alert: Service running in degraded mode
-    // HTTP functionality available, subscription unavailable
+if (health.status === 'ok') {
+    // Service is healthy
 }
 ```
 
@@ -348,22 +332,8 @@ if (health.services.subscription.degraded) {
 - **Format**: Structured JSON in production, readable format in development
 - **Destinations**: stdout/stderr for container logging systems
 
-#### Subscription-Specific Logging
-
-The service provides detailed logging for subscription lifecycle events:
-
-```
-=== SUBSCRIPTION ATTEMPT ===
-=== SUBSCRIPTION ATTEMPT SUCCESSFUL ===
-=== SUBSCRIPTION ATTEMPT ERROR ===
-=== SCHEDULING RETRY 1/3 ===
-=== SUBSCRIPTION PERMANENTLY FAILED ===
-=== SUBSCRIPTION STATUS UPDATE ===
-```
-
 #### Error Logging Categories
 
-- **Subscription Errors**: Connection, authentication, and retry events
 - **HTTP Errors**: Request processing and authentication failures
 - **System Errors**: Unhandled exceptions and critical failures
 
@@ -372,16 +342,8 @@ The service provides detailed logging for subscription lifecycle events:
 #### Service Metrics
 
 - **HTTP Availability**: Always available (200 OK from `/health`)
-- **Subscription Health**: Available via `/health/subscription`
 - **Response Times**: Tracked for performance monitoring
 - **Error Rates**: Authentication and system error tracking
-
-#### Subscription Metrics
-
-- **Connection State**: Real-time subscription status
-- **Retry Count**: Number of connection retry attempts
-- **Error Frequency**: Rate of subscription failures
-- **Recovery Time**: Time to restore subscription after failure
 
 #### Performance Metrics
 
@@ -418,259 +380,44 @@ curl -v http://localhost:8082/health
 
 # Expected response (service operational):
 # HTTP/1.1 200 OK
-# {"status":"ok","timestamp":"...","services":{"http":"healthy","subscription":{...}}}
+# {"status":"ok","timestamp":"...","services":{"http":"healthy"}}
 ```
 
-#### Subscription Health Issues
+### Common Issues
+
+#### Authentication Errors
 
 ```bash
-# Check detailed subscription status
-curl -v http://localhost:8082/health/subscription
+# Check JWT configuration
+echo $JWT_SECRET
+echo $JWT_ISSUER
+echo $JWT_AUDIENCE
 
-# Healthy subscription (HTTP 200):
-# {"status":"connected","healthy":true,"retryCount":0,...}
-
-# Unhealthy subscription (HTTP 503):
-# {"status":"failed","healthy":false,"retryCount":3,"lastError":"..."}
+# Test authentication endpoint
+curl -v "http://localhost:8082/authenticate?client_id=test&redirect_uri=http://localhost/callback&response_type=code&scope=openid&code_challenge=test&code_challenge_method=S256"
 ```
 
-### Subscription Troubleshooting
-
-#### Subscription States and Solutions
-
-**1. `connecting` State**
-
-- **Symptom**: Service shows "connecting" for extended periods
-- **Diagnosis**: Initial connection attempt in progress
-- **Solution**: Wait for connection or check network connectivity
+#### Database Issues
 
 ```bash
-# Check if service-ip is accessible
+# Check database file permissions
+ls -la /app/data/player-ip.db
+
+# Test database connectivity
+node -e "const db = require('better-sqlite3')('/app/data/player-ip.db'); console.log('Database connected');"
+```
+
+#### Service Communication Issues
+
+```bash
+# Check service-ip connectivity
 curl http://service-ip:8083/health
-# Verify TENANT_PUBLIC_KEY environment variable
-echo $TENANT_PUBLIC_KEY
-```
 
-**2. `retrying` State**
-
-- **Symptom**: Service shows "retrying" with increasing retry count
-- **Diagnosis**: Transient network or service issues
-- **Solution**: Monitor for automatic recovery or investigate network issues
-
-```bash
-# Check retry details
-curl http://localhost:8082/health/subscription | jq '.retryCount, .lastError, .lastRetryAt'
-# Monitor service logs for retry attempts
-docker compose logs -f player-ip | grep "RETRY"
-```
-
-**3. `failed` State**
-
-- **Symptom**: Service shows "failed" after exhausting retries
-- **Diagnosis**: Permanent failure (authentication, configuration, or persistent network issues)
-- **Solutions**:
-    - Verify `TENANT_PUBLIC_KEY` format and validity
-    - Check service-ip connectivity and authentication
-    - Review service logs for specific error details
-
-```bash
-# Check tenant public key format
-echo $TENANT_PUBLIC_KEY | head -1
-# Should start with: -----BEGIN PUBLIC KEY-----
+# Verify client credentials
+ls -la secrets/player-ip-client-secret
 
 # Test service-ip authentication
 curl -X POST http://service-ip:8083/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=client_credentials&client_id=player-ip"
 ```
-
-**4. `disconnected` State**
-
-- **Symptom**: Service shows "disconnected"
-- **Diagnosis**: Subscription not started or stopped
-- **Solution**: Check service startup logs and environment configuration
-
-#### Common Subscription Errors
-
-**"Failed to get service token"**
-
-```bash
-# Check service-ip connectivity
-curl http://service-ip:8083/health
-# Verify client credentials
-ls -la secrets/player-ip-client-secret
-# Check service-ip client configuration
-cat secrets/service-ip/clients/player-ip.json
-```
-
-**"TENANT_PUBLIC_KEY environment variable"**
-
-```bash
-# Verify environment variable is set and properly formatted
-echo "$TENANT_PUBLIC_KEY" | openssl rsa -pubin -text -noout
-# Should display RSA public key details without errors
-```
-
-**Network connectivity errors (ECONNREFUSED, ETIMEDOUT)**
-
-```bash
-# Test network connectivity to dependencies
-ping service-ip
-telnet service-ip 8083
-# Check Docker network configuration
-docker network ls | grep gamehub
-docker network inspect gamehub-network
-```
-
-### Service Degradation Handling
-
-#### Understanding Degraded Mode
-
-When subscription fails, the service continues operating in **degraded mode**:
-
-- ✅ HTTP endpoints remain functional
-- ✅ Authentication and authorization work normally
-- ✅ Health checks return appropriate status
-- ❌ Real-time synchronization unavailable
-- ❌ New game access paths won't be automatically configured
-
-#### Monitoring Degraded Mode
-
-```bash
-# Check if service is in degraded mode
-curl http://localhost:8082/health | jq '.services.subscription.degraded'
-
-# Monitor for recovery
-watch -n 5 'curl -s http://localhost:8082/health/subscription | jq ".status, .healthy"'
-```
-
-### Common Issues and Solutions
-
-#### 1. Port Conflicts
-
-```bash
-# Check if port 8082 is in use
-lsof -i :8082
-netstat -tulpn | grep 8082
-# Kill conflicting process or change SERVER_PORT
-```
-
-#### 2. Database Issues
-
-```bash
-# Check SQLite database permissions
-ls -la data/player-ip.db
-# Test database connectivity
-sqlite3 data/player-ip.db ".tables"
-# Reset database if corrupted
-rm data/player-ip.db && npm run migrate
-```
-
-#### 3. Service Discovery Issues
-
-```bash
-# Verify service-ip connectivity
-curl http://service-ip:8083/health
-# Check Docker network connectivity
-docker exec player-ip ping service-ip
-# Verify DNS resolution
-docker exec player-ip nslookup service-ip
-```
-
-#### 4. JWT Validation Issues
-
-```bash
-# Check JWT secret consistency
-echo $JWT_SECRET
-# Verify JWT configuration
-curl http://localhost:8082/public-key
-# Test token generation
-curl -X POST http://localhost:8082/token -d "grant_type=client_credentials"
-```
-
-### Debug Mode and Logging
-
-#### Enable Debug Logging
-
-```bash
-# Development environment
-export LOG_LEVEL=debug
-npm run dev
-
-# Docker environment
-docker compose up player-ip -e LOG_LEVEL=debug
-
-# Production debugging (temporary)
-docker exec -it player-ip sh -c 'LOG_LEVEL=debug npm start'
-```
-
-#### Log Analysis
-
-```bash
-# View all logs
-docker compose logs player-ip
-
-# Follow logs in real-time
-docker compose logs -f player-ip
-
-# Filter subscription-related logs
-docker compose logs player-ip | grep "SUBSCRIPTION"
-
-# Filter error logs
-docker compose logs player-ip | grep "ERROR\|FAILED"
-
-# Monitor health check requests
-docker compose logs -f player-ip | grep "GET /health"
-```
-
-#### Structured Log Analysis
-
-```bash
-# Extract subscription status changes
-docker compose logs player-ip | grep "SUBSCRIPTION STATUS UPDATE" -A 5
-
-# Monitor retry attempts
-docker compose logs player-ip | grep "SCHEDULING RETRY" -A 3
-
-# Check error patterns
-docker compose logs player-ip | grep "lastError" | sort | uniq -c
-```
-
-### Performance Troubleshooting
-
-#### Health Check Performance
-
-```bash
-# Measure health check response time
-time curl http://localhost:8082/health
-
-# Load test health endpoints
-for i in {1..100}; do
-  curl -w "%{time_total}\n" -o /dev/null -s http://localhost:8082/health
-done | sort -n
-```
-
-#### Memory and Resource Usage
-
-```bash
-# Monitor container resource usage
-docker stats player-ip
-
-# Check memory usage patterns
-docker exec player-ip ps aux | grep node
-
-# Monitor for memory leaks during subscription retries
-watch -n 5 'docker stats player-ip --no-stream | grep player-ip'
-```
-
-## Contributing
-
-1. Follow TypeScript best practices
-2. Add tests for new features
-3. Update documentation
-4. Ensure Docker builds succeed
-5. Test mesh integration
-
-## License
-
-MIT License - see LICENSE file for details.

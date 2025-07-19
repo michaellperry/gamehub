@@ -10,7 +10,6 @@ export interface AuthRequest {
     code_challenge: string;
     code_challenge_method: string;
     state?: string;
-    gapId: string; // Direct GAP ID instead of JWT
 }
 
 export interface TokenRequest {
@@ -56,7 +55,6 @@ export interface RefreshToken {
 }
 
 export interface JwtPayload {
-    gap_id: string;
     user_id?: string;
     iat: number;
     exp: number;

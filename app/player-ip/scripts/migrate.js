@@ -179,25 +179,6 @@ CREATE TABLE IF NOT EXISTS user_identities (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- GAPs (Game Access Paths) table
-CREATE TABLE IF NOT EXISTS gaps (
-  id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK (type IN ('OPEN', 'RESTRICTED')),
-  policy TEXT NOT NULL CHECK (policy IN ('COOKIE_BASED', 'TOKEN_BASED')),
-  event_id TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- GAP users association table
-CREATE TABLE IF NOT EXISTS gap_users (
-  gap_id TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (gap_id, user_id),
-  FOREIGN KEY (gap_id) REFERENCES gaps(id) ON DELETE CASCADE,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 -- OAuth authorization codes table
 CREATE TABLE IF NOT EXISTS auth_codes (
   code TEXT PRIMARY KEY,
@@ -228,7 +209,6 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_user_identities_user_id ON user_identities(user_id);
-CREATE INDEX IF NOT EXISTS idx_gaps_event_id ON gaps(event_id);
 CREATE INDEX IF NOT EXISTS idx_auth_codes_user_id ON auth_codes(user_id);
 CREATE INDEX IF NOT EXISTS idx_auth_codes_expires_at ON auth_codes(expires_at);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id);
@@ -453,8 +433,6 @@ PRAGMA foreign_keys = ON;
             const expectedTables = [
                 'users',
                 'user_identities',
-                'gaps',
-                'gap_users',
                 'auth_codes',
                 'refresh_tokens',
                 'schema_migrations',

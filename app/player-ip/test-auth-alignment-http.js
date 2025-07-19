@@ -53,9 +53,8 @@ const colors = {
 class AuthAlignmentTestRunner {
     constructor() {
         this.results = [];
+        this.server = null;
         this.serverProcess = null;
-        this.testGapId = null;
-        this.testCookieValue = null;
     }
 
     log(message, color = colors.reset) {
@@ -245,8 +244,6 @@ class AuthAlignmentTestRunner {
 
         try {
             // First, we need to create a test GAP
-            await this.createTestGAP();
-
             const pkce = this.generatePKCE();
 
             // Test authentication endpoint with PKCE
@@ -257,7 +254,6 @@ class AuthAlignmentTestRunner {
             authUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
             authUrl.searchParams.set('code_challenge', pkce.codeChallenge);
             authUrl.searchParams.set('code_challenge_method', pkce.codeChallengeMethod);
-            authUrl.searchParams.set('gap_id', this.testGapId);
             authUrl.searchParams.set('state', 'test-state-123');
 
             const authResponse = await fetch(authUrl.toString(), {
@@ -445,109 +441,74 @@ class AuthAlignmentTestRunner {
     }
 
     /**
-     * Test 6: GAP (Game Access Path) Integration
+     * Test 6: Error Handling and Security
      */
-    async testGAPIntegration() {
-        this.log('\n🎮 Testing GAP Integration...', colors.cyan);
+    async testErrorHandlingAndSecurity() {
+        this.log('\n🛡️ Testing Error Handling and Security...', colors.cyan);
 
         try {
-            // Test that GAP creation and retrieval works through the database
-            // This tests the integration with the GameHub model
+            // Test missing required parameters
+            const missingParamsUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
+            missingParamsUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
+            // Intentionally omit required parameters
 
-            if (!this.testGapId) {
-                await this.createTestGAP();
-            }
-
-            // Verify GAP was created with correct structure
-            if (!this.testGapId || this.testGapId.length < 10) {
-                throw new Error('GAP creation failed - invalid GAP ID');
-            }
-
-            this.logTest(
-                'GAP Creation and Storage',
-                'PASSED',
-                `GAP created successfully: ${this.testGapId}`
-            );
-
-            // Test GAP-based authentication flow
-            const authUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
-            authUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
-            authUrl.searchParams.set('redirect_uri', TEST_CONFIG.testClient.redirect_uri);
-            authUrl.searchParams.set('response_type', 'code');
-            authUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
-            authUrl.searchParams.set('code_challenge', 'test-challenge');
-            authUrl.searchParams.set('code_challenge_method', 'S256');
-            authUrl.searchParams.set('gap_id', this.testGapId);
-
-            const gapAuthResponse = await fetch(authUrl.toString(), {
+            const missingParamsResponse = await fetch(missingParamsUrl.toString(), {
                 method: 'GET',
                 redirect: 'manual',
             });
 
-            if (gapAuthResponse.status !== 302 && gapAuthResponse.status !== 200) {
-                throw new Error(`GAP authentication failed with status: ${gapAuthResponse.status}`);
+            if (missingParamsResponse.status !== 400) {
+                throw new Error(`Expected 400 for missing parameters, got ${missingParamsResponse.status}`);
             }
 
             this.logTest(
-                'GAP-based Authentication',
+                'Missing Parameters Validation',
                 'PASSED',
-                'GAP-based authentication flow working correctly'
-            );
-        } catch (error) {
-            this.logTest('GAP Integration', 'FAILED', 'GAP integration test failed', error);
-        }
-    }
-
-    /**
-     * Test 7: Error Handling and Security
-     */
-    async testErrorHandlingAndSecurity() {
-        this.log('\n🚨 Testing Error Handling and Security...', colors.cyan);
-
-        try {
-            // Test invalid OAuth parameters
-            const invalidAuthUrl = `${TEST_CONFIG.playerIpUrl}/authenticate?invalid=params`;
-            const invalidResponse = await fetch(invalidAuthUrl);
-
-            if (invalidResponse.status !== 400) {
-                throw new Error(
-                    `Expected 400 for invalid parameters, got ${invalidResponse.status}`
-                );
-            }
-
-            this.logTest(
-                'Invalid Parameter Handling',
-                'PASSED',
-                'Invalid OAuth parameters properly rejected'
+                'Properly validates required OAuth parameters'
             );
 
-            // Test missing GAP ID
-            const missingGapUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
-            missingGapUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
-            missingGapUrl.searchParams.set('redirect_uri', TEST_CONFIG.testClient.redirect_uri);
-            missingGapUrl.searchParams.set('response_type', 'code');
-            missingGapUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
-            missingGapUrl.searchParams.set('code_challenge', 'test-challenge');
-            missingGapUrl.searchParams.set('code_challenge_method', 'S256');
-            // Intentionally omit gap_id
+            // Test invalid response_type
+            const invalidResponseTypeUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
+            invalidResponseTypeUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
+            invalidResponseTypeUrl.searchParams.set('redirect_uri', TEST_CONFIG.testClient.redirect_uri);
+            invalidResponseTypeUrl.searchParams.set('response_type', 'invalid');
+            invalidResponseTypeUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
+            invalidResponseTypeUrl.searchParams.set('code_challenge', 'test-challenge');
+            invalidResponseTypeUrl.searchParams.set('code_challenge_method', 'S256');
 
-            const missingGapResponse = await fetch(missingGapUrl.toString());
+            const invalidResponseTypeResponse = await fetch(invalidResponseTypeUrl.toString(), {
+                method: 'GET',
+                redirect: 'manual',
+            });
 
-            if (missingGapResponse.status !== 400) {
-                throw new Error(
-                    `Expected 400 for missing GAP ID, got ${missingGapResponse.status}`
-                );
-            }
-
-            const responseText = await missingGapResponse.text();
-            if (!responseText.includes('QR Code Required')) {
-                throw new Error('Missing GAP ID should show QR code page');
+            if (invalidResponseTypeResponse.status !== 400) {
+                throw new Error(`Expected 400 for invalid response_type, got ${invalidResponseTypeResponse.status}`);
             }
 
             this.logTest(
-                'Missing GAP ID Handling',
+                'Invalid Response Type Validation',
                 'PASSED',
-                'Missing GAP ID properly handled with user-friendly message'
+                'Properly validates response_type parameter'
+            );
+
+            // Test CORS preflight
+            const corsResponse = await fetch(`${TEST_CONFIG.playerIpUrl}/authenticate`, {
+                method: 'OPTIONS',
+                headers: {
+                    Origin: 'http://localhost:3001',
+                    'Access-Control-Request-Method': 'GET',
+                    'Access-Control-Request-Headers': 'Content-Type',
+                },
+            });
+
+            if (corsResponse.status !== 200) {
+                throw new Error(`CORS preflight failed with status: ${corsResponse.status}`);
+            }
+
+            this.logTest(
+                'CORS Security',
+                'PASSED',
+                'CORS preflight requests handled correctly'
             );
         } catch (error) {
             this.logTest(
@@ -556,24 +517,6 @@ class AuthAlignmentTestRunner {
                 'Error handling and security test failed',
                 error
             );
-        }
-    }
-
-    /**
-     * Helper: Create a test GAP for testing
-     */
-    async createTestGAP() {
-        try {
-            // Generate a test GAP ID
-            this.testGapId = `test-gap-${crypto.randomUUID()}`;
-
-            // In a real implementation, this would create a GAP in the database
-            // For testing purposes, we'll simulate this by setting the ID
-            // The actual GAP creation would happen through the repository layer
-
-            this.log(`📝 Created test GAP: ${this.testGapId}`, colors.yellow);
-        } catch (error) {
-            throw new Error(`Failed to create test GAP: ${error.message}`);
         }
     }
 
@@ -659,7 +602,6 @@ class AuthAlignmentTestRunner {
             await this.testJWTTokenStructure();
             await this.testCORSConfiguration();
             await this.testServiceToServiceConfig();
-            await this.testGAPIntegration();
             await this.testErrorHandlingAndSecurity();
 
             // Generate final report

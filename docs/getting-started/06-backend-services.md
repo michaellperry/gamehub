@@ -88,16 +88,49 @@ GameHub uses a microservices architecture with three specialized backend service
 The player-ip service is a comprehensive OAuth 2.0 identity provider that handles player authentication and authorization for the GameHub platform. It runs on **Port 8082** and provides secure authentication flows for frontend applications with current infrastructure integration.
 
 **Key Features:**
-- OAuth 2.0 Authorization Code Flow with PKCE for secure authentication
-- SQLite database for user and session management
-- JWT token issuance with refresh token rotation
-- Integration with Service IP for backend service authentication
-- Integration with Jinaga replicator for real-time data synchronization
-- Cookie-based session management
-- QR code authentication support
-- Docker containerization with health checks
-- TypeScript implementation with Express.js
-- Network segmentation support (gamehub-network, gamehub-db-network)
+- **OAuth 2.0 Authorization Server**: Complete implementation supporting Authorization Code flow with PKCE
+- **JWT Token Management**: Secure token generation and validation
+- **Refresh Token Support**: Long-lived refresh tokens with optional rotation
+- **SQLite Database**: Persistent storage for users, sessions, and tokens
+- **Docker Support**: Containerized deployment with health checks
+- **Service Discovery**: Integration with service-ip for inter-service communication
+
+### Authentication Flow
+
+The player-ip service implements a standard OAuth 2.0 Authorization Code flow with PKCE:
+
+1. **Authorization Request**: Client redirects user to `/authenticate` with required parameters
+2. **User Authentication**: Service validates user identity via cookie-based authentication
+3. **Authorization Code**: Service generates and returns authorization code to client
+4. **Token Exchange**: Client exchanges authorization code for access token via `/token`
+5. **Resource Access**: Client uses access token for authenticated API requests
+
+**Required OAuth Parameters:**
+- `client_id`: OAuth client identifier
+- `redirect_uri`: Client callback URL
+- `response_type`: Must be "code" (Authorization Code flow)
+- `scope`: Requested permissions (e.g., "openid profile")
+- `code_challenge`: PKCE challenge for security
+- `code_challenge_method`: PKCE method ("S256" or "plain")
+
+### API Endpoints
+
+**Authentication Endpoints:**
+- `GET /authenticate` - OAuth authorization endpoint
+- `GET /authenticate_retry` - Retry authentication after cookie setup
+- `POST /token` - OAuth token endpoint (authorization code and refresh token grants)
+- `POST /revoke` - Token revocation endpoint
+
+**User Management:**
+- `GET /userinfo` - User information endpoint
+- `POST /logout` - User logout endpoint
+- `GET /profile` - User profile endpoint
+
+**Service Management:**
+- `GET /health` - Health check endpoint
+- `GET /configured` - Configuration status endpoint
+- `GET /ready` - Readiness check endpoint
+- `GET /public-key` - Service public key for service principal creation
 
 ### Directory Structure
 

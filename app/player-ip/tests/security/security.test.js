@@ -173,7 +173,7 @@ class SecurityTestRunner {
                     scope: 'openid profile',
                     code_challenge: 'test-challenge',
                     code_challenge_method: 'S256',
-                    gap_id: payload,
+                    // gap_id parameter is no longer required
                 });
 
                 const response = await fetch(`${TEST_CONFIG.baseUrl}/authenticate?${params}`);
@@ -283,7 +283,7 @@ class SecurityTestRunner {
                     scope: input,
                     code_challenge: input,
                     code_challenge_method: 'S256',
-                    gap_id: crypto.randomUUID(),
+                    // gap_id intentionally missing to trigger QR code page
                 });
 
                 const response = await fetch(`${TEST_CONFIG.baseUrl}/authenticate?${params}`);
@@ -717,14 +717,14 @@ class SecurityTestRunner {
                 code_challenge: 'test-challenge',
                 code_challenge_method: 'S256',
                 state: 'test-state-value',
-                // gap_id intentionally missing to trigger QR code page
+                // gap_id parameter is no longer required
             });
 
             const response = await fetch(`${TEST_CONFIG.baseUrl}/authenticate?${params}`);
 
             // Should handle state parameter appropriately
             assert.ok(
-                response.status === 400,
+                response.status === 200 || response.status === 302,
                 'Should handle authentication request with state parameter'
             );
 
@@ -815,8 +815,8 @@ class SecurityTestRunner {
                     finding.severity === 'HIGH'
                         ? colors.red
                         : finding.severity === 'MEDIUM'
-                          ? colors.yellow
-                          : colors.blue;
+                            ? colors.yellow
+                            : colors.blue;
                 console.log(
                     `${index + 1}. ${severityColor}[${finding.severity}]${colors.reset} ${finding.finding}`
                 );

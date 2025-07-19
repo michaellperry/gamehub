@@ -51,26 +51,6 @@ const initializeDatabase = () => {
     )
   `);
 
-    // Create gaps table
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS gaps (
-      id TEXT PRIMARY KEY,
-      type TEXT NOT NULL,
-      policy TEXT NOT NULL,
-      event_id TEXT NOT NULL
-    )
-  `);
-
-    // Create gap_users table (for user-specific access paths)
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS gap_users (
-      gap_id TEXT NOT NULL,
-      user_id TEXT NOT NULL,
-      PRIMARY KEY (gap_id, user_id),
-      FOREIGN KEY (gap_id) REFERENCES gaps(id) ON DELETE CASCADE
-    )
-  `);
-
     // Create auth_codes table
     db.exec(`
     CREATE TABLE IF NOT EXISTS auth_codes (

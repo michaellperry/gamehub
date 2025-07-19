@@ -19,15 +19,12 @@ import {
     createUser,
     storeUserIdentity,
     getUserIdByCookie,
-    getGAPById,
     getAuthorizationCode,
     deleteAuthorizationCode,
     getRefreshToken,
     revokeRefreshToken,
 } from '../repository/index.js';
 import {
-    GAPType,
-    OpenAccessPolicy,
     TokenResponse,
     AuthRequest,
     TokenRequest,
@@ -52,7 +49,6 @@ const validateAuthRequest = (query: any): AuthRequest => {
         code_challenge,
         code_challenge_method,
         state,
-        gap_id,
     } = query;
 
     // Validate required parameters
@@ -62,8 +58,7 @@ const validateAuthRequest = (query: any): AuthRequest => {
         !response_type ||
         !scope ||
         !code_challenge ||
-        !code_challenge_method ||
-        !gap_id
+        !code_challenge_method
     ) {
         // Create an informative error message
         const missingParams = [];
@@ -84,9 +79,6 @@ const validateAuthRequest = (query: any): AuthRequest => {
         }
         if (!code_challenge_method) {
             missingParams.push('code_challenge_method');
-        }
-        if (!gap_id) {
-            missingParams.push('gap_id');
         }
         // Throw an error with the missing parameters
         throw new Error(`Missing required parameters: ${missingParams.join(', ')}`);
@@ -110,7 +102,6 @@ const validateAuthRequest = (query: any): AuthRequest => {
         code_challenge: code_challenge as string,
         code_challenge_method: code_challenge_method as string,
         state: state as string | undefined,
-        gapId: gap_id as string,
     };
 };
 
@@ -137,10 +128,9 @@ const asyncHandler = (
 /**
  * Authenticate endpoint
  *
- * This endpoint handles the initial authentication request with the GAP ID in the query parameters.
+ * This endpoint handles the initial authentication request.
  * If the user doesn't have an identity cookie, it creates one and redirects to authenticate_retry.
  * If the user has an identity cookie, it processes the authentication request.
- * If only the gap_id parameter is missing, it displays a user-friendly page asking to re-scan the QR code.
  */
 router.get(
     '/authenticate',
@@ -153,74 +143,9 @@ router.get(
             scope,
             code_challenge,
             code_challenge_method,
-            gap_id,
         } = req.query;
 
-        // Check if only gap_id is missing (and all other required parameters are present)
-        if (
-            !gap_id &&
-            client_id &&
-            redirect_uri &&
-            response_type &&
-            scope &&
-            code_challenge &&
-            code_challenge_method
-        ) {
-            // Render a user-friendly page asking the user to re-scan their QR code
-            return res.status(400).send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>QR Code Required</title>
-          <meta name="viewport" content="width=device-width, initial-scale=1">
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              text-align: center;
-              margin: 0;
-              padding: 20px;
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              background-color: #f5f5f5;
-            }
-            .container {
-              background-color: white;
-              border-radius: 8px;
-              padding: 30px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-              max-width: 500px;
-              width: 100%;
-            }
-            h1 {
-              color: #333;
-              margin-bottom: 20px;
-            }
-            p {
-              color: #666;
-              line-height: 1.6;
-              margin-bottom: 25px;
-            }
-            .icon {
-              font-size: 60px;
-              margin-bottom: 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="icon">📱</div>
-            <h1>QR Code Required</h1>
-            <p>Please re-scan your event QR code to continue with the authentication process.</p>
-          </div>
-        </body>
-      </html>
-    `);
-        }
-
-        // If gap_id is present or other parameters are missing, proceed with normal validation
+        // Validate the authentication request
         const authRequest = validateAuthRequest(req.query);
 
         // Check for identity cookie
@@ -505,26 +430,11 @@ const handleRefreshTokenGrant = async (tokenRequest: TokenRequest, res: Response
  * Process authentication request
  *
  * This function processes the authentication request after the identity cookie has been verified.
- * It uses the GAP ID from the request path, looks up the user ID and event ID, and issues an authorization code.
+ * It creates an authorization code for the user.
  */
 const processAuthentication = async (authRequest: AuthRequest, res: Response, userId: string) => {
-    // Get the GAP ID directly from the request
-    const gapId = authRequest.gapId;
-
-    // Get the GAP from the repository
-    const gap = getGAPById(gapId);
-
-    if (!gap) {
-        throw new Error('Invalid GAP ID');
-    }
-
-    // Check if the GAP is an open access path with cookie-based policy
-    if (gap.type !== GAPType.OPEN || gap.policy !== OpenAccessPolicy.COOKIE_BASED) {
-        throw new Error('Unsupported GAP type or policy');
-    }
-
-    // Get the event ID from the GAP
-    const eventId = gap.eventId;
+    // Use a default event ID for now (this could be made configurable in the future)
+    const eventId = 'default-event';
 
     // Create an authorization code
     const code = createAuthorizationCode(

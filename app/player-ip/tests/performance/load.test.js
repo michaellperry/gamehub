@@ -371,22 +371,31 @@ class PerformanceTestRunner {
                 const requestStart = Date.now();
 
                 // Test authentication endpoint with missing gap_id (should return QR code page)
-                const params = new URLSearchParams({
-                    client_id: 'test-client',
-                    redirect_uri: 'http://localhost:3000/callback',
-                    response_type: 'code',
-                    scope: 'openid profile',
-                    code_challenge: 'test-challenge',
-                    code_challenge_method: 'S256',
+                const missingGapIdUrl = new URL(`${TEST_CONFIG.baseUrl}/authenticate`);
+                missingGapIdUrl.searchParams.set('client_id', 'test-client');
+                missingGapIdUrl.searchParams.set('redirect_uri', 'http://localhost:3000/callback');
+                missingGapIdUrl.searchParams.set('response_type', 'code');
+                missingGapIdUrl.searchParams.set('scope', 'openid profile');
+                missingGapIdUrl.searchParams.set('code_challenge', 'test-challenge');
+                missingGapIdUrl.searchParams.set('code_challenge_method', 'S256');
+                // gap_id parameter is no longer required
+
+                const missingGapIdResponse = await fetch(missingGapIdUrl.toString(), {
+                    method: 'GET',
+                    redirect: 'manual',
                 });
 
-                const response = await fetch(`${TEST_CONFIG.baseUrl}/authenticate?${params}`);
+                // Should now work without gap_id since it's no longer required
+                if (missingGapIdResponse.status !== 302 && missingGapIdResponse.status !== 200) {
+                    throw new Error(`Expected 200/302 status without gap_id, got ${missingGapIdResponse.status}`);
+                }
+
                 const requestEnd = Date.now();
 
                 return {
-                    status: response.status,
+                    status: missingGapIdResponse.status,
                     responseTime: requestEnd - requestStart,
-                    success: response.status === 400, // Expected for missing gap_id
+                    success: missingGapIdResponse.status === 200 || missingGapIdResponse.status === 302, // Expect 200 or 302 for success
                 };
             });
 

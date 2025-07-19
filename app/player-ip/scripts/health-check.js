@@ -159,14 +159,13 @@ class HealthChecker {
                 scope: 'openid profile',
                 code_challenge: 'health-check-challenge',
                 code_challenge_method: 'S256',
-                // gap_id intentionally missing to trigger expected error response
             });
 
             const response = await fetch(`${CONFIG.serviceUrl}/authenticate?${params}`);
 
-            // Should return 400 for missing gap_id, which indicates JWT/auth system is working
-            if (response.status !== 400) {
-                throw new Error(`Expected 400 status for missing gap_id, got ${response.status}`);
+            // Should now work without gap_id since it's no longer required
+            if (response.status !== 302 && response.status !== 200) {
+                throw new Error(`Expected 200/302 status without gap_id, got ${response.status}`);
             }
 
             this.metrics.jwtFunctional = true;

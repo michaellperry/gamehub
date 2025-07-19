@@ -6,18 +6,14 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import {
+    AuthorizationCode,
     User,
     UserIdentity,
-    GameAccessPath,
-    GAPType,
-    OpenAccessPolicy,
-    AuthorizationCode,
 } from '../../models';
 
 // In-memory storage
 const users: Map<string, User> = new Map();
 const userIdentities: Map<string, string> = new Map(); // Map of cookie value to user ID
-const gaps: Map<string, GameAccessPath> = new Map();
 const authCodes: Map<string, AuthorizationCode> = new Map();
 
 /**
@@ -59,22 +55,6 @@ export const storeUserIdentity = (userId: string, cookieValue: string): UserIden
     return { userId, cookieValue };
 };
 
-// For testing purposes, create a sample open access path with cookie-based policy
-export const createSampleOpenAccessPath = (): GameAccessPath => {
-    const gapId = uuidv4();
-    const eventId = uuidv4();
-
-    const gap: GameAccessPath = {
-        id: gapId,
-        type: GAPType.OPEN,
-        policy: OpenAccessPolicy.COOKIE_BASED,
-        eventId,
-    };
-
-    gaps.set(gapId, gap);
-    return gap;
-};
-
 /**
  * Authorization code repository functions
  */
@@ -91,6 +71,3 @@ export const getAuthorizationCode = (code: string): AuthorizationCode | undefine
 export const deleteAuthorizationCode = (code: string): boolean => {
     return authCodes.delete(code);
 };
-
-// Initialize with a sample GAP for testing
-createSampleOpenAccessPath();

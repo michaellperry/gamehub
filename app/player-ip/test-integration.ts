@@ -141,7 +141,6 @@ class TestRunner {
         // Integration Tests
         await this.testJWTTokenGeneration();
         await this.testErrorHandling();
-        await this.testGAPIntegration();
     }
 
     private async testDatabaseSchema() {
@@ -216,15 +215,6 @@ class TestRunner {
         VALUES (?, ?)
       `
             ).run(testCookie, testUserId);
-
-            // Test gaps table
-            const testGapId = crypto.randomUUID();
-            db.prepare(
-                `
-        INSERT INTO gaps (id, type, policy, event_id)
-        VALUES (?, ?, ?, ?)
-      `
-            ).run(testGapId, 'OPEN', 'COOKIE_BASED', crypto.randomUUID());
 
             console.log(
                 `${colors.green}  ✓ Database initialization and basic operations work correctly${colors.reset}`
@@ -350,24 +340,22 @@ class TestRunner {
             }
 
             // Test /authenticate endpoint with missing gap_id only (should show QR code page)
-            const params = new URLSearchParams({
-                client_id: 'test-client',
-                redirect_uri: 'http://localhost:3000/callback',
-                response_type: 'code',
-                scope: 'openid profile',
-                code_challenge: 'test-challenge',
-                code_challenge_method: 'S256',
+            const missingGapIdUrl = new URL(`${TEST_CONFIG.baseUrl}/authenticate`);
+            missingGapIdUrl.searchParams.set('client_id', 'test-client');
+            missingGapIdUrl.searchParams.set('redirect_uri', 'http://localhost:3000/callback');
+            missingGapIdUrl.searchParams.set('response_type', 'code');
+            missingGapIdUrl.searchParams.set('scope', 'openid profile');
+            missingGapIdUrl.searchParams.set('code_challenge', 'test-challenge');
+            missingGapIdUrl.searchParams.set('code_challenge_method', 'S256');
+
+            const missingGapIdResponse = await fetch(missingGapIdUrl.toString(), {
+                method: 'GET',
+                redirect: 'manual',
             });
 
-            const authResponseMissingGap = await fetch(
-                `${TEST_CONFIG.baseUrl}/authenticate?${params}`
-            );
-
-            if (authResponseMissingGap.ok) {
-                const html = await authResponseMissingGap.text();
-                if (!html.includes('QR Code Required')) {
-                    throw new Error('Should show QR code required page when gap_id is missing');
-                }
+            // Should now work without gap_id since it's no longer required
+            if (missingGapIdResponse.status !== 302 && missingGapIdResponse.status !== 200) {
+                throw new Error('Should work without gap_id parameter');
             }
 
             // Test /token endpoint with missing parameters
@@ -456,35 +444,6 @@ class TestRunner {
             }
 
             console.log(`${colors.green}  ✓ Error handling working correctly${colors.reset}`);
-        });
-    }
-
-    private async testGAPIntegration() {
-        await this.runTest('GAP Integration (Basic)', async () => {
-            // Test GAP repository functions
-            const { createOpenAccessPath, getGAPById } = await import('./src/repository/index.js');
-            const { OpenAccessPolicy } = await import('./src/models/index.js');
-
-            const testGapId = crypto.randomUUID();
-            const testEventId = crypto.randomUUID();
-
-            // Create a test GAP
-            createOpenAccessPath(testGapId, OpenAccessPolicy.COOKIE_BASED, testEventId);
-
-            // Retrieve the GAP
-            const gap = getGAPById(testGapId);
-
-            if (!gap) {
-                throw new Error('Failed to create or retrieve GAP');
-            }
-
-            if (gap.eventId !== testEventId) {
-                throw new Error('GAP event ID mismatch');
-            }
-
-            console.log(
-                `${colors.green}  ✓ GAP integration basic functionality working${colors.reset}`
-            );
         });
     }
 
