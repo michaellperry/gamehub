@@ -414,9 +414,6 @@ class SetupWizard {
             case 2:
                 this.renderTenantStep();
                 break;
-            case 3:
-                this.renderServicePrincipalStep();
-                break;
         }
     }
 
