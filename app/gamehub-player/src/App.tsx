@@ -1,18 +1,16 @@
-import { Routes, Route } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 import './App.css';
 
 // Import pages
 import HomePage from '@/pages/HomePage';
-import LoginPage from '@/pages/LoginPage';
-import GameSessionPage from '@/pages/GameSessionPage';
+import Callback from './auth/Callback';
 
 function App() {
     return (
         <div className="min-h-screen bg-gray-50">
             <Routes>
                 <Route path="/" element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/game/:sessionId" element={<GameSessionPage />} />
+                <Route path="/callback" element={<Callback />} />
             </Routes>
         </div>
     );

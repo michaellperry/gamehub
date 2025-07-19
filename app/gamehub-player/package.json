@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
-        "build:container": "tsc -b && vite build --mode container && mkdir -p ../../mesh/nginx/app/gamehub-player && cp -r dist/* ../../mesh/nginx/app/gamehub-player/",
+        "build:container": "vite build --mode container && mkdir -p ../../mesh/nginx/app/gamehub-player && cp -r dist/* ../../mesh/nginx/app/gamehub-player/",
         "build:model": "cd ../gamehub-model && npm run build",
         "lint": "eslint .",
         "preview": "vite preview"
@@ -15,16 +15,16 @@
         "gamehub-model": "file:../gamehub-model",
         "jinaga": "^6.7.8",
         "jinaga-react": "^5.2.0",
-        "react": "^19.1.0",
-        "react-dom": "^19.1.0",
-        "react-oauth2-code-pkce": "^1.22.2",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "react-oauth2-code-pkce": "^1.23.1",
         "react-router-dom": "^7.6.3"
     },
     "devDependencies": {
         "@eslint/js": "^9.30.1",
         "@types/node": "^24.0.15",
-        "@types/react": "^19.1.8",
-        "@types/react-dom": "^19.1.6",
+        "@types/react": "^18.2.66",
+        "@types/react-dom": "^18.2.22",
         "@vitejs/plugin-react": "^4.6.0",
         "autoprefixer": "^10.4.21",
         "eslint": "^9.30.1",

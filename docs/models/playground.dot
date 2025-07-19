@@ -1,0 +1,6 @@
+digraph {
+    rankdir=BT
+    Player -> User, Tenant
+    PlayerName -> Player
+    PlayerName -> PlayerName [label="prior *"]
+}
