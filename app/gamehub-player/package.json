@@ -7,6 +7,7 @@
         "dev": "vite",
         "build": "tsc -b && vite build",
         "build:container": "tsc -b && vite build",
+        "build:model": "cd ../gamehub-model && npm run build",
         "lint": "eslint .",
         "preview": "vite preview"
     },

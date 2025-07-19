@@ -5,11 +5,11 @@ import { distribution } from "./distribution/index.js";
 
 // Utility function for testing integration
 export function getModelInfo() {
-  return {
-    version: "1.0.0",
-    timestamp: new Date().toISOString(),
-    modules: ["model", "authorization", "distribution"]
-  };
+    return {
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+        modules: ["model", "authorization", "distribution"]
+    };
 }
 
 // Re-export the modules
@@ -19,19 +19,19 @@ export { model } from "./model/index.js";
 
 // Default export for CommonJS compatibility
 export default {
-  authorization,
-  distribution,
-  model,
-  getModelInfo,
-  describeAuthorizationRules,
-  describeDistributionRules,
+    authorization,
+    distribution,
+    model,
+    getModelInfo,
+    describeAuthorizationRules,
+    describeDistributionRules,
 };
 
 // Generate authorization and distribution rules when this file is executed
 // via the command line with the --generate-policies flag
-if (process.argv.includes("--generate-policies")) {
-  const authorizationRules = describeAuthorizationRules(model, authorization);
-  const distributionRules = describeDistributionRules(distribution);
-  console.log(authorizationRules);
-  console.log(distributionRules);
+if (typeof process !== 'undefined' && process.argv && process.argv.includes("--generate-policies")) {
+    const authorizationRules = describeAuthorizationRules(model, authorization);
+    const distributionRules = describeDistributionRules(distribution);
+    console.log(authorizationRules);
+    console.log(distributionRules);
 }
