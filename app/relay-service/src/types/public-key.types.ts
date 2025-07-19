@@ -8,4 +8,4 @@ export interface PublicKeyServiceData {
 export interface PublicKeyResponse {
     timestamp: string;
     services: Record<string, PublicKeyServiceData>;
-} 
+}

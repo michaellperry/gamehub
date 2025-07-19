@@ -18,7 +18,7 @@ export enum SubscriptionState {
     CONNECTING = 'connecting',
     CONNECTED = 'connected',
     RETRYING = 'retrying',
-    FAILED = 'failed'
+    FAILED = 'failed',
 }
 
 interface SubscriptionStatus {
@@ -32,7 +32,7 @@ interface SubscriptionStatus {
 // Global subscription status
 let subscriptionStatus: SubscriptionStatus = {
     state: SubscriptionState.DISCONNECTED,
-    retryCount: 0
+    retryCount: 0,
 };
 
 // Retry configuration
@@ -40,7 +40,7 @@ const RETRY_CONFIG = {
     maxRetries: 3,
     baseDelay: 1000, // 1 second
     maxDelay: 30000, // 30 seconds
-    backoffMultiplier: 2
+    backoffMultiplier: 2,
 };
 
 // Calculate exponential backoff delay
@@ -68,11 +68,11 @@ function isTransientError(error: any): boolean {
         'fetch failed',
         'service unavailable',
         'bad gateway',
-        'gateway timeout'
+        'gateway timeout',
     ];
 
-    return transientPatterns.some(pattern =>
-        errorMessage.includes(pattern) || errorCode.includes(pattern)
+    return transientPatterns.some(
+        (pattern) => errorMessage.includes(pattern) || errorCode.includes(pattern)
     );
 }
 
@@ -81,10 +81,13 @@ export function getSubscriptionStatus(): SubscriptionStatus {
     return { ...subscriptionStatus };
 }
 
-const accessPathsToConfigure = model.given(Tenant).match(tenant =>
-    GameAccessPath.in(tenant)
-        .notExists(accessPath => GameAccessPathConfigured.for(accessPath))
-);
+const accessPathsToConfigure = model
+    .given(Tenant)
+    .match((tenant) =>
+        GameAccessPath.in(tenant).notExists((accessPath) =>
+            GameAccessPathConfigured.for(accessPath)
+        )
+    );
 
 // Robust subscription function with retry logic
 async function attemptSubscription(retryCount: number = 0): Promise<() => void> {
@@ -99,9 +102,7 @@ async function attemptSubscription(retryCount: number = 0): Promise<() => void> 
         const { userFact } = await jinagaClient.login<User>();
         console.log('Jinaga login successful');
 
-        Trace.info(
-            `Attendee service principal public key:\n${userFact.publicKey}`
-        );
+        Trace.info(`Attendee service principal public key:\n${userFact.publicKey}`);
 
         const tenant = new Tenant(new User(process.env.TENANT_PUBLIC_KEY!));
         console.log('Creating subscription observer...');
@@ -109,31 +110,38 @@ async function attemptSubscription(retryCount: number = 0): Promise<() => void> 
         // Wrap the subscription call in try-catch for robust error handling
         let observer;
         try {
-            observer = jinagaClient.subscribe(accessPathsToConfigure, tenant, async accessPath => {
-                try {
-                    const typedAccessPath = accessPath as GameAccessPath;
-                    Trace.info(
-                        `Configuring access path ${typedAccessPath.id} for event ${typedAccessPath.session.id}.`
-                    );
-                    await createOpenAccessPath(
-                        typedAccessPath.id,
-                        OpenAccessPolicy.COOKIE_BASED,
-                        typedAccessPath.session.id);
-                    await jinagaClient.fact(new GameAccessPathConfigured(typedAccessPath, new Date()));
-                    Trace.info(
-                        `Successfully configured access path ${typedAccessPath.id} for event ${typedAccessPath.session.id}.`
-                    );
-                } catch (error) {
-                    console.error('=== SUBSCRIPTION CALLBACK ERROR ===');
-                    console.error('Timestamp:', new Date().toISOString());
-                    console.error('Error in subscription callback:', error);
-                    if (error instanceof Error) {
-                        console.error('Stack trace:', error.stack);
+            observer = jinagaClient.subscribe(
+                accessPathsToConfigure,
+                tenant,
+                async (accessPath) => {
+                    try {
+                        const typedAccessPath = accessPath as GameAccessPath;
+                        Trace.info(
+                            `Configuring access path ${typedAccessPath.id} for event ${typedAccessPath.session.id}.`
+                        );
+                        await createOpenAccessPath(
+                            typedAccessPath.id,
+                            OpenAccessPolicy.COOKIE_BASED,
+                            typedAccessPath.session.id
+                        );
+                        await jinagaClient.fact(
+                            new GameAccessPathConfigured(typedAccessPath, new Date())
+                        );
+                        Trace.info(
+                            `Successfully configured access path ${typedAccessPath.id} for event ${typedAccessPath.session.id}.`
+                        );
+                    } catch (error) {
+                        console.error('=== SUBSCRIPTION CALLBACK ERROR ===');
+                        console.error('Timestamp:', new Date().toISOString());
+                        console.error('Error in subscription callback:', error);
+                        if (error instanceof Error) {
+                            console.error('Stack trace:', error.stack);
+                        }
+                        console.error('=== END CALLBACK ERROR ===');
+                        Trace.error(error);
                     }
-                    console.error('=== END CALLBACK ERROR ===');
-                    Trace.error(error);
                 }
-            });
+            );
         } catch (subscriptionError) {
             console.error('=== SUBSCRIPTION CREATION ERROR ===');
             console.error('Timestamp:', new Date().toISOString());
@@ -198,7 +206,6 @@ async function attemptSubscription(retryCount: number = 0): Promise<() => void> 
             console.log('Subscription stopped successfully');
             Trace.info('Subscription stopped.');
         };
-
     } catch (error) {
         console.error('=== SUBSCRIPTION ATTEMPT ERROR ===');
         console.error('Timestamp:', new Date().toISOString());
@@ -238,7 +245,10 @@ async function attemptSubscription(retryCount: number = 0): Promise<() => void> 
             // Permanent failure or max retries exceeded
             subscriptionStatus.state = SubscriptionState.FAILED;
             console.error('=== SUBSCRIPTION PERMANENTLY FAILED ===');
-            console.error('Reason:', !isTransientError(error) ? 'Non-transient error' : 'Max retries exceeded');
+            console.error(
+                'Reason:',
+                !isTransientError(error) ? 'Non-transient error' : 'Max retries exceeded'
+            );
 
             // Return a no-op function instead of throwing to prevent service shutdown
             return () => {
@@ -249,8 +259,13 @@ async function attemptSubscription(retryCount: number = 0): Promise<() => void> 
 }
 
 export async function startSubscription(): Promise<() => void> {
-    if (!process.env.TENANT_PUBLIC_KEY || !process.env.TENANT_PUBLIC_KEY.startsWith('-----BEGIN PUBLIC KEY-----')) {
-        throw new Error('Set the TENANT_PUBLIC_KEY environment variable to the public key of the tenant creator');
+    if (
+        !process.env.TENANT_PUBLIC_KEY ||
+        !process.env.TENANT_PUBLIC_KEY.startsWith('-----BEGIN PUBLIC KEY-----')
+    ) {
+        throw new Error(
+            'Set the TENANT_PUBLIC_KEY environment variable to the public key of the tenant creator'
+        );
     }
 
     Trace.configure(new ConsoleTracer());

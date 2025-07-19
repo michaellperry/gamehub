@@ -17,7 +17,7 @@ function ServicePrincipals() {
         knownServicesLoading,
         knownServicesError,
         bulkProvisionServices,
-        bulkProvisioningLoading
+        bulkProvisioningLoading,
     } = useServicePrincipals();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isProvisionModalOpen, setIsProvisionModalOpen] = useState(false);
@@ -141,7 +141,8 @@ function ServicePrincipals() {
                 emptyState={{
                     iconName: 'user',
                     title: 'No service principals found',
-                    description: 'Get started by adding your first service principal or provisioning known services.',
+                    description:
+                        'Get started by adding your first service principal or provisioning known services.',
                     action: (
                         <div className="flex flex-col sm:flex-row gap-3">
                             <Button

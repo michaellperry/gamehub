@@ -4,7 +4,7 @@ import { useSpecification } from 'jinaga-react';
 import { useMemo, useState } from 'react';
 import { j } from '../jinaga-config';
 import { useTenant } from '../tenants/useTenant';
-import { useKnownServices } from "./useKnownServices";
+import { useKnownServices } from './useKnownServices';
 
 const servicePrincipalsInTenant = model
     .given(Tenant)
@@ -55,15 +55,16 @@ export function useServicePrincipals() {
     };
 
     // Get existing service principals as a set of public keys for quick lookup
-    const existingPublicKeys = useMemo(() => new Set(
-        data?.map((sp) => sp.user.publicKey) || []
-    ), [data]);
+    const existingPublicKeys = useMemo(
+        () => new Set(data?.map((sp) => sp.user.publicKey) || []),
+        [data]
+    );
 
     // Fetch known services from the relay service
     const {
         data: rawServices,
         loading: knownServicesLoading,
-        error: knownServicesError
+        error: knownServicesError,
     } = useKnownServices();
 
     // Combine raw services with alreadyExists status
@@ -78,7 +79,6 @@ export function useServicePrincipals() {
             };
         });
     }, [rawServices, existingPublicKeys]);
-
 
     const addServicePrincipal = (publicKey: string) => {
         if (tenant) {
@@ -100,7 +100,9 @@ export function useServicePrincipals() {
     };
 
     // Bulk provision selected services
-    const bulkProvisionServices = async (serviceNames: string[]): Promise<BulkProvisioningResult> => {
+    const bulkProvisionServices = async (
+        serviceNames: string[]
+    ): Promise<BulkProvisioningResult> => {
         if (!tenant) {
             throw new Error('No tenant configured');
         }

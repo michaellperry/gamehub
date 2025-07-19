@@ -19,8 +19,10 @@ process.on('unhandledRejection', (reason, promise) => {
 
     // Check if this is a subscription-related error
     const subscriptionStatus = getSubscriptionStatus();
-    if (subscriptionStatus.state === SubscriptionState.RETRYING ||
-        subscriptionStatus.state === SubscriptionState.CONNECTING) {
+    if (
+        subscriptionStatus.state === SubscriptionState.RETRYING ||
+        subscriptionStatus.state === SubscriptionState.CONNECTING
+    ) {
         console.error('Subscription-related rejection detected - service will continue');
     }
 
@@ -38,7 +40,8 @@ process.on('uncaughtException', (error) => {
 
     // Check if this might be subscription-related
     const errorMessage = error.message?.toLowerCase() || '';
-    const isSubscriptionRelated = errorMessage.includes('subscription') ||
+    const isSubscriptionRelated =
+        errorMessage.includes('subscription') ||
         errorMessage.includes('jinaga') ||
         errorMessage.includes('observer');
 
@@ -62,10 +65,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({
-    origin: CORS_ORIGIN,
-    credentials: true
-}));
+app.use(
+    cors({
+        origin: CORS_ORIGIN,
+        credentials: true,
+    })
+);
 
 // Health status endpoint for subscription monitoring
 app.get('/health/subscription', (req: Request, res: Response) => {
@@ -79,7 +84,7 @@ app.get('/health/subscription', (req: Request, res: Response) => {
         lastError: status.lastError?.message,
         lastRetryAt: status.lastRetryAt,
         connectedAt: status.connectedAt,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 
@@ -96,9 +101,9 @@ app.get('/health', (req: Request, res: Response) => {
             subscription: {
                 status: subscriptionStatus.state,
                 healthy: isSubscriptionHealthy,
-                degraded: !isSubscriptionHealthy
-            }
-        }
+                degraded: !isSubscriptionHealthy,
+            },
+        },
     });
 });
 
@@ -110,7 +115,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error('Error:', err.message);
     res.status(500).json({
         error: 'Internal Server Error',
-        message: err.message
+        message: err.message,
     });
 });
 
@@ -138,8 +143,7 @@ async function run() {
                 console.log('Subscription failed - service operating in degraded mode');
                 setReady(); // Still mark as ready to serve HTTP requests
             }
-        }
-        catch (error) {
+        } catch (error) {
             console.error('=== SUBSCRIPTION STARTUP ERROR (NON-FATAL) ===');
             console.error('Error starting subscription:', error);
             console.error('Service will continue in degraded mode');
@@ -163,7 +167,9 @@ async function run() {
         if (status.state === SubscriptionState.CONNECTED) {
             console.log('Service status: FULLY OPERATIONAL');
         } else {
-            console.log('Service status: DEGRADED MODE (HTTP functional, subscription unavailable)');
+            console.log(
+                'Service status: DEGRADED MODE (HTTP functional, subscription unavailable)'
+            );
             console.log(`Subscription state: ${status.state}`);
         }
         console.log(`Health check available at: http://localhost:${SERVER_PORT}/health`);

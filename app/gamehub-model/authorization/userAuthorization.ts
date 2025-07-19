@@ -1,6 +1,6 @@
-import { AuthorizationRules, User } from "jinaga";
+import { AuthorizationRules, User } from 'jinaga';
 
-export const userAuthorization = (a: AuthorizationRules) => a
-  // Anybody can create user facts
-  .any(User)
-  ;
+export const userAuthorization = (a: AuthorizationRules) =>
+    a
+        // Anybody can create user facts
+        .any(User);

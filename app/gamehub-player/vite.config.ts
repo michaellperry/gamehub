@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { resolve } from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -9,15 +9,15 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': resolve(__dirname, './src'),
-            '@model': resolve(__dirname, '../gamehub-model/src')
-        }
+            '@model': resolve(__dirname, '../gamehub-model/src'),
+        },
     },
     build: {
         outDir: 'dist',
-        sourcemap: true
+        sourcemap: true,
     },
     server: {
         port: 3001,
-        host: true
-    }
-})
+        host: true,
+    },
+});

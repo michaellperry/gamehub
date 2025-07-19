@@ -1,10 +1,10 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./dist/cjs",
-    "rootDir": ".",
-    "esModuleInterop": true
-  }
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "outDir": "./dist/cjs",
+        "rootDir": ".",
+        "esModuleInterop": true
+    }
 }

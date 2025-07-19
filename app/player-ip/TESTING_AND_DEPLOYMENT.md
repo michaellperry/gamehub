@@ -20,12 +20,14 @@ This document provides comprehensive information about the testing infrastructur
 The Player-IP service includes comprehensive testing coverage across multiple categories:
 
 #### 1. Unit Tests
+
 - **Location**: `tests/unit/`
 - **Purpose**: Test individual components in isolation
 - **Coverage**: Utils, Repository functions, JWT operations, OAuth utilities
 - **Command**: `npm run test:unit`
 
 **Key Test Files**:
+
 - `tests/unit/utils/jwt.test.js` - JWT token generation and validation
 - `tests/unit/utils/oauth.test.js` - OAuth PKCE verification
 - `tests/unit/utils/cookie.test.js` - Cookie utilities and security
@@ -33,30 +35,35 @@ The Player-IP service includes comprehensive testing coverage across multiple ca
 - `tests/unit/repository/auth.test.js` - Authentication operations
 
 #### 2. Integration Tests
+
 - **Location**: `test-integration.ts`
 - **Purpose**: Test complete workflows and service integration
 - **Coverage**: End-to-end OAuth flows, database operations, API endpoints
 - **Command**: `npm run test:integration`
 
 #### 3. Component Tests
+
 - **Location**: `test-components.js`
 - **Purpose**: Test components without full server setup
 - **Coverage**: Repository functions, utilities, GAP integration
 - **Command**: `npm run test:component`
 
 #### 4. API Contract Tests
+
 - **Location**: `tests/contract/api-contract.test.js`
 - **Purpose**: Verify API endpoint contracts and specifications
 - **Coverage**: Request/response formats, HTTP status codes, CORS, error patterns
 - **Command**: `npm run test:contract`
 
 #### 5. Performance Tests
+
 - **Location**: `tests/performance/load.test.js`
 - **Purpose**: Validate service performance under load
 - **Coverage**: Response times, concurrent requests, memory usage, sustained load
 - **Command**: `npm run test:performance`
 
 #### 6. Security Tests
+
 - **Location**: `tests/security/security.test.js`
 - **Purpose**: Validate security posture and vulnerability prevention
 - **Coverage**: Input validation, XSS/SQL injection prevention, JWT security, CORS
@@ -65,6 +72,7 @@ The Player-IP service includes comprehensive testing coverage across multiple ca
 ### Test Configuration
 
 #### Environment Variables
+
 ```bash
 NODE_ENV=test
 SQLITE_DB_PATH=./test-data/test.db
@@ -73,6 +81,7 @@ SKIP_JINAGA_SUBSCRIPTION=true
 ```
 
 #### Test Data Management
+
 - Test databases are created in `test-data/` directory
 - Automatic cleanup after test completion
 - Isolated test environments for each test suite
@@ -119,6 +128,7 @@ The enhanced build script (`scripts/build-player-ip.sh`) provides comprehensive 
 ```
 
 #### Build Features
+
 - **Code Quality**: Linting, type checking, security audits
 - **Testing**: Unit, component, integration, and security tests
 - **Docker**: Multi-platform image building with proper tagging
@@ -144,6 +154,7 @@ The deployment script (`scripts/deploy-player-ip.sh`) handles production deploym
 ```
 
 #### Deployment Features
+
 - **Environment Management**: Staging and production environments
 - **Health Checks**: Post-deployment health verification
 - **Rollback**: Automatic rollback on failure
@@ -154,12 +165,14 @@ The deployment script (`scripts/deploy-player-ip.sh`) handles production deploym
 ## Quality Gates
 
 ### Code Coverage Requirements
+
 - **Minimum Coverage**: 80%
 - **Unit Tests**: 90%+ coverage for utilities and core functions
 - **Integration Tests**: Complete workflow coverage
 - **Security Tests**: All security scenarios covered
 
 ### Performance Thresholds
+
 - **Health Check Response**: < 100ms average
 - **Token Generation**: < 50ms average
 - **Database Operations**: < 20ms average
@@ -167,6 +180,7 @@ The deployment script (`scripts/deploy-player-ip.sh`) handles production deploym
 - **Memory Usage**: < 100MB increase under load
 
 ### Security Requirements
+
 - **Input Validation**: All inputs sanitized and validated
 - **SQL Injection**: Prevention verified through testing
 - **XSS Prevention**: Output encoding and CSP headers
@@ -180,6 +194,7 @@ The deployment script (`scripts/deploy-player-ip.sh`) handles production deploym
 The Player-IP service provides comprehensive health monitoring through multiple endpoints designed for different monitoring scenarios:
 
 #### General Health Endpoint (`/health`)
+
 - **Purpose**: Overall service health status including subscription monitoring
 - **Response**: Always returns HTTP 200 (service operational) with detailed status
 - **Use Case**: Load balancer health checks, general service monitoring
@@ -204,6 +219,7 @@ curl http://localhost:8082/health
 ```
 
 #### Subscription Health Endpoint (`/health/subscription`)
+
 - **Purpose**: Detailed subscription diagnostics and troubleshooting
 - **Response**: HTTP 200 (healthy) or 503 (unhealthy) based on subscription state
 - **Use Case**: Subscription-specific monitoring, alerting, and diagnostics
@@ -233,6 +249,7 @@ curl http://localhost:8082/health/subscription
 ```
 
 ### Health Check Script
+
 The health check script (`scripts/health-check.js`) provides comprehensive service monitoring:
 
 ```bash
@@ -250,6 +267,7 @@ node scripts/health-check.js --check-subscription
 ```
 
 #### Health Check Features
+
 - **Service Availability**: Basic connectivity and response
 - **Health Endpoint**: Structured health response validation
 - **Subscription Monitoring**: Detailed subscription status checking
@@ -261,6 +279,7 @@ node scripts/health-check.js --check-subscription
 ### Monitoring Integration
 
 #### Automated Monitoring
+
 ```javascript
 import { getHealthMetrics } from './scripts/health-check.js';
 
@@ -281,43 +300,48 @@ if (health.services.subscription.degraded) {
 #### Monitoring Strategies
 
 **Load Balancer Health Checks**
+
 - Use `/health` endpoint (always returns 200 for HTTP availability)
 - Configure appropriate timeout and retry settings
 - Monitor for consistent response format
 
 **Application Monitoring**
+
 - Use `/health/subscription` for detailed subscription monitoring
 - Set up alerts for subscription failures (HTTP 503 responses)
 - Monitor retry patterns and error frequencies
 
 **Container Orchestration**
+
 ```yaml
 # Kubernetes example
 livenessProbe:
-  httpGet:
-    path: /health
-    port: 8082
-  initialDelaySeconds: 30
-  periodSeconds: 10
+    httpGet:
+        path: /health
+        port: 8082
+    initialDelaySeconds: 30
+    periodSeconds: 10
 
 readinessProbe:
-  httpGet:
-    path: /health/subscription
-    port: 8082
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  failureThreshold: 3
+    httpGet:
+        path: /health/subscription
+        port: 8082
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    failureThreshold: 3
 ```
 
 #### Monitoring Metrics
 
 **Service-Level Metrics**
+
 - HTTP endpoint availability (from `/health`)
 - Response time trends
 - Error rate monitoring
 - Resource utilization
 
 **Subscription-Level Metrics**
+
 - Connection state transitions
 - Retry attempt frequency
 - Error pattern analysis
@@ -338,6 +362,7 @@ watch -n 10 'curl -s http://localhost:8082/health/subscription | jq ".status, .c
 ## Security Considerations
 
 ### Security Testing
+
 - **Input Validation**: SQL injection, XSS, parameter pollution
 - **Authentication**: JWT security, token expiration, bypass prevention
 - **CORS**: Configuration validation and bypass prevention
@@ -345,7 +370,9 @@ watch -n 10 'curl -s http://localhost:8082/health/subscription | jq ".status, .c
 - **PKCE Security**: OAuth 2.0 PKCE implementation validation
 
 ### Security Headers
+
 Recommended security headers for production:
+
 ```
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
@@ -355,6 +382,7 @@ Content-Security-Policy: default-src 'self'
 ```
 
 ### Environment Security
+
 - **Secrets Management**: Use environment variables for sensitive data
 - **Database Security**: Enable foreign key constraints, use prepared statements
 - **Network Security**: Implement proper firewall rules and network segmentation
@@ -362,6 +390,7 @@ Content-Security-Policy: default-src 'self'
 ## Performance Testing
 
 ### Load Testing Scenarios
+
 1. **Concurrent Health Checks**: 100 simultaneous requests
 2. **Authentication Load**: 50 concurrent authentication attempts
 3. **Sustained Load**: 30-second continuous load testing
@@ -369,6 +398,7 @@ Content-Security-Policy: default-src 'self'
 5. **Token Generation**: High-frequency JWT generation
 
 ### Performance Metrics
+
 - **Response Time**: Average, minimum, maximum response times
 - **Throughput**: Requests per second capacity
 - **Memory Usage**: Heap usage and garbage collection
@@ -378,6 +408,7 @@ Content-Security-Policy: default-src 'self'
 ## CI/CD Integration
 
 ### GitHub Actions Workflow
+
 The CI/CD pipeline (`.github/workflows/ci-cd.yml`) includes:
 
 1. **Quality Checks**: Linting, type checking, security audit
@@ -391,6 +422,7 @@ The CI/CD pipeline (`.github/workflows/ci-cd.yml`) includes:
 9. **Quality Gates**: Comprehensive validation before deployment
 
 ### Pipeline Triggers
+
 - **Push to main**: Production deployment
 - **Push to develop**: Staging deployment
 - **Pull Requests**: Full test suite execution
@@ -401,6 +433,7 @@ The CI/CD pipeline (`.github/workflows/ci-cd.yml`) includes:
 ### Common Issues
 
 #### Test Failures
+
 ```bash
 # Check test environment
 npm run type-check
@@ -414,6 +447,7 @@ ls -la test-data/
 ```
 
 #### Build Issues
+
 ```bash
 # Clean build
 ./scripts/build-player-ip.sh --clean
@@ -427,6 +461,7 @@ docker images | grep gamehub-player-ip
 ```
 
 #### Deployment Issues
+
 ```bash
 # Check deployment status
 ./scripts/deploy-player-ip.sh --status --env staging
@@ -441,6 +476,7 @@ docker images | grep gamehub-player-ip
 #### Health Check Failures
 
 **General Health Check Issues**
+
 ```bash
 # Manual health check
 curl -f http://localhost:8082/health
@@ -454,6 +490,7 @@ curl -v http://localhost:8082/health | jq '.'
 ```
 
 **Subscription Health Check Issues**
+
 ```bash
 # Check subscription-specific health
 curl -f http://localhost:8082/health/subscription
@@ -469,6 +506,7 @@ curl -v http://localhost:8082/health/subscription | jq '.'
 ```
 
 **Troubleshooting Subscription Health**
+
 ```bash
 # Monitor subscription state changes
 watch -n 5 'curl -s http://localhost:8082/health/subscription | jq ".status, .healthy, .retryCount"'
@@ -484,6 +522,7 @@ echo $TENANT_PUBLIC_KEY | head -1
 ```
 
 **Service Logs Analysis**
+
 ```bash
 # Check service logs
 docker compose logs player-ip
@@ -499,6 +538,7 @@ docker compose logs player-ip | grep "ERROR\|FAILED"
 ```
 
 **Database Verification**
+
 ```bash
 # Verify database
 sqlite3 data/player-ip.db ".tables"
@@ -511,7 +551,9 @@ sqlite3 data/player-ip.db "SELECT COUNT(*) FROM users;"
 ```
 
 ### Debug Mode
+
 Enable debug output for detailed troubleshooting:
+
 ```bash
 DEBUG=true npm run test
 DEBUG=true ./scripts/build-player-ip.sh
@@ -519,6 +561,7 @@ DEBUG=true ./scripts/deploy-player-ip.sh
 ```
 
 ### Log Analysis
+
 - **Application Logs**: Check service logs for errors
 - **Test Logs**: Review test output for failure details
 - **Build Logs**: Examine build process for issues
@@ -527,24 +570,28 @@ DEBUG=true ./scripts/deploy-player-ip.sh
 ## Best Practices
 
 ### Development
+
 1. **Run tests locally** before committing code
 2. **Use linting** to maintain code quality
 3. **Write tests** for new features and bug fixes
 4. **Follow security guidelines** for sensitive operations
 
 ### Testing
+
 1. **Maintain high coverage** (>80% overall, >90% for critical paths)
 2. **Test edge cases** and error conditions
 3. **Use realistic test data** and scenarios
 4. **Keep tests fast** and reliable
 
 ### Deployment
+
 1. **Use staging environment** for validation
 2. **Run health checks** after deployment
 3. **Monitor performance** and error rates
 4. **Have rollback plan** ready
 
 ### Security
+
 1. **Regular security testing** and vulnerability scanning
 2. **Keep dependencies updated** and audit regularly
 3. **Use secure defaults** for configuration

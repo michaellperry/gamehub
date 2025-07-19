@@ -4,6 +4,6 @@ import { ServiceAuthenticationProvider } from './provider.js';
 const serviceAuthenticationProvider = new ServiceAuthenticationProvider();
 
 export const jinagaClient = JinagaClient.create({
-  httpEndpoint: process.env.REPLICATOR_URL || 'http://localhost:3000/jinaga',
-  httpAuthenticationProvider: serviceAuthenticationProvider
+    httpEndpoint: process.env.REPLICATOR_URL || 'http://localhost:3000/jinaga',
+    httpAuthenticationProvider: serviceAuthenticationProvider,
 });

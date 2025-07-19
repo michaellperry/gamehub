@@ -30,10 +30,10 @@ grant_type=client_credentials&client_id=your-client-id&client_secret=your-client
 
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "token_type": "Bearer",
-  "expires_in": 3600,
-  "scope": "optional-scope"
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "token_type": "Bearer",
+    "expires_in": 3600,
+    "scope": "optional-scope"
 }
 ```
 
@@ -42,6 +42,7 @@ grant_type=client_credentials&client_id=your-client-id&client_secret=your-client
 Client credentials are stored as files in the `CLIENTS_DIR` directory. Each file is named after the client ID, and the content of the file is the client secret.
 
 For example:
+
 - File: `/app/secrets/clients/attendee-ip`
 - Content: `your-client-secret`
 
@@ -57,7 +58,7 @@ The service can be configured using environment variables:
 | JWT_EXPIRES_IN | JWT expiration time                     | 1h                     |
 | JWT_ISSUER     | JWT issuer claim                        | service-ip             |
 | JWT_AUDIENCE   | JWT audience claim                      | service-clients        |
-| CORS_ORIGIN    | CORS allowed origins                    | *                      |
+| CORS_ORIGIN    | CORS allowed origins                    | \*                     |
 | LOG_LEVEL      | Logging level                           | info                   |
 | CLIENTS_DIR    | Directory containing client credentials | ./secrets/clients      |
 
@@ -84,3 +85,4 @@ npm run build
 
 # Run in production mode
 npm start
+```

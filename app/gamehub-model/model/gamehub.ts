@@ -1,83 +1,72 @@
-import { LabelOf, ModelBuilder, User } from "jinaga";
+import { LabelOf, ModelBuilder, User } from 'jinaga';
 
 export class Tenant {
-    static Type = "GameHub.Tenant" as const;
+    static Type = 'GameHub.Tenant' as const;
     public type = Tenant.Type;
 
-    constructor(
-        public creator: User
-    ) { }
+    constructor(public creator: User) {}
 }
 
 export class Administrator {
-    static Type = "GameHub.Tenant.Administrator" as const;
+    static Type = 'GameHub.Tenant.Administrator' as const;
     public type = Administrator.Type;
 
     constructor(
         public tenant: Tenant,
         public user: User,
         public createdAt: Date | string
-    ) { }
+    ) {}
 
     static of(tenant: LabelOf<Tenant>) {
-        return tenant.successors(Administrator, admin => admin.tenant);
+        return tenant.successors(Administrator, (admin) => admin.tenant);
     }
 
     static by(user: LabelOf<User>) {
-        return user.successors(Administrator, admin => admin.user);
+        return user.successors(Administrator, (admin) => admin.user);
     }
 
     static usersOf(tenant: LabelOf<Tenant>) {
-        return tenant.successors(Administrator, admin => admin.tenant)
-            .selectMany(admin => admin.user.predecessor());
+        return tenant
+            .successors(Administrator, (admin) => admin.tenant)
+            .selectMany((admin) => admin.user.predecessor());
     }
 }
 
 export class Player {
-    static Type = "GameHub.Player" as const;
+    static Type = 'GameHub.Player' as const;
     public type = Player.Type;
 
     constructor(
         public user: User,
         public tenant: Tenant
-    ) { }
+    ) {}
 
     static in(tenant: LabelOf<Tenant>) {
-        return tenant.successors(Player, player => player.tenant);
+        return tenant.successors(Player, (player) => player.tenant);
     }
 }
 
 export class PlayerName {
-    static Type = "GameHub.Player.Name" as const;
+    static Type = 'GameHub.Player.Name' as const;
     public type = PlayerName.Type;
 
     constructor(
         public player: Player,
         public name: string,
         public prior: PlayerName[]
-    ) { }
+    ) {}
 
     static current(player: LabelOf<Player>) {
-        return player.successors(PlayerName, name => name.player)
-            .notExists(name => name.successors(PlayerName, next => next.prior));
+        return player
+            .successors(PlayerName, (name) => name.player)
+            .notExists((name) => name.successors(PlayerName, (next) => next.prior));
     }
 }
 
-export const gameHubModel = (b: ModelBuilder) => b
-    .type(User)
-    .type(Tenant, m => m
-        .predecessor("creator", User)
-    )
-    .type(Administrator, m => m
-        .predecessor("tenant", Tenant)
-        .predecessor("user", User)
-    )
-    .type(Player, m => m
-        .predecessor("user", User)
-        .predecessor("tenant", Tenant)
-    )
-    .type(PlayerName, m => m
-        .predecessor("player", Player)
-        .predecessor("prior", PlayerName)
-    )
-    ;
+export const gameHubModel = (b: ModelBuilder) =>
+    b
+        .type(User)
+        .type(Tenant, (m) => m.predecessor('creator', User))
+        .type(Administrator, (m) => m.predecessor('tenant', Tenant).predecessor('user', User))
+        .type(Player, (m) => m.predecessor('user', User).predecessor('tenant', Tenant))
+        .type(PlayerName, (m) => m.predecessor('player', Player).predecessor('prior', PlayerName));

@@ -26,34 +26,35 @@ export const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 // Client credentials directory
 // Find the workspace root by looking for the directory containing both 'app' and 'mesh' directories
 const findWorkspaceRoot = (): string => {
-  let currentDir = process.cwd();
-  
-  // Keep going up directories until we find the workspace root
-  while (currentDir !== path.dirname(currentDir)) { // Stop at filesystem root
-    const appDir = path.join(currentDir, 'app');
-    const meshDir = path.join(currentDir, 'mesh');
-    
-    if (fs.existsSync(appDir) && fs.existsSync(meshDir)) {
-      return currentDir;
+    let currentDir = process.cwd();
+
+    // Keep going up directories until we find the workspace root
+    while (currentDir !== path.dirname(currentDir)) {
+        // Stop at filesystem root
+        const appDir = path.join(currentDir, 'app');
+        const meshDir = path.join(currentDir, 'mesh');
+
+        if (fs.existsSync(appDir) && fs.existsSync(meshDir)) {
+            return currentDir;
+        }
+
+        currentDir = path.dirname(currentDir);
     }
-    
-    currentDir = path.dirname(currentDir);
-  }
-  
-  // If not found, return the original directory
-  return process.cwd();
+
+    // If not found, return the original directory
+    return process.cwd();
 };
 
 // Default clients directory - different for Docker vs local development
 const getDefaultClientsDir = (): string => {
-  // In Docker container, secrets are mounted at /app/secrets/clients
-  if (process.env.NODE_ENV === 'production' || fs.existsSync('/app/secrets/clients')) {
-    return '/app/secrets/clients';
-  }
-  
-  // In development, use the workspace structure
-  const workspaceRoot = findWorkspaceRoot();
-  return path.join(workspaceRoot, 'mesh/secrets/service-ip/clients');
+    // In Docker container, secrets are mounted at /app/secrets/clients
+    if (process.env.NODE_ENV === 'production' || fs.existsSync('/app/secrets/clients')) {
+        return '/app/secrets/clients';
+    }
+
+    // In development, use the workspace structure
+    const workspaceRoot = findWorkspaceRoot();
+    return path.join(workspaceRoot, 'mesh/secrets/service-ip/clients');
 };
 
 export const CLIENTS_DIR = process.env.CLIENTS_DIR || getDefaultClientsDir();

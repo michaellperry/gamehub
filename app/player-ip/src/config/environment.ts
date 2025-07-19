@@ -29,10 +29,13 @@ export const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
 
 // SQLite configuration
 // Use memory database for tests, temp directory for CI, or default path for development
-export const SQLITE_DB_PATH = process.env.SQLITE_DB_PATH ||
-  (NODE_ENV === 'test' ? ':memory:' :
-    (process.env.CI ? path.join(process.env.RUNNER_TEMP || '/tmp', 'player-ip.db') :
-      path.join(__dirname, '../../../data/player-ip.db')));
+export const SQLITE_DB_PATH =
+    process.env.SQLITE_DB_PATH ||
+    (NODE_ENV === 'test'
+        ? ':memory:'
+        : process.env.CI
+          ? path.join(process.env.RUNNER_TEMP || '/tmp', 'player-ip.db')
+          : path.join(__dirname, '../../../data/player-ip.db'));
 
 // Refresh token configuration
 export const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '14d';

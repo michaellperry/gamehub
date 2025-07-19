@@ -8,21 +8,21 @@ let dbPath = SQLITE_DB_PATH;
 
 // For tests, always use memory database unless explicitly overridden
 if (process.env.NODE_ENV === 'test' && !process.env.SQLITE_DB_PATH) {
-  dbPath = ':memory:';
+    dbPath = ':memory:';
 }
 
 // Ensure the directory exists (only for file-based databases)
 if (dbPath !== ':memory:') {
-  const dbDir = path.dirname(dbPath);
-  if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-  }
+    const dbDir = path.dirname(dbPath);
+    if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+    }
 }
 
 // Create database connection
 const db: Database = new BetterSqlite3(dbPath, {
-  verbose: process.env.NODE_ENV !== 'production' ? console.log : undefined,
-  fileMustExist: false
+    verbose: process.env.NODE_ENV !== 'production' ? console.log : undefined,
+    fileMustExist: false,
 });
 
 // Enable foreign keys
@@ -30,8 +30,8 @@ db.pragma('foreign_keys = ON');
 
 // Initialize database schema
 const initializeDatabase = () => {
-  // Create users table
-  db.exec(`
+    // Create users table
+    db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       identity_cookie TEXT UNIQUE,
@@ -42,8 +42,8 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create user_identities table
-  db.exec(`
+    // Create user_identities table
+    db.exec(`
     CREATE TABLE IF NOT EXISTS user_identities (
       cookie_value TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -51,8 +51,8 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create gaps table
-  db.exec(`
+    // Create gaps table
+    db.exec(`
     CREATE TABLE IF NOT EXISTS gaps (
       id TEXT PRIMARY KEY,
       type TEXT NOT NULL,
@@ -61,8 +61,8 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create gap_users table (for user-specific access paths)
-  db.exec(`
+    // Create gap_users table (for user-specific access paths)
+    db.exec(`
     CREATE TABLE IF NOT EXISTS gap_users (
       gap_id TEXT NOT NULL,
       user_id TEXT NOT NULL,
@@ -71,8 +71,8 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create auth_codes table
-  db.exec(`
+    // Create auth_codes table
+    db.exec(`
     CREATE TABLE IF NOT EXISTS auth_codes (
       code TEXT PRIMARY KEY,
       client_id TEXT NOT NULL,
@@ -88,8 +88,8 @@ const initializeDatabase = () => {
     )
   `);
 
-  // Create refresh_tokens table
-  db.exec(`
+    // Create refresh_tokens table
+    db.exec(`
     CREATE TABLE IF NOT EXISTS refresh_tokens (
       token TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -103,7 +103,7 @@ const initializeDatabase = () => {
     )
   `);
 
-  console.log('Database schema initialized');
+    console.log('Database schema initialized');
 };
 
 // Initialize the database

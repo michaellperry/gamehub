@@ -8,8 +8,8 @@ const cors = require('cors');
 const { authenticate, loadAuthenticationConfigurations } = require('./authenticate');
 
 // Constants
-const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, "../storage");
-const AUTH_DIR = process.env.AUTH_DIR || path.join(__dirname, "../auth");
+const STORAGE_DIR = process.env.STORAGE_DIR || path.join(__dirname, '../storage');
+const AUTH_DIR = process.env.AUTH_DIR || path.join(__dirname, '../auth');
 
 // Ensure storage and auth directories exist
 if (!fs.existsSync(STORAGE_DIR)) {
@@ -21,12 +21,12 @@ if (!fs.existsSync(AUTH_DIR)) {
 }
 
 process.on('SIGINT', () => {
-    console.log("\n\nStopping content store\n");
+    console.log('\n\nStopping content store\n');
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-    console.log("\n\nStopping content store\n");
+    console.log('\n\nStopping content store\n');
     process.exit(0);
 });
 
@@ -38,10 +38,12 @@ app.set('port', process.env.PORT || 8081);
 app.use(express.json());
 app.use(express.text());
 app.use(cors());
-app.use(fileUpload({
-    createParentPath: true,
-    limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
-}));
+app.use(
+    fileUpload({
+        createParentPath: true,
+        limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max file size
+    })
+);
 
 // Load authentication configuration
 async function initializeAuthentication() {
@@ -51,7 +53,9 @@ async function initializeAuthentication() {
 
         // Create authentication middleware
         const authMiddleware = authenticate(configs, allowAnonymous);
-        console.log(`Authentication initialized. Anonymous access: ${allowAnonymous ? 'allowed' : 'not allowed'}`);
+        console.log(
+            `Authentication initialized. Anonymous access: ${allowAnonymous ? 'allowed' : 'not allowed'}`
+        );
 
         // Upload endpoint - protected by authentication
         app.post('/upload', authMiddleware, (req, res) => {
@@ -86,7 +90,7 @@ async function initializeAuthentication() {
                     contentHash,
                     contentType,
                     size: uploadedFile.size,
-                    message: 'File uploaded successfully'
+                    message: 'File uploaded successfully',
                 });
             } catch (error) {
                 console.error('Upload error:', error);
@@ -101,7 +105,7 @@ async function initializeAuthentication() {
 
                 // Find the file with the matching hash prefix in the storage directory
                 const files = fs.readdirSync(STORAGE_DIR);
-                const matchingFile = files.find(file => file.startsWith(hash));
+                const matchingFile = files.find((file) => file.startsWith(hash));
 
                 if (!matchingFile) {
                     return res.status(404).json({ error: 'Content not found' });
@@ -134,7 +138,7 @@ async function initializeAuthentication() {
                 status: 'healthy',
                 service: 'content-store',
                 timestamp: new Date().toISOString(),
-                version: process.env.npm_package_version || '1.0.0'
+                version: process.env.npm_package_version || '1.0.0',
             });
         });
 
@@ -143,13 +147,13 @@ async function initializeAuthentication() {
             try {
                 // Check secrets configuration - verify AUTH_DIR contains required secrets
                 let secretsConfigured = false;
-                
+
                 try {
                     if (fs.existsSync(AUTH_DIR)) {
                         const authFiles = fs.readdirSync(AUTH_DIR);
                         // Check for at least one authentication provider file or allow-anonymous file
-                        const hasProviders = authFiles.some(file =>
-                            file.endsWith('.provider') || file === 'allow-anonymous'
+                        const hasProviders = authFiles.some(
+                            (file) => file.endsWith('.provider') || file === 'allow-anonymous'
                         );
                         secretsConfigured = hasProviders;
                     }
@@ -159,7 +163,7 @@ async function initializeAuthentication() {
                 }
 
                 const configuredGroups = {
-                    secrets: secretsConfigured
+                    secrets: secretsConfigured,
                 };
 
                 const allConfigured = secretsConfigured;
@@ -170,7 +174,7 @@ async function initializeAuthentication() {
                     timestamp: new Date().toISOString(),
                     configured: allConfigured,
                     configuredGroups,
-                    ready: allConfigured // Service is ready when configured
+                    ready: allConfigured, // Service is ready when configured
                 });
             } catch (error) {
                 console.error('Error checking configuration:', error);
@@ -180,10 +184,10 @@ async function initializeAuthentication() {
                     timestamp: new Date().toISOString(),
                     configured: false,
                     configuredGroups: {
-                        secrets: false
+                        secrets: false,
                     },
                     ready: false,
-                    error: error.message || 'Unknown error'
+                    error: error.message || 'Unknown error',
                 });
             }
         });
@@ -193,13 +197,13 @@ async function initializeAuthentication() {
             try {
                 // Check if authentication is properly configured
                 let ready = false;
-                
+
                 try {
                     if (fs.existsSync(AUTH_DIR)) {
                         const authFiles = fs.readdirSync(AUTH_DIR);
                         // Check for at least one authentication provider file or allow-anonymous file
-                        const hasProviders = authFiles.some(file =>
-                            file.endsWith('.provider') || file === 'allow-anonymous'
+                        const hasProviders = authFiles.some(
+                            (file) => file.endsWith('.provider') || file === 'allow-anonymous'
                         );
                         ready = hasProviders;
                     }
@@ -212,13 +216,13 @@ async function initializeAuthentication() {
                     res.status(200).json({
                         status: 'ready',
                         message: 'Content store is ready to serve requests',
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
                     });
                 } else {
                     res.status(503).json({
                         status: 'not ready',
                         message: 'Content store is not ready yet - authentication not configured',
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
                     });
                 }
             } catch (error) {
@@ -227,7 +231,7 @@ async function initializeAuthentication() {
                     status: 'not ready',
                     message: 'Error checking readiness',
                     timestamp: new Date().toISOString(),
-                    error: error.message || 'Unknown error'
+                    error: error.message || 'Unknown error',
                 });
             }
         });
@@ -252,7 +256,9 @@ function sanitizeContentType(contentType) {
         await initializeAuthentication();
 
         server.listen(app.get('port'), () => {
-            console.log(`  Content Store is running at http://localhost:${app.get('port')} in ${app.get('env')} mode`);
+            console.log(
+                `  Content Store is running at http://localhost:${app.get('port')} in ${app.get('env')} mode`
+            );
             console.log('  Press CTRL-C to stop\n');
         });
     } catch (error) {

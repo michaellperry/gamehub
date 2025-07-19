@@ -1,8 +1,8 @@
-const chardet = require("chardet");
-const fs = require("fs").promises;
-const iconv = require("iconv-lite");
-const { decode, JwtPayload, verify } = require("jsonwebtoken");
-const path = require("path");
+const chardet = require('chardet');
+const fs = require('fs').promises;
+const iconv = require('iconv-lite');
+const { decode, JwtPayload, verify } = require('jsonwebtoken');
+const path = require('path');
 
 /**
  * Authentication middleware for Express
@@ -15,7 +15,7 @@ function authenticate(configs, allowAnonymous) {
         let possibleConfigs = configs;
 
         try {
-            if (req.method === "OPTIONS") {
+            if (req.method === 'OPTIONS') {
                 next();
                 return;
             }
@@ -25,50 +25,55 @@ function authenticate(configs, allowAnonymous) {
                 if (match) {
                     const token = match[1];
                     const payload = decode(token);
-                    if (!payload || typeof payload !== "object") {
+                    if (!payload || typeof payload !== 'object') {
                         res.set('Access-Control-Allow-Origin', '*');
-                        res.status(401).send("Invalid token");
+                        res.status(401).send('Invalid token');
                         return;
                     }
 
                     // Validate the subject.
                     const subject = payload.sub;
-                    if (typeof subject !== "string") {
+                    if (typeof subject !== 'string') {
                         res.set('Access-Control-Allow-Origin', '*');
-                        res.status(401).send("Invalid subject");
+                        res.status(401).send('Invalid subject');
                         return;
                     }
 
                     // Validate the issuer and audience.
                     const issuer = payload.iss;
-                    possibleConfigs = configs.filter(config => config.issuer === issuer);
+                    possibleConfigs = configs.filter((config) => config.issuer === issuer);
                     if (possibleConfigs.length === 0) {
                         res.set('Access-Control-Allow-Origin', '*');
-                        res.status(401).send("Invalid issuer");
+                        res.status(401).send('Invalid issuer');
                         return;
                     }
                     const audience = payload.aud;
-                    possibleConfigs = possibleConfigs.filter(config => config.audience === audience);
+                    possibleConfigs = possibleConfigs.filter(
+                        (config) => config.audience === audience
+                    );
                     if (possibleConfigs.length === 0) {
                         res.set('Access-Control-Allow-Origin', '*');
-                        res.status(401).send("Invalid audience");
+                        res.status(401).send('Invalid audience');
                         return;
                     }
 
                     let verified = undefined;
-                    let provider = "";
+                    let provider = '';
                     try {
-                        const config = possibleConfigs.find(config => config.keyId === decode(token, { complete: true }).header.kid);
+                        const config = possibleConfigs.find(
+                            (config) =>
+                                config.keyId === decode(token, { complete: true }).header.kid
+                        );
                         if (!config) {
                             res.set('Access-Control-Allow-Origin', '*');
-                            res.status(401).send("Invalid key ID");
+                            res.status(401).send('Invalid key ID');
                             return;
                         }
                         provider = config.provider;
                         verified = verify(token, config.key);
                     } catch (error) {
                         res.set('Access-Control-Allow-Origin', '*');
-                        res.status(401).send("Invalid signature");
+                        res.status(401).send('Invalid signature');
                         return;
                     }
 
@@ -77,21 +82,20 @@ function authenticate(configs, allowAnonymous) {
                         id: subject,
                         provider: provider,
                         profile: {
-                            displayName: payload.display_name ?? ""
-                        }
-                    }
+                            displayName: payload.display_name ?? '',
+                        },
+                    };
                 }
-            }
-            else if (!allowAnonymous) {
+            } else if (!allowAnonymous) {
                 res.set('Access-Control-Allow-Origin', '*');
-                res.status(401).send("No token");
+                res.status(401).send('No token');
                 return;
             }
             next();
         } catch (error) {
             next(error);
         }
-    }
+    };
 }
 
 /**
@@ -139,7 +143,7 @@ async function findProviderFiles(dir) {
         } else if (entry.isFile()) {
             if (entry.name.endsWith('.provider')) {
                 providerFiles.push(fullPath);
-            } else if (entry.name === "allow-anonymous") {
+            } else if (entry.name === 'allow-anonymous') {
                 hasAllowAnonymousFile = true;
             }
         }
@@ -163,14 +167,16 @@ async function loadConfigurationFromFile(filePath) {
         const config = JSON.parse(content);
 
         const missingFields = [];
-        if (!config.provider) missingFields.push("provider");
-        if (!config.issuer) missingFields.push("issuer");
-        if (!config.audience) missingFields.push("audience");
-        if (!config.key_id) missingFields.push("key_id");
-        if (!config.key) missingFields.push("key");
+        if (!config.provider) missingFields.push('provider');
+        if (!config.issuer) missingFields.push('issuer');
+        if (!config.audience) missingFields.push('audience');
+        if (!config.key_id) missingFields.push('key_id');
+        if (!config.key) missingFields.push('key');
 
         if (missingFields.length > 0) {
-            throw new Error(`Invalid authentication configuration in ${filePath}: Missing required fields: ${missingFields.join(", ")}`);
+            throw new Error(
+                `Invalid authentication configuration in ${filePath}: Missing required fields: ${missingFields.join(', ')}`
+            );
         }
 
         return {
@@ -178,7 +184,7 @@ async function loadConfigurationFromFile(filePath) {
             issuer: config.issuer,
             audience: config.audience,
             keyId: config.key_id,
-            key: config.key
+            key: config.key,
         };
     } catch (error) {
         if (error instanceof Error) {
@@ -191,5 +197,5 @@ async function loadConfigurationFromFile(filePath) {
 
 module.exports = {
     authenticate,
-    loadAuthenticationConfigurations
+    loadAuthenticationConfigurations,
 };

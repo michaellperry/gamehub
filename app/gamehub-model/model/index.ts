@@ -1,19 +1,17 @@
-import { buildModel } from "jinaga";
-import { bookkeepingModel } from "./bookkeeping.js";
-import { gameHubModel } from "./gamehub.js";
-import { invitationModel } from "./invitation.js";
+import { buildModel } from 'jinaga';
+import { bookkeepingModel } from './bookkeeping.js';
+import { gameHubModel } from './gamehub.js';
+import { invitationModel } from './invitation.js';
 
 // Create and export the combined model
-export const model = buildModel(b => b
-    .with(gameHubModel)
-    .with(bookkeepingModel)
-    .with(invitationModel)
+export const model = buildModel((b) =>
+    b.with(gameHubModel).with(bookkeepingModel).with(invitationModel)
 );
 
 // Re-export all model classes for convenience
-export * from "./bookkeeping.js";
-export * from "./gamehub.js";
-export * from "./invitation.js";
+export * from './bookkeeping.js';
+export * from './gamehub.js';
+export * from './invitation.js';
 
 // Default export for CommonJS compatibility
 export default {
@@ -21,5 +19,5 @@ export default {
     // Include individual models for direct access
     gameHubModel,
     bookkeepingModel,
-    invitationModel
+    invitationModel,
 };
