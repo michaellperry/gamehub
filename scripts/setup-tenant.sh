@@ -41,7 +41,7 @@ show_usage() {
     echo "Options:"
     echo "  --force                 Force update even if configuration files don't exist"
     echo "  --verbose               Enable verbose logging"
-    echo "  --no-rebuild            Skip admin application rebuild"
+    echo "  --no-rebuild            Skip admin and player application rebuild"
     echo "  --help                  Show this help message"
     echo ""
     echo "Examples:"
@@ -54,7 +54,7 @@ show_usage() {
     echo "  - Updates mesh/.env with TENANT_PUBLIC_KEY"
     echo "  - Updates app/gamehub-admin/.env.container.local with VITE_TENANT_PUBLIC_KEY"
     echo "  - Rebuilds the Docker Compose stack to apply tenant key to services"
-    echo "  - Rebuilds the admin application container to apply changes"
+    echo "  - Rebuilds the admin and player application containers to apply changes"
     echo "  - Validates tenant configuration"
 }
 
@@ -158,9 +158,9 @@ rebuild_docker_compose() {
     return 0
 }
 
-# Function to rebuild admin container
+# Function to rebuild admin and player containers
 rebuild_admin_container() {
-    print_info "Rebuilding admin application container to apply tenant configuration..."
+    print_info "Rebuilding admin and player application containers to apply tenant configuration..."
     
     # Navigate to app directory
     cd app
@@ -177,12 +177,22 @@ rebuild_admin_container() {
         fi
     fi
     
-    # Run the build command
+    # Build admin container
     print_info "Running npm run build:admin:container..."
     if npm run build:admin:container; then
         print_success "Admin application container rebuilt successfully"
     else
         print_error "Failed to rebuild admin application container"
+        cd ..
+        return 1
+    fi
+    
+    # Build player container
+    print_info "Running npm run build:player:container..."
+    if npm run build:player:container; then
+        print_success "Player application container rebuilt successfully"
+    else
+        print_error "Failed to rebuild player application container"
         cd ..
         return 1
     fi
@@ -373,20 +383,20 @@ cd "$PROJECT_ROOT"
 if [[ "$NO_REBUILD" == false ]]; then
     if check_build_requirements; then
         if rebuild_admin_container; then
-            print_success "Admin application container rebuilt successfully"
+            print_success "Admin and player application containers rebuilt successfully"
         else
-            print_error "Failed to rebuild admin application container"
+            print_error "Failed to rebuild admin and player application containers"
             exit 1
         fi
     else
         print_warning "Build requirements check failed. Skipping rebuild."
-        print_info "You may need to manually rebuild the admin container with:"
-        print_info "cd app && npm run build:admin:container"
+        print_info "You may need to manually rebuild the admin and player containers with:"
+        print_info "cd app && npm run build:admin:container && npm run build:player:container"
     fi
 else
     print_info "Skipping admin application rebuild (--no-rebuild flag specified)"
-    print_info "Remember to rebuild the admin container manually with:"
-    print_info "cd app && npm run build:admin:container"
+    print_info "Remember to rebuild the admin and player containers manually with:"
+    print_info "cd app && npm run build:admin:container && npm run build:player:container"
 fi
 
 # Rebuild Docker Compose stack to apply the new tenant key
