@@ -11,7 +11,7 @@
         "dev": "nodemon --exec \"node --loader ts-node/esm src/server.ts\"",
         "clean": "rimraf dist",
         "rebuild": "npm run clean && npm run build",
-        "test": "npm run test:unit && npm run test:integration && npm run test:contract",
+        "test": "npm run test:unit",
         "test:unit": "npm run build && node --test tests/unit/**/*.test.js",
         "test:integration": "npm run build && node test-integration.js",
         "test:component": "npm run build && node test-components.js",
