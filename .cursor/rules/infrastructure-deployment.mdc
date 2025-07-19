@@ -1,0 +1,221 @@
+# Infrastructure & Deployment
+
+## Docker Orchestration (`mesh/`)
+
+### Main Configuration
+- **[docker-compose.yml](mesh/docker-compose.yml)** - Primary orchestration file
+- **Services**: PostgreSQL, FusionAuth, Jinaga Replicator, NGINX, Application Services
+- **Networks**: Isolated networks for security and service discovery
+
+### NGINX Configuration (`mesh/nginx/`)
+- **[nginx.conf](mesh/nginx/nginx.conf)** - Main NGINX configuration
+- **Reverse Proxy**: Routes traffic to appropriate services
+- **Static Files**: Serves status dashboard and setup wizard
+- **SSL/TLS**: HTTPS termination and certificate management
+
+### Service Configuration
+```yaml
+# Typical service configuration pattern
+services:
+  my-service:
+    build:
+      context: ../app/my-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - JINAGA_URL=http://replicator:8080
+    networks:
+      - gamehub-network
+    depends_on:
+      - replicator
+      - postgres
+```
+
+## Build & Deployment Scripts (`scripts/`)
+
+### Initialization
+- **[init-mesh.sh](scripts/init-mesh.sh)** - Initialize Docker environment
+  - Creates Docker networks
+  - Sets up volumes and secrets
+  - Configures environment variables
+  - Validates dependencies
+
+### Service Builds
+- **[build-content-store.sh](scripts/build-content-store.sh)** - Content store container build
+- **[build-player-ip.sh](scripts/build-player-ip.sh)** - Player IP service build
+- **[build-service-ip.sh](scripts/build-service-ip.sh)** - Service IP provider build
+
+### Setup & Configuration
+- **[setup-fusionauth.sh](scripts/setup-fusionauth.sh)** - FusionAuth configuration
+  - Creates application registrations
+  - Sets up OAuth clients
+  - Configures user roles and permissions
+  - Establishes tenant structure
+
+- **[setup-tenant.sh](scripts/setup-tenant.sh)** - Tenant setup automation
+  - Creates new game organizations
+  - Sets up FusionAuth tenants
+  - Configures service principals
+  - Initializes Jinaga facts
+
+### Deployment
+- **[deploy-mesh.sh](scripts/deploy-mesh.sh)** - Full environment deployment
+- **[deploy-player-ip.sh](scripts/deploy-player-ip.sh)** - Player IP service deployment
+
+## Development Environment
+
+### Local Development Setup
+```bash
+# 1. Initialize mesh environment
+./scripts/init-mesh.sh
+
+# 2. Build application containers
+cd app/gamehub-admin && npm run build:container
+cd ../player-ip && npm run build:container
+
+# 3. Start services
+cd ../../mesh
+docker compose up -d
+
+# 4. Setup FusionAuth
+./scripts/setup-fusionauth.sh
+
+# 5. Create tenant
+./scripts/setup-tenant.sh
+```
+
+### Service Dependencies
+```
+NGINX (Port 80)
+├── Admin Portal (/portal/)
+├── Setup Wizard (/setup/)
+├── Status Dashboard (/status/)
+├── Player IP Service (/player-ip/)
+├── Content Store (/content/)
+├── Jinaga Replicator (/replicator/)
+├── FusionAuth (/auth/)
+└── Relay Service (/relay/)
+
+Internal Services
+├── Service IP Provider (Port 8083)
+└── PostgreSQL (Port 5432)
+```
+
+## Configuration Management
+
+### Environment Variables
+```bash
+# Core configuration
+JINAGA_URL=http://replicator:8080
+FUSIONAUTH_URL=http://fusionauth:9011
+DATABASE_URL=postgresql://postgres:password@postgres:5432/gamehub
+
+# Service-specific
+PLAYER_IP_PORT=8082
+CONTENT_STORE_PORT=8081
+RELAY_SERVICE_PORT=8084
+SERVICE_IP_PORT=8083
+
+# Security
+FUSIONAUTH_API_KEY=your-api-key
+JWT_SECRET=your-jwt-secret
+```
+
+### Secrets Management
+- **[mesh/secrets/](mesh/secrets/)** - Environment secrets
+- **Docker Secrets**: For production deployments
+- **Environment Files**: `.env` files for local development
+
+## Monitoring & Observability
+
+### Status Dashboard
+- **Location**: `mesh/nginx/html/status/`
+- **Features**: Real-time service monitoring
+- **Polling**: HTTP-based health checks
+- **Bundle Discovery**: Automatic service detection
+
+### Health Checks
+```typescript
+// Standard health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    version: process.env.npm_package_version,
+    uptime: process.uptime()
+  });
+});
+```
+
+### Logging
+```bash
+# View service logs
+docker compose logs -f service-name
+
+# View all logs
+docker compose logs -f
+
+# Filter logs
+docker compose logs -f | grep "ERROR"
+```
+
+## Production Deployment
+
+### Azure Container Apps
+- **CI/CD**: GitHub Actions integration
+- **Scaling**: Automatic scaling based on demand
+- **Monitoring**: Azure Monitor integration
+- **Security**: Managed identities and secrets
+
+### Environment Variables
+```bash
+# Production environment
+NODE_ENV=production
+JINAGA_URL=https://your-replicator.azurecontainerapps.io
+FUSIONAUTH_URL=https://your-fusionauth.azurecontainerapps.io
+DATABASE_URL=your-postgresql-connection-string
+```
+
+### Security Considerations
+- **Network Isolation**: Services in separate networks
+- **Authentication**: Service-to-service JWT tokens
+- **HTTPS**: SSL/TLS termination at NGINX
+- **Secrets**: Azure Key Vault integration
+
+## Troubleshooting
+
+### Common Issues
+1. **Service Startup**: Check Docker logs for initialization errors
+2. **Network Connectivity**: Verify Docker networks are created
+3. **Authentication**: Ensure FusionAuth is properly configured
+4. **Database**: Check PostgreSQL connection and migrations
+
+### Debug Commands
+```bash
+# Check service status
+docker compose ps
+
+# View service logs
+docker compose logs service-name
+
+# Access service shell
+docker compose exec service-name sh
+
+# Check network connectivity
+docker compose exec service-name ping other-service
+
+# Restart specific service
+docker compose restart service-name
+```
+
+### Performance Monitoring
+- **Resource Usage**: `docker stats`
+- **Network Traffic**: `docker network inspect`
+- **Service Health**: Status dashboard at `/status/`
+- **Application Metrics**: Service-specific endpoints
+description:
+globs:
+alwaysApply: false
+---
