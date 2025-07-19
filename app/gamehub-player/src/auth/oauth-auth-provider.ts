@@ -1,8 +1,8 @@
-import type { AuthenticationProvider, HttpHeaders } from "jinaga";
-import type { IAuthContext } from "react-oauth2-code-pkce";
+import type { AuthenticationProvider, HttpHeaders } from 'jinaga';
+import type { IAuthContext } from 'react-oauth2-code-pkce';
 
 export class OAuth2AuthenticationProvider implements AuthenticationProvider {
-    constructor(private authContext: IAuthContext) { }
+    constructor(private authContext: IAuthContext) {}
 
     async getHeaders(): Promise<HttpHeaders> {
         const { token } = this.authContext;
@@ -12,7 +12,7 @@ export class OAuth2AuthenticationProvider implements AuthenticationProvider {
         }
 
         return {
-            "Authorization": `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
         };
     }
 
@@ -26,7 +26,7 @@ export class OAuth2AuthenticationProvider implements AuthenticationProvider {
                 await logIn();
                 return true; // Indicate that we successfully refreshed the token
             } catch (error) {
-                console.error("Failed to refresh token:", error);
+                console.error('Failed to refresh token:', error);
                 return false; // Indicate that we failed to refresh the token
             }
         }

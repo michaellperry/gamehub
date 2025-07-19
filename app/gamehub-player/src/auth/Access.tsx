@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccess } from "./AccessProvider";
+import { useAccess } from './AccessProvider';
 
 /**
  * Access component for handling AAP-based login
- * 
+ *
  * This component extracts the AAP ID from the URL path parameters
  * and uses the react-oauth2-code-pkce library to initiate the OAuth flow.
  */
@@ -61,9 +61,7 @@ export function Access() {
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                 Authentication in progress...
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-                You will be redirected shortly.
-            </p>
+            <p className="text-gray-600 dark:text-gray-400">You will be redirected shortly.</p>
         </div>
     );
 }

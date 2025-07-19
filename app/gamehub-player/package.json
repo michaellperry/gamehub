@@ -8,6 +8,8 @@
         "build": "tsc -b && vite build",
         "build:container": "tsc -b && vite build",
         "build:model": "cd ../gamehub-model && npm run build",
+        "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+        "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
         "lint": "eslint .",
         "preview": "vite preview"
     },
@@ -32,6 +34,7 @@
         "eslint-plugin-react-refresh": "^0.4.20",
         "globals": "^16.3.0",
         "postcss": "^8.5.6",
+        "prettier": "^3.6.2",
         "tailwindcss": "^3.4.0",
         "typescript": "~5.8.3",
         "typescript-eslint": "^8.35.1",

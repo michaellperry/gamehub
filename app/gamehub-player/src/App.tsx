@@ -1,10 +1,10 @@
-import { Routes, Route } from 'react-router-dom'
-import './App.css'
+import { Routes, Route } from 'react-router-dom';
+import './App.css';
 
 // Import pages
-import HomePage from '@/pages/HomePage'
-import LoginPage from '@/pages/LoginPage'
-import GameSessionPage from '@/pages/GameSessionPage'
+import HomePage from '@/pages/HomePage';
+import LoginPage from '@/pages/LoginPage';
+import GameSessionPage from '@/pages/GameSessionPage';
 
 function App() {
     return (
@@ -15,7 +15,7 @@ function App() {
                 <Route path="/game/:sessionId" element={<GameSessionPage />} />
             </Routes>
         </div>
-    )
+    );
 }
 
-export default App
+export default App;

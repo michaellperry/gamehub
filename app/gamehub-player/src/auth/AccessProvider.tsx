@@ -1,6 +1,11 @@
-import { useContext, useEffect } from "react";
-import { AuthContext, AuthProvider, type TAuthConfig, type TRefreshTokenExpiredEvent } from "react-oauth2-code-pkce";
-import { getEnv } from "../utils/environment.ts";
+import { useContext, useEffect } from 'react';
+import {
+    AuthContext,
+    AuthProvider,
+    type TAuthConfig,
+    type TRefreshTokenExpiredEvent,
+} from 'react-oauth2-code-pkce';
+import { getEnv } from '../utils/environment.ts';
 
 // Function to detect private browsing mode
 const isPrivateBrowsingMode = (): boolean => {
@@ -17,13 +22,15 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
     // Check for private browsing mode
     useEffect(() => {
         if (isPrivateBrowsingMode()) {
-            console.warn('Private browsing mode detected. Authentication persistence may be limited.');
+            console.warn(
+                'Private browsing mode detected. Authentication persistence may be limited.'
+            );
             // You could add a user-facing notification here if desired
         }
     }, []);
 
     if (import.meta.env.DEV) {
-        return <>{children}</>
+        return <>{children}</>;
     }
 
     const authConfig: TAuthConfig = {
@@ -35,7 +42,7 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
         storageKeyPrefix: 'ROCP_player_',
         onRefreshTokenExpire: (event: TRefreshTokenExpiredEvent) => {
             try {
-                event.logIn(undefined, {}, "popup");
+                event.logIn(undefined, {}, 'popup');
             } catch (error) {
                 console.error('Token refresh failed:', error);
             }
@@ -43,12 +50,8 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
         logoutEndpoint: getEnv('VITE_LOGOUT_ENDPOINT'),
     };
 
-    return (
-        <AuthProvider authConfig={authConfig}>
-            {children}
-        </AuthProvider>
-    );
-};
+    return <AuthProvider authConfig={authConfig}>{children}</AuthProvider>;
+}
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAccess = () => {
@@ -56,8 +59,8 @@ export const useAccess = () => {
 
     if (import.meta.env.DEV) {
         return {
-            logIn: async () => { },
-            logOut: () => { },
+            logIn: async () => {},
+            logOut: () => {},
         };
     }
 
@@ -67,6 +70,6 @@ export const useAccess = () => {
         },
         logOut: () => {
             authLogOut();
-        }
+        },
     };
 };

@@ -1,7 +1,7 @@
-import { useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom';
 
 export default function GameSessionPage() {
-    const { sessionId } = useParams<{ sessionId: string }>()
+    const { sessionId } = useParams<{ sessionId: string }>();
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -49,5 +49,5 @@ export default function GameSessionPage() {
                 </div>
             </div>
         </div>
-    )
-} 
+    );
+}

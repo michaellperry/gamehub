@@ -11,15 +11,11 @@ export default function HomePage() {
                     </p>
 
                     <div className="space-y-4">
-                        <p className="text-gray-500">
-                            Please log in to access game sessions
-                        </p>
-                        <button className="btn-primary">
-                            Log In
-                        </button>
+                        <p className="text-gray-500">Please log in to access game sessions</p>
+                        <button className="btn-primary">Log In</button>
                     </div>
                 </div>
             </div>
         </div>
-    )
-} 
+    );
+}

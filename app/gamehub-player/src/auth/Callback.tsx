@@ -1,11 +1,11 @@
-import { Player, type Tenant } from "gamehub-model/model";
-import { User } from "jinaga";
+import { Player, type Tenant } from 'gamehub-model/model';
+import { User } from 'jinaga';
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from 'react-oauth2-code-pkce';
 import { useNavigate } from 'react-router-dom';
-import { j } from "../jinaga-config.ts";
-import { useUser } from "./UserProvider";
-import { useTenant } from "./useTenant.ts";
+import { j } from '../jinaga-config.ts';
+import { useUser } from './UserProvider';
+import { useTenant } from './useTenant.ts';
 
 async function addAttendee(user: User | null, tenant: Tenant | null) {
     if (user === null || tenant === null) {
@@ -16,7 +16,7 @@ async function addAttendee(user: User | null, tenant: Tenant | null) {
 
 /**
  * Callback component for handling the OAuth callback
- * 
+ *
  * This component extracts the authorization code from the URL query parameters
  * and exchanges it for an access token.
  */
@@ -36,8 +36,7 @@ export function Callback() {
                     navigate('/');
                 }
             });
-        }
-        else if (!loginInProgress) {
+        } else if (!loginInProgress) {
             // If no token is available, we can assume the authentication failed
             setError('Authentication failed. Please scan the QR code again.');
             setLoading(false);
@@ -77,12 +76,9 @@ export function Callback() {
             <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
                 Authentication successful!
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-                You will be redirected shortly.
-            </p>
+            <p className="text-gray-600 dark:text-gray-400">You will be redirected shortly.</p>
         </div>
     );
 }
-
 
 export default Callback;

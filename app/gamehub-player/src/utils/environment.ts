@@ -9,12 +9,9 @@
  * @param defaultValue Optional default value if the variable is not defined
  * @returns The environment variable value or the default value
  */
-export function getEnv<T extends keyof ImportMetaEnv>(
-    name: T,
-    defaultValue?: string
-): string {
+export function getEnv<T extends keyof ImportMetaEnv>(name: T, defaultValue?: string): string {
     const value = import.meta.env[name];
-    return value !== undefined ? value : (defaultValue || '');
+    return value !== undefined ? value : defaultValue || '';
 }
 
 /**
@@ -36,7 +33,7 @@ export function validateEnvironment(): EnvironmentValidationResult {
     // Common required variables for all modes
     const commonRequiredVars: Array<keyof ImportMetaEnv> = [
         'VITE_BASE_NAME',
-        'VITE_CONTENT_STORE_URL'
+        'VITE_CONTENT_STORE_URL',
     ];
 
     // Variables required only in non-development modes
@@ -47,24 +44,22 @@ export function validateEnvironment(): EnvironmentValidationResult {
         'VITE_REDIRECT_URI',
         'VITE_LOGOUT_ENDPOINT',
         'VITE_PLAYER_IP_URL',
-        'VITE_CLIENT_ID'
+        'VITE_CLIENT_ID',
     ];
 
     // Determine which variables are required based on the current mode
     const requiredVars = [
         ...commonRequiredVars,
-        ...(import.meta.env.PROD || currentMode === 'container' ? nonDevRequiredVars : [])
+        ...(import.meta.env.PROD || currentMode === 'container' ? nonDevRequiredVars : []),
     ];
 
     // Check for missing variables
-    const missing = requiredVars.filter(
-        varName => !import.meta.env[varName]
-    ) as string[];
+    const missing = requiredVars.filter((varName) => !import.meta.env[varName]) as string[];
 
     return {
         isValid: missing.length === 0,
         missing,
-        mode: currentMode
+        mode: currentMode,
     };
 }
 
@@ -81,11 +76,17 @@ export function logEnvironmentValidation(validation: EnvironmentValidationResult
 
         // Provide helpful guidance based on the mode
         if (validation.mode === 'development') {
-            console.info('For development mode, create a .env file in the app/launchkings-PLAYER directory');
+            console.info(
+                'For development mode, create a .env file in the app/launchkings-PLAYER directory'
+            );
         } else if (validation.mode === 'production') {
-            console.info('For production mode, ensure all variables are set in the .env.production file');
+            console.info(
+                'For production mode, ensure all variables are set in the .env.production file'
+            );
         } else {
-            console.info('For container mode, ensure all variables are set in the .env.container and .env.container.local files');
+            console.info(
+                'For container mode, ensure all variables are set in the .env.container and .env.container.local files'
+            );
         }
     }
 }
@@ -100,23 +101,17 @@ export function getAllEnvVars(includeSensitive = false): Record<string, string> 
     const result: Record<string, string> = {};
 
     // List of sensitive variable name patterns
-    const sensitivePatterns = [
-        /key/i,
-        /secret/i,
-        /password/i,
-        /token/i,
-        /auth/i
-    ];
+    const sensitivePatterns = [/key/i, /secret/i, /password/i, /token/i, /auth/i];
 
     // Get all environment variables
-    Object.keys(import.meta.env).forEach(key => {
+    Object.keys(import.meta.env).forEach((key) => {
         // Skip non-VITE_ variables and MODE
         if (!key.startsWith('VITE_') || key === 'MODE') {
             return;
         }
 
         // Check if the variable is sensitive
-        const isSensitive = sensitivePatterns.some(pattern => pattern.test(key));
+        const isSensitive = sensitivePatterns.some((pattern) => pattern.test(key));
 
         // Add the variable to the result
         if (!isSensitive || includeSensitive) {

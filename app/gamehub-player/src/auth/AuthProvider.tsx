@@ -1,4 +1,4 @@
-import type { AuthenticationProvider, HttpHeaders } from "jinaga";
+import type { AuthenticationProvider, HttpHeaders } from 'jinaga';
 
 export class AuthProvider implements AuthenticationProvider {
     private accessToken: string | null = null;
@@ -10,7 +10,7 @@ export class AuthProvider implements AuthenticationProvider {
     getHeaders(): Promise<HttpHeaders> {
         if (this.accessToken) {
             return Promise.resolve({
-                Authorization: `Bearer ${this.accessToken}`
+                Authorization: `Bearer ${this.accessToken}`,
             });
         } else {
             return Promise.resolve({});

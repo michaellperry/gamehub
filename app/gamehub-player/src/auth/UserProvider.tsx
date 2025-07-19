@@ -1,7 +1,7 @@
-import { Jinaga, User } from "jinaga";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { AuthContext } from "react-oauth2-code-pkce";
-import { AuthProvider } from "./AuthProvider";
+import { Jinaga, User } from 'jinaga';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { AuthContext } from 'react-oauth2-code-pkce';
+import { AuthProvider } from './AuthProvider';
 
 interface UserContextValue {
     user: User | null;
@@ -21,23 +21,29 @@ interface UserProviderProps {
     authProvider: AuthProvider;
 }
 
-export function UserProvider({ j, authProvider, children }: { j: Jinaga; authProvider: AuthProvider; children: ReactNode }) {
+export function UserProvider({
+    j,
+    authProvider,
+    children,
+}: {
+    j: Jinaga;
+    authProvider: AuthProvider;
+    children: ReactNode;
+}) {
     const { token } = useContext(AuthContext);
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (import.meta.env.DEV) {
-            setUser(new User("-----ATTENDEE USER-----"));
+            setUser(new User('-----ATTENDEE USER-----'));
             setError(null);
-        }
-        else if (token) {
+        } else if (token) {
             authProvider.setToken(token);
             j.login<User>()
                 .then(({ userFact, profile }) => setUser(userFact))
-                .catch(error => setError(error));
-        }
-        else {
+                .catch((error) => setError(error));
+        } else {
             setUser(null);
             setError(null);
         }
@@ -46,12 +52,8 @@ export function UserProvider({ j, authProvider, children }: { j: Jinaga; authPro
             // Don't flash the user fact when the token is removed
             // setUser(null);
             setError(null);
-        }
+        };
     }, [token, j, authProvider]);
 
-    return (
-        <UserContext.Provider value={{ user, error }}>
-            {children}
-        </UserContext.Provider>
-    );
+    return <UserContext.Provider value={{ user, error }}>{children}</UserContext.Provider>;
 }
