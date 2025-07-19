@@ -1,10 +1,9 @@
-# 3-Step Setup Guide for GameHub Docker Compose Mesh
+# 2-Step Setup Guide for GameHub Docker Compose Mesh
 
-Before you can use your full GameHub Docker Compose mesh, you need to initialize three components:
+Before you can use your full GameHub Docker Compose mesh, you need to initialize two components:
 
 1. **FusionAuth**: Configure the authentication service.
 2. **GameHub Tenant**: Set up a tenant for your GameHub instance.
-3. **Service Principals**: Create a service principal for support services.
 
 ## Step 1: FusionAuth Configuration
 
@@ -25,20 +24,7 @@ GameHub is a multi-tenant application. Create the tenant using your administrato
 3. Create new tenant and copy the generated public key
 4. From your terminal, execute: `./scripts/setup-tenant.sh "<TENANT_PUBLIC_KEY>"`
 
-### Step 3: Service Principal Configuration
 
-The backend services authenticate using service principals. This step creates a service principal for the Player-IP service, which allows players to anonymously log into your game.
-
-1. Navigate to http://localhost/portal/service-principals
-2. Log in using FusionAuth credentials
-3. Click "Create Service Principal for Player-IP"
-4. System automatically fetches player-ip public key from http://localhost/player-ip/public-key
-5. Confirm service principal creation
-
-**System Functionality**:
-- Admin portal makes GET request to player-ip service for public key
-- Creates service principal with fetched key
-- Updates service configurations automatically
 
 ## Setup Page Implementation
 
@@ -46,7 +32,7 @@ The setup page at http://localhost/setup/ should include:
 
 ### Key Features:
 - **Progress Indicator**: Visual progress bar showing current step
-- **Direct Links**: Buttons opening required admin interfaces (FusionAuth, tenant management, service principals)
+- **Direct Links**: Buttons opening required admin interfaces (FusionAuth, tenant management)
 - **Copy-Paste Helpers**: Text areas for API keys and public keys
 - **Command Generation**: Auto-generated terminal commands with user inputs
 - **Validation Feedback**: Real-time status updates
@@ -72,7 +58,7 @@ Each step provides:
 
 ### 3. `scripts/validate-setup.sh` (new)
 - **Purpose**: Validate complete mesh setup
-- **Validates**: Service health, authentication flows, service principal configuration
+- **Validates**: Service health, authentication flows
 
 ## Technical Implementation Notes
 
@@ -83,8 +69,7 @@ Each step provides:
 
 ### Service Dependencies:
 - FusionAuth must be fully initialized before Step 1
-- Admin portal requires FusionAuth authentication for Steps 2 and 3
-- Player-IP service must expose `/public-key` endpoint for Step 3
+- Admin portal requires FusionAuth authentication for Step 2
 - Health checks required between each step
 
 This design provides a streamlined, user-friendly setup process with clear documentation, automated scripts, and comprehensive validation to ensure successful GameHub mesh deployment.

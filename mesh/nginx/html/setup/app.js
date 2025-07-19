@@ -8,7 +8,7 @@ class SetupWizard {
         this.pollingInterval = null;
         this.pollingDelay = 10000; // 10 seconds
         this.currentStep = 1;
-        this.totalSteps = 3;
+        this.totalSteps = 2;
         this.stepData = {};
         this.statusData = null;
         this.isConnected = false;
@@ -32,13 +32,6 @@ class SetupWizard {
                 description: 'Create tenant and configure public keys for all services',
                 estimatedTime: '10 minutes',
                 validationKey: 'tenant'
-            },
-            {
-                id: 3,
-                title: 'Service Principal Authorization',
-                description: 'Authorize service principal for tenant access',
-                estimatedTime: '5 minutes',
-                validationKey: 'servicePrincipal'
             }
         ];
 
@@ -472,26 +465,7 @@ class SetupWizard {
         `;
     }
 
-    renderServicePrincipalStep() {
-        this.stepContent.innerHTML = `
-            <div class="step-instructions">
-                <h3>Service Principal Authorization</h3>
-                <p>Use the automated service provisioning workflow to set up service principals:</p>
-                <ol>
-                    <li><strong>Open the Admin Portal</strong> Service Principals page</li>
-                    <li><strong>Click "Provision Known Services"</strong> to automatically discover available services</li>
-                    <li><strong>Select the services</strong> you want to provision from the list</li>
-                    <li><strong>Click "Provision Selected Services"</strong> to automatically add them to your tenant</li>
-                </ol>
-                <div style="margin-top: 20px;">
-                    <a href="/portal/service-principals" target="_blank" class="action-button">Open Service Principals Page</a>
-                </div>
-                <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when the automated workflow has successfully configured service principal authorization for the Player IP service.</p>
-                </div>
-            </div>
-        `;
-    }
+
 
     // Step validation methods
     isStepCompleted(stepId) {
@@ -515,11 +489,7 @@ class SetupWizard {
                 console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
                 console.log(`   Player app data:`, JSON.stringify(this.bundleData?.['player-app'], null, 2));
                 return result;
-            case 3: // Service Principal Authorization
-                result = this.statusData?.services?.['player-ip']?.configuredGroups?.servicePrincipal === true;
-                console.log(`✅ Step 3 (Service Principal) - service principal configured: ${result}`);
-                console.log(`   Player IP service principal data:`, JSON.stringify(this.statusData?.services?.['player-ip']?.configuredGroups, null, 2));
-                return result;
+
             default:
                 console.log(`❓ Unknown step ${stepId}`);
                 return false;
@@ -541,7 +511,7 @@ class SetupWizard {
 
     canSkipStep(stepId) {
         // Allow skipping most steps except critical ones
-        return stepId !== 3; // Don't allow skipping service principal authorization
+        return stepId !== 2; // Don't allow skipping tenant creation
     }
 
     allStepsCompleted() {

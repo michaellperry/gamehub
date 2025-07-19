@@ -86,7 +86,7 @@ Returns aggregated public keys from all configured services that have public key
 {
     "timestamp": "2025-01-15T12:30:15.123Z",
     "services": {
-        "player-ip": {
+        "backend-service": {
             "publicKey": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890abcdef...\n-----END PUBLIC KEY-----",
             "lastChecked": "2025-01-15T12:30:14.890Z",
             "responseTime": 45
@@ -134,7 +134,6 @@ The service is configured via environment variables:
             "healthEndpoint": "http://player-ip:8082/health",
             "configuredEndpoint": "http://player-ip:8082/configured",
             "readyEndpoint": "http://player-ip:8082/ready",
-            "publicKeyEndpoint": "http://player-ip:8082/public-key",
             "timeout": 5000,
             "retries": 3
         },

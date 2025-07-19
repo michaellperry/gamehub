@@ -34,12 +34,11 @@ export const SQLITE_DB_PATH =
     (NODE_ENV === 'test'
         ? ':memory:'
         : process.env.CI
-          ? path.join(process.env.RUNNER_TEMP || '/tmp', 'player-ip.db')
-          : path.join(__dirname, '../../../data/player-ip.db'));
+            ? path.join(process.env.RUNNER_TEMP || '/tmp', 'player-ip.db')
+            : path.join(__dirname, '../../../data/player-ip.db'));
 
 // Refresh token configuration
 export const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '14d';
 export const ROTATE_REFRESH_TOKENS = process.env.ROTATE_REFRESH_TOKENS === 'true';
 
-// Service Discovery configuration
-export const SERVICE_IP_URL = process.env.SERVICE_IP_URL || 'http://localhost:8083';
+

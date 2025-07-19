@@ -36,7 +36,6 @@ const DEFAULT_RELAY_CONFIG: RelayConfig = {
             healthEndpoint: 'http://player-ip:8082/health',
             configuredEndpoint: 'http://player-ip:8082/configured',
             readyEndpoint: 'http://player-ip:8082/ready',
-            publicKeyEndpoint: 'http://player-ip:8082/public-key',
             timeout: 5000,
             retries: 3,
         },

@@ -121,11 +121,6 @@ services:
       - SQLITE_DB_PATH=/app/data/player-ip.db
       - REFRESH_TOKEN_EXPIRES_IN=${REFRESH_TOKEN_EXPIRES_IN:-14d}
       - ROTATE_REFRESH_TOKENS=${ROTATE_REFRESH_TOKENS:-false}
-      - TENANT_PUBLIC_KEY=${TENANT_PUBLIC_KEY}
-      - SERVICE_IP_URL=http://service-ip:8083
-      - SERVICE_IP_CLIENT_ID=player-ip
-      - SERVICE_IP_CLIENT_SECRET_FILE=/app/secrets/player-ip-client-secret
-      - REPLICATOR_URL=http://gamehub-replicator:8080/jinaga
     volumes:
       - player-ip-data:/app/data
       - ./secrets/player-ip:/app/secrets:ro
@@ -140,7 +135,6 @@ services:
       start_period: 40s
     depends_on:
       - service-ip
-      - gamehub-replicator
 
   # Content Store (existing service)
   content-store:

@@ -26,7 +26,6 @@ const __dirname = path.dirname(__filename);
 // Test configuration
 const TEST_CONFIG = {
     baseUrl: 'http://localhost:8082',
-    serviceIpUrl: 'http://localhost:8083',
     testDbPath: path.join(__dirname, 'test-data', 'test-player-ip.db'),
     timeout: 30000,
 };
@@ -81,9 +80,8 @@ class TestRunner {
         process.env.SERVER_PORT = '8082';
         process.env.JWT_SECRET = 'test-secret-key';
         process.env.CORS_ORIGIN = '*';
-        process.env.SERVICE_IP_URL = TEST_CONFIG.serviceIpUrl;
-        process.env.TENANT_PUBLIC_KEY =
-            '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890\n-----END PUBLIC KEY-----';
+
+
 
         console.log(`${colors.green}✅ Test environment setup complete${colors.reset}`);
     }

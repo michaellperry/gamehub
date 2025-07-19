@@ -83,9 +83,8 @@ class TestRunner {
         process.env.SERVER_PORT = '8082';
         process.env.JWT_SECRET = 'test-secret-key';
         process.env.CORS_ORIGIN = '*';
-        process.env.SERVICE_IP_URL = TEST_CONFIG.serviceIpUrl;
-        process.env.TENANT_PUBLIC_KEY =
-            '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1234567890\n-----END PUBLIC KEY-----';
+
+
         // Skip Jinaga subscription for testing
         process.env.SKIP_JINAGA_SUBSCRIPTION = 'true';
 

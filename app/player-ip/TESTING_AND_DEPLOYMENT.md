@@ -518,7 +518,7 @@ curl -s http://localhost:8082/health/subscription | jq '.lastError'
 curl http://service-ip:8083/health
 
 # Check environment configuration
-echo $TENANT_PUBLIC_KEY | head -1
+echo $JWT_SECRET | head -1
 ```
 
 **Service Logs Analysis**
