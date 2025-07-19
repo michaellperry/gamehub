@@ -24,8 +24,7 @@ function checkClientConfiguration(): boolean {
         // Check if we have the necessary environment variables for FusionAuth client
         const clientId = import.meta.env.VITE_CLIENT_ID;
 
-        // Player app should have a different client ID than the default
-        return clientId && clientId !== 'gamehub-player' && clientId !== 'gamehub-admin';
+        return !!clientId;
     } catch (error) {
         console.warn('Error checking client configuration:', error);
         return false;
