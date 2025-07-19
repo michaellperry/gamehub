@@ -502,11 +502,9 @@ class SetupWizard {
         let result;
         switch (stepId) {
             case 1: // FusionAuth Configuration
-                result = this.bundleData?.['admin-portal']?.configuredGroups?.client === true &&
-                    this.bundleData?.['player-app']?.configuredGroups?.client === true;
+                result = this.bundleData?.['admin-portal']?.configuredGroups?.client === true;
                 console.log(`✅ Step 1 (FusionAuth) - client configured: ${result}`);
                 console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
-                console.log(`   Player app data:`, JSON.stringify(this.bundleData?.['player-app'], null, 2));
                 return result;
             case 2: // Tenant Creation
                 result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true &&
