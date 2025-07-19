@@ -1,6 +1,6 @@
 ---
 description: "GameHub project overview and architecture reference for the multiplayer game platform template built with React, Jinaga, and microservices. Includes project structure, core applications, infrastructure components, build/deployment scripts, technology stack (React 18, TypeScript, Vite, TailwindCSS, Node.js, Express, Jinaga, PostgreSQL, FusionAuth, Docker), development workflow, and service endpoint mappings for local development environment."
-alwaysApply: false
+alwaysApply: true
 ---
 # GameHub Project Overview
 
