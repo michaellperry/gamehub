@@ -3,169 +3,6 @@
  * HTTP polling-based service monitoring dashboard
  */
 
-/**
- * Bundle Manager for loading and executing JavaScript bundles
- */
-class BundleManager {
-    constructor() {
-        this.loadedBundles = new Map();
-        this.bundleConfigs = new Map();
-        this.bundleCache = new Map();
-    }
-
-    /**
-     * Discover bundle URL from HTML page
-     */
-    async discoverBundleFromHTML(htmlUrl) {
-        try {
-            const response = await fetch(htmlUrl);
-            if (!response.ok) {
-                throw new Error(`Failed to fetch HTML: ${response.status}`);
-            }
-
-            const html = await response.text();
-
-            // Create a temporary DOM element to parse HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-
-            // Find the main module script
-            const scriptTag = tempDiv.querySelector('script[type="module"][crossorigin]');
-            if (!scriptTag) {
-                throw new Error('Main bundle script not found in HTML');
-            }
-
-            const src = scriptTag.getAttribute('src');
-            // Convert relative htmlUrl to absolute URL if needed
-            const baseUrl = htmlUrl.startsWith('http') ? htmlUrl : window.location.origin + htmlUrl;
-            return new URL(src, baseUrl).href;
-        } catch (error) {
-            console.error('Bundle discovery failed:', error);
-            throw error;
-        }
-    }
-
-    /**
-     * Load and execute a JavaScript bundle
-     */
-    async loadBundle(bundleId, config) {
-        try {
-            // Check cache first
-            const cacheKey = `${bundleId}_${config.discoveryUrl}`;
-            const cached = this.bundleCache.get(cacheKey);
-            if (cached && (Date.now() - cached.timestamp) < 300000) { // 5 minute cache
-                return cached.result;
-            }
-
-            let bundleUrl;
-
-            // Primary: HTML parsing discovery
-            if (config.discoveryMethod === 'html-parse') {
-                bundleUrl = await this.discoverBundleFromHTML(config.discoveryUrl);
-            } else {
-                throw new Error(`Unsupported discovery method: ${config.discoveryMethod}`);
-            }
-
-            // Load and execute the bundle
-            const result = await this.loadScriptBundle(bundleUrl, config.configFunction);
-
-            // Cache the result
-            this.bundleCache.set(cacheKey, {
-                result,
-                timestamp: Date.now()
-            });
-
-            return result;
-
-        } catch (error) {
-            console.warn(`Bundle loading failed for ${bundleId}:`, error);
-
-            // Return error status
-            return {
-                configured: false,
-                configuredGroups: {},
-                error: error.message
-            };
-        }
-    }
-
-    /**
-     * Load script bundle and execute configuration function
-     */
-    async loadScriptBundle(bundleUrl, functionName) {
-        return new Promise((resolve, reject) => {
-            // Create a unique callback name to avoid conflicts
-            const callbackName = `bundleCallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-            const script = document.createElement('script');
-            script.type = 'module';
-            script.crossOrigin = 'anonymous';
-
-            // Create a timeout for the operation
-            const timeout = setTimeout(() => {
-                cleanup();
-                reject(new Error('Bundle loading timeout'));
-            }, 10000);
-
-            const cleanup = () => {
-                clearTimeout(timeout);
-                if (script.parentNode) {
-                    script.parentNode.removeChild(script);
-                }
-                delete window[callbackName];
-            };
-
-            script.onload = () => {
-                try {
-                    // Try to access the function from the global scope
-                    const configFunction = window[functionName];
-                    if (typeof configFunction === 'function') {
-                        const result = configFunction();
-                        cleanup();
-                        resolve(result);
-                    } else {
-                        cleanup();
-                        reject(new Error(`Function ${functionName} not found or not callable`));
-                    }
-                } catch (error) {
-                    cleanup();
-                    reject(error);
-                }
-            };
-
-            script.onerror = () => {
-                cleanup();
-                reject(new Error(`Failed to load bundle: ${bundleUrl}`));
-            };
-
-            script.src = bundleUrl;
-            document.head.appendChild(script);
-        });
-    }
-
-    /**
-     * Get bundle status
-     */
-    async getBundleStatus(bundleId, config) {
-        try {
-            const result = await this.loadBundle(bundleId, config);
-            return {
-                configured: result.configured || false,
-                configuredGroups: result.configuredGroups || {},
-                lastChecked: new Date().toISOString(),
-                error: result.error
-            };
-        } catch (error) {
-            return {
-                configured: false,
-                configuredGroups: {},
-                lastChecked: new Date().toISOString(),
-                error: error.message
-            };
-        }
-    }
-}
-
 class StatusDashboard {
     constructor() {
         this.pollingInterval = null;
@@ -255,6 +92,8 @@ class StatusDashboard {
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden && this.autoRefresh && !this.pollingInterval) {
                 this.startPolling();
+                // Force refresh bundles when page becomes visible (after hard refresh)
+                this.forceRefreshBundles();
             } else if (document.hidden && this.pollingInterval) {
                 // Optionally pause polling when page is hidden to save resources
                 // this.stopPolling();
@@ -366,17 +205,21 @@ class StatusDashboard {
 
             if (refreshResponse.ok) {
                 const data = await refreshResponse.json();
-                this.handleStatusUpdate(data);
-                console.log('Manual refresh completed via POST');
+                this.handleStatusUpdate(data, true); // Force refresh bundles on manual refresh
+                console.log('Manual refresh completed via POST with bundle refresh');
             } else {
                 // Fallback to regular GET request
                 await this.fetchStatus();
-                console.log('Manual refresh completed via GET fallback');
+                // Force refresh bundles after regular fetch
+                await this.forceRefreshBundles();
+                console.log('Manual refresh completed via GET fallback with bundle refresh');
             }
         } catch (error) {
             console.error('Manual refresh failed:', error);
             // Fallback to regular fetch
             await this.fetchStatus();
+            // Force refresh bundles after regular fetch
+            await this.forceRefreshBundles();
         } finally {
             setTimeout(() => {
                 this.refreshBtn.classList.remove('loading');
@@ -384,7 +227,7 @@ class StatusDashboard {
         }
     }
 
-    async handleStatusUpdate(data) {
+    async handleStatusUpdate(data, forceRefreshBundles = false) {
         this.lastData = data;
         this.hideLoading();
         this.hideError();
@@ -393,7 +236,7 @@ class StatusDashboard {
         this.updateLastUpdated(data.timestamp);
 
         // Always scan for bundles independently of relay service
-        const bundleStatuses = await this.scanBundles();
+        const bundleStatuses = await this.scanBundles(forceRefreshBundles);
 
         this.renderServices(data.services || {}, bundleStatuses);
         this.renderSummary(data.summary || {});
@@ -402,11 +245,12 @@ class StatusDashboard {
             timestamp: data.timestamp,
             services: Object.keys(data.services || {}).length,
             bundles: Object.keys(bundleStatuses).length,
-            overallStatus: data.summary?.overallStatus
+            overallStatus: data.summary?.overallStatus,
+            forceRefresh: forceRefreshBundles
         });
     }
 
-    async scanBundles() {
+    async scanBundles(forceRefresh = false) {
         const bundleStatuses = {};
 
         // Bundle configurations defined in status page
@@ -422,7 +266,7 @@ class StatusDashboard {
         // Scan each configured bundle
         for (const [bundleId, config] of Object.entries(bundleConfigs)) {
             try {
-                const status = await this.bundleManager.getBundleStatus(bundleId, config);
+                const status = await this.bundleManager.getBundleStatus(bundleId, config, forceRefresh);
                 bundleStatuses[bundleId] = {
                     ...status,
                     name: config.name,
@@ -439,6 +283,24 @@ class StatusDashboard {
                     type: 'bundle'
                 };
             }
+        }
+
+        return bundleStatuses;
+    }
+
+    /**
+     * Force refresh bundle cache and rescan
+     */
+    async forceRefreshBundles() {
+        console.log('Force refreshing bundle cache...');
+        this.bundleManager.clearBundleCache();
+
+        // Force refresh all bundles
+        const bundleStatuses = await this.scanBundles(true);
+
+        // Update the display with fresh bundle data
+        if (this.lastData) {
+            this.renderServices(this.lastData.services || {}, bundleStatuses);
         }
 
         return bundleStatuses;
@@ -784,6 +646,13 @@ class StatusDashboard {
 // Initialize the dashboard when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.statusDashboard = new StatusDashboard();
+
+    // Expose force refresh method globally for debugging
+    window.forceRefreshBundles = () => {
+        if (window.statusDashboard) {
+            return window.statusDashboard.forceRefreshBundles();
+        }
+    };
 });
 
 // Handle page unload - cleanup polling
