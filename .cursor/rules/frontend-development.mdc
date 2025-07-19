@@ -1,3 +1,7 @@
+---
+description: "GameHub frontend development standards for React admin portal, status dashboard, and setup wizard using Atomic Design methodology. Includes React 18 with TypeScript, TailwindCSS styling, Jinaga real-time data integration, component composition patterns, design system with atoms/molecules/organisms, accessibility-first principles, responsive design, theme support, and comprehensive styling guidelines for consistent UI development."
+alwaysApply: false
+---
 # Frontend Development Guidelines
 
 ## React Admin Portal (`app/gamehub-admin/`)
@@ -359,7 +363,3 @@ Standardized text styles:
 - **Heading 3**: `text-lg font-medium text-gray-900`
 - **Body Text**: `text-base text-gray-700`
 - **Small Text**: `text-sm text-gray-500`
-description:
-globs:
-alwaysApply: false
----

@@ -1,3 +1,7 @@
+---
+description: "GameHub Jinaga data model development standards for creating immutable facts, authorization rules, and distribution patterns in the event-sourced architecture. Includes fact definition patterns, multi-tenant structures, role-based authorization, hierarchical permissions, share/with distribution rules, client-side React hooks with useSpecification, server-side querying patterns, and best practices for immutable fact design, security, and performance optimization."
+alwaysApply: false
+---
 # Jinaga Data Model Development
 
 ## Model Architecture (`app/gamehub-model/`)
@@ -325,8 +329,3 @@ const session = await jinaga.fact(new GameSession(game, user));
 2. **Distribution**: Minimize unnecessary fact distribution
 3. **Caching**: Cache frequently accessed facts on the client
 4. **Pagination**: Handle large fact sets with pagination
-
-description:
-globs:
-alwaysApply: false
----

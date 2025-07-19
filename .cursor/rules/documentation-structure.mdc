@@ -1,3 +1,7 @@
+---
+description: "GameHub documentation structure standards for organizing project documentation into logical sections including implementation plans, technical architecture, user guides, and setup documentation. Emphasizes critical plan file requirements with progress tracking, checklists, phased work breakdowns, and project management focus. Includes file naming conventions, markdown formatting standards, content organization guidelines, and version control practices for maintaining documentation quality."
+alwaysApply: false
+---
 # Documentation Structure and Standards
 
 ## Overview
@@ -160,7 +164,3 @@ Additional context, decisions, or important information.
 4. **Maintenance**: Update plan files as work progresses and phases are completed.
 
 5. **Clarity**: Plans should be clear enough for team members to understand what needs to be done and track progress effectively.
-description:
-globs:
-alwaysApply: false
----

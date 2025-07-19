@@ -1,3 +1,7 @@
+---
+description: "GameHub project overview and architecture reference for the multiplayer game platform template built with React, Jinaga, and microservices. Includes project structure, core applications, infrastructure components, build/deployment scripts, technology stack (React 18, TypeScript, Vite, TailwindCSS, Node.js, Express, Jinaga, PostgreSQL, FusionAuth, Docker), development workflow, and service endpoint mappings for local development environment."
+alwaysApply: false
+---
 # GameHub Project Overview
 
 GameHub is a multiplayer game platform template built with React, Jinaga, and modern web technologies. This is a full-stack foundation with real-time data synchronization, OAuth authentication, and microservices architecture.
@@ -63,7 +67,3 @@ GameHub is a multiplayer game platform template built with React, Jinaga, and mo
 | Player API | http://localhost/player-ip/ | Player authentication |
 | Content Store | http://localhost/content/ | File storage |
 | Relay Service | http://localhost/relay/ | Observability aggregation |
-description:
-globs:
-alwaysApply: false
----

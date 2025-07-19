@@ -1,3 +1,7 @@
+---
+description: "GameHub infrastructure and deployment standards for Docker orchestration, NGINX configuration, service builds, FusionAuth setup, tenant automation, Azure Container Apps deployment, monitoring with status dashboard, health checks, logging, troubleshooting, and comprehensive environment management for microservices architecture."
+alwaysApply: false
+---
 # Infrastructure & Deployment
 
 ## Docker Orchestration (`mesh/`)
@@ -215,7 +219,3 @@ docker compose restart service-name
 - **Network Traffic**: `docker network inspect`
 - **Service Health**: Status dashboard at `/status/`
 - **Application Metrics**: Service-specific endpoints
-description:
-globs:
-alwaysApply: false
----

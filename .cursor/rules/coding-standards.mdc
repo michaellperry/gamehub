@@ -1,3 +1,7 @@
+---
+description: "GameHub coding standards for TypeScript/JavaScript development with React frontend and Node.js backend services. Includes modular design principles, error handling patterns, performance optimization, security best practices, testing standards, documentation requirements, Git workflows, monitoring/logging standards, and comprehensive health/ready check implementations for microservices architecture."
+alwaysApply: false
+---
 # GameHub Coding Standards
 
 ## General Principles
@@ -539,7 +543,3 @@ The setup wizard uses ready checks to:
 - **Detailed Logging**: Log configuration check failures with context
 - **User-Friendly Messages**: Provide clear error messages for debugging
 - **Fallback Behavior**: Return appropriate status codes for different error conditions
-description:
-globs:
-alwaysApply: false
----
