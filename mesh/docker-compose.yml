@@ -58,6 +58,7 @@ services:
       - ./replicator/policies:/var/lib/replicator/policies:ro
       - ./replicator/authentication:/var/lib/replicator/authentication:ro
       - ./replicator/subscriptions:/var/lib/replicator/subscriptions:ro
+      - gamehub_replicator_data:/var/lib/postgresql/data
     networks:
       - gamehub-network
     restart: unless-stopped
@@ -259,4 +260,5 @@ volumes:
     name: gamehub-player-ip-data
   content-store-data:
     name: gamehub-content-store-data
-  
+  gamehub_replicator_data:
+    name: gamehub-replicator-data
