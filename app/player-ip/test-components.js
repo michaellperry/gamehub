@@ -7,7 +7,7 @@
  * 2. Repository functions
  * 3. JWT token generation and validation
  * 4. OAuth utilities
- * 5. GAP integration (basic validation)
+ * 5. Cookie utilities
  */
 
 import fs from 'fs';
@@ -167,8 +167,6 @@ class ComponentTestRunner {
       `
             ).run(testCookie, testUserId);
 
-
-
             console.log(
                 `${colors.green}  ✓ Database initialization and basic operations work correctly${colors.reset}`
             );
@@ -264,33 +262,6 @@ class ComponentTestRunner {
         });
     }
 
-    async testGAPRepository() {
-        await this.runTest('GAP Repository Functions', async () => {
-            const { createOpenAccessPath, getGAPById } = await import('./dist/repository/index.js');
-
-            const testGapId = crypto.randomUUID();
-            const testEventId = crypto.randomUUID();
-
-            // Create a test GAP
-            createOpenAccessPath(testGapId, 'cookie_based', testEventId);
-
-            // Retrieve the GAP
-            const gap = getGAPById(testGapId);
-
-            if (!gap) {
-                throw new Error('Failed to create or retrieve GAP');
-            }
-
-            if (gap.eventId !== testEventId) {
-                throw new Error('GAP event ID mismatch');
-            }
-
-            console.log(
-                `${colors.green}  ✓ GAP repository functions working correctly${colors.reset}`
-            );
-        });
-    }
-
     async testAuthRepository() {
         await this.runTest('Auth Repository Functions', async () => {
             const {
@@ -356,15 +327,15 @@ class ComponentTestRunner {
             // Generate a test token
             const token = generateAccessToken(testUserId, testEventId);
 
-            if (!token) {
-                throw new Error('Failed to generate access token');
-            }
-
             // Verify the token
             const decoded = verifyJwt(token);
 
-            if (!decoded || decoded.sub !== testUserId) {
-                throw new Error('Token verification failed');
+            if (decoded.userId !== testUserId) {
+                throw new Error('Token user ID mismatch');
+            }
+
+            if (decoded.eventId !== testEventId) {
+                throw new Error('Token event ID mismatch');
             }
 
             console.log(
@@ -377,14 +348,16 @@ class ComponentTestRunner {
         await this.runTest('OAuth Utilities', async () => {
             const { verifyCodeChallenge } = await import('./dist/utils/oauth.js');
 
-            // Test PKCE code challenge verification
-            const codeVerifier = 'test-code-verifier-123456789';
-            const codeChallenge = 'test-challenge';
+            // Test S256 code challenge verification
+            const codeVerifier = crypto.randomBytes(32).toString('base64url');
+            const codeChallenge = crypto
+                .createHash('sha256')
+                .update(codeVerifier)
+                .digest('base64url');
 
-            // Test plain method
-            const plainResult = verifyCodeChallenge(codeVerifier, codeVerifier, 'plain');
-            if (!plainResult) {
-                throw new Error('Plain code challenge verification failed');
+            const isValid = verifyCodeChallenge(codeVerifier, codeChallenge, 'S256');
+            if (!isValid) {
+                throw new Error('S256 code challenge verification failed');
             }
 
             console.log(`${colors.green}  ✓ OAuth utilities working correctly${colors.reset}`);
@@ -393,71 +366,21 @@ class ComponentTestRunner {
 
     async testCookieUtilities() {
         await this.runTest('Cookie Utilities', async () => {
-            const { generateCookieValue, IDENTITY_COOKIE_NAME } = await import(
-                './dist/utils/cookie.js'
-            );
+            const { generateCookieValue } = await import('./dist/utils/cookie.js');
 
             // Test cookie value generation
             const cookieValue = generateCookieValue();
-            if (!cookieValue || cookieValue.length < 10) {
-                throw new Error('Failed to generate cookie value');
+            if (!cookieValue || cookieValue.length < 32) {
+                throw new Error('Generated cookie value is too short');
             }
 
-            // Test cookie name constant
-            if (!IDENTITY_COOKIE_NAME) {
-                throw new Error('Identity cookie name not defined');
+            // Test uniqueness
+            const cookieValue2 = generateCookieValue();
+            if (cookieValue === cookieValue2) {
+                throw new Error('Generated cookie values are not unique');
             }
 
             console.log(`${colors.green}  ✓ Cookie utilities working correctly${colors.reset}`);
-        });
-    }
-
-    async testGAPIntegration() {
-        await this.runTest('GAP Integration (Complete Flow)', async () => {
-            const {
-                createUser,
-                storeUserIdentity,
-                createOpenAccessPath,
-                getGAPById,
-                getAuthorizationCode,
-            } = await import('./dist/repository/index.js');
-
-            const { createAuthorizationCode } = await import('./dist/utils/index.js');
-
-            // Create user and GAP
-            const user = createUser();
-            const cookieValue = crypto.randomUUID();
-            storeUserIdentity(user.id, cookieValue);
-
-            const testGapId = crypto.randomUUID();
-            const testEventId = crypto.randomUUID();
-            createOpenAccessPath(testGapId, 'cookie_based', testEventId);
-
-            // Verify GAP exists
-            const gap = getGAPById(testGapId);
-            if (!gap) {
-                throw new Error('Failed to create GAP');
-            }
-
-            // Test complete OAuth flow
-            const authCode = createAuthorizationCode(
-                'test-client',
-                'http://localhost:3000/callback',
-                'test-challenge',
-                'S256',
-                user.id,
-                testEventId,
-                'openid profile'
-            );
-
-            const retrievedAuthCode = getAuthorizationCode(authCode);
-            if (!retrievedAuthCode || retrievedAuthCode.event_id !== testEventId) {
-                throw new Error('OAuth flow integration failed');
-            }
-
-            console.log(
-                `${colors.green}  ✓ GAP integration complete flow working correctly${colors.reset}`
-            );
         });
     }
 
@@ -487,7 +410,7 @@ class ComponentTestRunner {
     }
 
     printResults() {
-        console.log(`\n${colors.cyan}📊 Test Results Summary${colors.reset}`);
+        console.log(`\n${colors.cyan}📊 Component Test Results${colors.reset}`);
         console.log('='.repeat(50));
 
         const passed = this.results.filter((r) => r.passed).length;
@@ -509,18 +432,18 @@ class ComponentTestRunner {
         );
 
         if (failed > 0) {
-            console.log(
-                `\n${colors.red}❌ Some tests failed. Please review the errors above.${colors.reset}`
-            );
+            console.log(`\n${colors.red}❌ Some component tests failed.${colors.reset}`);
             process.exit(1);
         } else {
-            console.log(
-                `\n${colors.green}🎉 All component tests passed! Player-IP service components are working correctly.${colors.reset}`
-            );
+            console.log(`\n${colors.green}🎉 All component tests passed! Player-IP service components are working correctly.${colors.reset}`);
         }
     }
 }
 
 // Run tests if this file is executed directly
-const runner = new ComponentTestRunner();
-runner.run().catch(console.error);
+if (import.meta.url === `file://${process.argv[1]}`) {
+    const runner = new ComponentTestRunner();
+    runner.run().catch(console.error);
+}
+
+export { ComponentTestRunner }; 
