@@ -14,6 +14,7 @@ This plan outlines the creation of the GameHub Player application - a React-base
 **Current Status**: The GameHub Player application has been successfully created with a complete foundation, authentication system, UI components, and build configuration. The application is ready for NGINX integration and deployment.
 
 ## Prerequisites
+- [ ] Node.js 22.x or later is installed and active
 - [ ] GameHub infrastructure is running (Docker Compose services)
 - [ ] gamehub-model package is built and available
 - [ ] Player-IP service is operational and accessible

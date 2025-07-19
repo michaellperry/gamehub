@@ -17,8 +17,8 @@ GameHub is a **starter template** that provides everything you need to build you
 
 ### Prerequisites
 
-- **Node.js** >= 18.0.0
-- **npm** >= 9.0.0
+- **Node.js** >= 22.0.0
+- **npm** >= 10.0.0
 - **Docker** and **Docker Compose**
 - **Git**
 
