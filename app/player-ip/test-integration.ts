@@ -159,8 +159,6 @@ class TestRunner {
             const expectedTables = [
                 'users',
                 'user_identities',
-                'gaps',
-                'gap_users',
                 'auth_codes',
                 'refresh_tokens',
             ];

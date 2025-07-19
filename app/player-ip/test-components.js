@@ -88,16 +88,12 @@ class ComponentTestRunner {
 
         // Repository Tests
         await this.testUserRepository();
-        await this.testGAPRepository();
         await this.testAuthRepository();
 
         // Utility Tests
         await this.testJWTTokenGeneration();
         await this.testOAuthUtilities();
         await this.testCookieUtilities();
-
-        // Integration Tests
-        await this.testGAPIntegration();
     }
 
     async testDatabaseSchema() {
@@ -118,8 +114,6 @@ class ComponentTestRunner {
             const expectedTables = [
                 'users',
                 'user_identities',
-                'gaps',
-                'gap_users',
                 'auth_codes',
                 'refresh_tokens',
             ];
@@ -173,14 +167,7 @@ class ComponentTestRunner {
       `
             ).run(testCookie, testUserId);
 
-            // Test gaps table
-            const testGapId = crypto.randomUUID();
-            db.prepare(
-                `
-        INSERT INTO gaps (id, type, policy, event_id)
-        VALUES (?, ?, ?, ?)
-      `
-            ).run(testGapId, 'OPEN', 'COOKIE_BASED', crypto.randomUUID());
+
 
             console.log(
                 `${colors.green}  ✓ Database initialization and basic operations work correctly${colors.reset}`

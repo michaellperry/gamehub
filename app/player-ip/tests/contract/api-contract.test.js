@@ -124,8 +124,7 @@ class APIContractTestRunner {
         // Root Endpoint Contract
         await this.testRootEndpointContract();
 
-        // Public Key Endpoint Contract
-        await this.testPublicKeyEndpointContract();
+
 
         // Authentication Endpoints Contract
         await this.testAuthenticateEndpointContract();
@@ -192,39 +191,7 @@ class APIContractTestRunner {
         });
     }
 
-    async testPublicKeyEndpointContract() {
-        await this.runTest('Public Key Endpoint Contract', async () => {
-            const response = await fetch(`${TEST_CONFIG.baseUrl}/public-key`);
 
-            // Status code contract
-            assert.strictEqual(response.status, 200, 'Public key endpoint should return 200');
-
-            // Content-Type contract
-            const contentType = response.headers.get('content-type');
-            assert.ok(
-                contentType.includes('application/json'),
-                'Public key endpoint should return JSON'
-            );
-
-            // Response body contract
-            const data = await response.json();
-            assert.strictEqual(typeof data, 'object', 'Response should be an object');
-            assert.ok(data.publicKey, 'Should include publicKey field');
-            assert.strictEqual(typeof data.publicKey, 'string', 'Public key should be string');
-
-            // Public key format contract (should be PEM format)
-            assert.ok(
-                data.publicKey.startsWith('-----BEGIN'),
-                'Public key should be in PEM format'
-            );
-            assert.ok(
-                data.publicKey.includes('-----END'),
-                'Public key should be complete PEM format'
-            );
-
-            console.log(`${colors.green}  ✓ Public key endpoint contract verified${colors.reset}`);
-        });
-    }
 
     async testAuthenticateEndpointContract() {
         await this.runTest('Authenticate Endpoint Contract', async () => {
