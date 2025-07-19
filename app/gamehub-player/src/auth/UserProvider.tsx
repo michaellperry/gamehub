@@ -1,5 +1,5 @@
 import { Jinaga, User } from "jinaga";
-import { createContext, PropsWithChildren, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { AuthContext } from "react-oauth2-code-pkce";
 import { AuthProvider } from "./AuthProvider";
 
@@ -21,7 +21,7 @@ interface UserProviderProps {
     authProvider: AuthProvider;
 }
 
-export function UserProvider({ j, authProvider, children }: PropsWithChildren<UserProviderProps>) {
+export function UserProvider({ j, authProvider, children }: { j: Jinaga; authProvider: AuthProvider; children: ReactNode }) {
     const { token } = useContext(AuthContext);
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<Error | null>(null);
@@ -34,7 +34,7 @@ export function UserProvider({ j, authProvider, children }: PropsWithChildren<Us
         else if (token) {
             authProvider.setToken(token);
             j.login<User>()
-                .then(({userFact, profile}) => setUser(userFact))
+                .then(({ userFact, profile }) => setUser(userFact))
                 .catch(error => setError(error));
         }
         else {

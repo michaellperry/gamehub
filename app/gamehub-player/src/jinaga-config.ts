@@ -15,7 +15,7 @@ export const j = JinagaBrowser.create({
 async function setupTestData() {
     const f3 = await j.fact(new User("-----TENANT USER-----"));
 
-    const f4 = await j.fact(new Tenant(f3));
+    await j.fact(new Tenant(f3));
 }
 
 if (import.meta.env.DEV) {

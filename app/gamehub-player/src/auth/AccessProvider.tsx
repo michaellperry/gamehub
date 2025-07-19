@@ -23,9 +23,7 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     if (import.meta.env.DEV) {
-        return (
-            { children }
-        )
+        return <>{children}</>
     }
 
     const authConfig: TAuthConfig = {
