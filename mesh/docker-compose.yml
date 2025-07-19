@@ -212,6 +212,7 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
       - ./nginx/app/gamehub-admin:/var/www/admin:ro
+      - ./nginx/app/gamehub-player:/var/www/player:ro
       - ./nginx/html:/usr/share/nginx/html:ro
     networks:
       - gamehub-network

@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc -b && vite build",
-        "build:container": "tsc -b && vite build",
+        "build:container": "tsc -b && vite build && mkdir -p ../../mesh/nginx/app/gamehub-player && cp -r dist/* ../../mesh/nginx/app/gamehub-player/",
         "build:model": "cd ../gamehub-model && npm run build",
         "lint": "eslint .",
         "preview": "vite preview"
