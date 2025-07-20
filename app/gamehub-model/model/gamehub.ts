@@ -88,12 +88,23 @@ export class Join {
     ) { }
 
     static by(player: LabelOf<Player>) {
-        return player.successors(Join, (join) => join.player);
+        return player.successors(Join, (join) => join.player)
+            .notExists((join) => join.successors(Leave, (leave) => leave.join));
     }
 
     static in(playground: LabelOf<Playground>) {
-        return playground.successors(Join, (join) => join.playground);
+        return playground.successors(Join, (join) => join.playground)
+            .notExists((join) => join.successors(Leave, (leave) => leave.join));
     }
+}
+
+export class Leave {
+    static Type = 'GameHub.Leave' as const;
+    public type = Leave.Type;
+
+    constructor(
+        public join: Join
+    ) { }
 }
 
 export const gameHubModel = (b: ModelBuilder) =>
@@ -104,4 +115,5 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(Player, (m) => m.predecessor('user', User).predecessor('tenant', Tenant))
         .type(PlayerName, (m) => m.predecessor('player', Player).predecessor('prior', PlayerName))
         .type(Playground, (m) => m.predecessor('tenant', Tenant))
-        .type(Join, (m) => m.predecessor('player', Player).predecessor('playground', Playground));
+        .type(Join, (m) => m.predecessor('player', Player).predecessor('playground', Playground))
+        .type(Leave, (m) => m.predecessor('join', Join));

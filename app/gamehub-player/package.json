@@ -8,6 +8,7 @@
         "build": "vite build",
         "build:container": "vite build --mode container && mkdir -p ../../mesh/nginx/app/gamehub-player && cp -r dist/* ../../mesh/nginx/app/gamehub-player/",
         "build:model": "cd ../gamehub-model && npm run build",
+        "generate-policies": "npm run generate-policies --workspace=gamehub-model",
         "lint": "eslint .",
         "preview": "vite preview",
         "typecheck": "tsc --noEmit"

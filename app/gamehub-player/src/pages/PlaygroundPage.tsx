@@ -2,11 +2,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
 import { PlaygroundGame, usePlaygroundPage } from '../hooks/usePlaygroundPage';
 import { getFriendlyDate } from '../utils/dateUtils';
+import { useState } from 'react';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
     const viewModel = usePlaygroundPage(code);
     const navigate = useNavigate();
+    const [isLeaving, setIsLeaving] = useState(false);
+    const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
     if (!code) {
         return (
@@ -42,6 +45,29 @@ export default function PlaygroundPage() {
         );
     }
 
+    const handleLeavePlayground = async () => {
+        if (!viewModel.handleLeavePlayground) return;
+
+        setIsLeaving(true);
+        try {
+            await viewModel.handleLeavePlayground();
+            setShowLeaveConfirmation(false);
+            // Navigate to home page after successful leave
+            navigate('/', {
+                state: {
+                    message: 'Successfully left playground',
+                    type: 'success'
+                }
+            });
+        } catch (error) {
+            console.error('Error leaving playground:', error);
+            // Show error message
+            alert('Failed to leave playground. Please try again.');
+        } finally {
+            setIsLeaving(false);
+        }
+    };
+
     return (
         <PageLayout variant="default">
             <Container variant="hero">
@@ -55,6 +81,22 @@ export default function PlaygroundPage() {
                         <Typography variant="body" className="text-gray-600">
                             Share this code with friends to join the playground
                         </Typography>
+
+                        {/* Leave Playground Button for Current Player */}
+                        {viewModel.data?.players.some(player => player.isCurrentPlayer) && (
+                            <div className="pt-4">
+                                <Button
+                                    variant="secondary"
+                                    size="lg"
+                                    onClick={() => setShowLeaveConfirmation(true)}
+                                    disabled={isLeaving}
+                                    className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                                >
+                                    <Icon name="leave" size="sm" className="mr-2" />
+                                    {isLeaving ? 'Leaving...' : 'Leave Playground'}
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Error Display */}
@@ -189,6 +231,41 @@ export default function PlaygroundPage() {
                     )}
                 </div>
             </Container>
+
+            {/* Leave Confirmation Modal */}
+            {showLeaveConfirmation && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-md mx-4">
+                        <div className="text-center space-y-4">
+                            <Icon name="leave" size="lg" className="text-red-600 mx-auto" />
+                            <Typography variant="h3" className="text-lg font-semibold text-gray-900">
+                                Leave Playground?
+                            </Typography>
+                            <Typography variant="body" className="text-gray-600">
+                                Are you sure you want to leave this playground? You can rejoin later using the same code.
+                            </Typography>
+                            <div className="flex space-x-3 pt-4">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setShowLeaveConfirmation(false)}
+                                    disabled={isLeaving}
+                                    className="flex-1"
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    onClick={handleLeavePlayground}
+                                    disabled={isLeaving}
+                                    className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                                >
+                                    {isLeaving ? 'Leaving...' : 'Leave'}
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </PageLayout>
     );
 } 

@@ -1,4 +1,4 @@
-import { Join, PlayerName, Playground, model } from '@model/model';
+import { Join, Leave, Player, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { j } from '../jinaga-config';
 import { usePlayer } from './usePlayer';
@@ -32,6 +32,7 @@ export interface PlaygroundPageViewModel {
     clearError: () => void;
     handleChallengePlayer: (player: PlaygroundPlayer) => void;
     handleJoinGame: (game: PlaygroundGame) => void;
+    handleLeavePlayground: () => Promise<void>;
 }
 
 // Create specification to find all players in a playground with their names
@@ -47,8 +48,12 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
         )
 );
 
+const playerJoinsSpec = model.given(Player, Playground).match((player, playground) => Join.in(playground)
+    .join(join => join.player, player)
+);
+
 export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewModel {
-    const { playerId, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
+    const { playerId, player, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
     const { playground, isValidCode, error: playgroundError, loading: playgroundLoading, clearError: clearPlaygroundError } = usePlayground(code);
 
     // Use Jinaga to load all players in the playground
@@ -90,6 +95,25 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         console.log('Join game:', game);
     };
 
+    const handleLeavePlayground = async (): Promise<void> => {
+        if (!playground || !player) {
+            throw new Error('Cannot leave playground: missing playground or player information');
+        }
+
+        try {
+            // Find all joins for the current player in this playground
+            const playerJoins = await j.query(playerJoinsSpec, player, playground);
+
+            // Create a leave fact for each join
+            await Promise.all(playerJoins.map(async (playerJoin) => {
+                await j.fact(new Leave(playerJoin));
+            }));
+        } catch (error) {
+            console.error('Error leaving playground:', error);
+            throw error;
+        }
+    };
+
     // Loading state combines player loading, playground loading, and specification loading
     const isLoading = playerLoading || playgroundLoading || playersLoading;
 
@@ -108,5 +132,6 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         clearError,
         handleChallengePlayer,
         handleJoinGame,
+        handleLeavePlayground,
     };
 } 

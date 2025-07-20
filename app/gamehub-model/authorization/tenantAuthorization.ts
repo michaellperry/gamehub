@@ -1,5 +1,5 @@
 import { AuthorizationRules } from 'jinaga';
-import { Administrator, Join, Player, Playground, Tenant } from '../model/index.js';
+import { Administrator, Join, Leave, Player, Playground, Tenant } from '../model/index.js';
 
 export const tenantAuthorization = (a: AuthorizationRules) =>
     a
@@ -19,4 +19,7 @@ export const tenantAuthorization = (a: AuthorizationRules) =>
         )
 
         // Only the player can create their own joins
-        .type(Join, (join) => join.player.user.predecessor());
+        .type(Join, (join) => join.player.user.predecessor())
+
+        // Only the player who joined can leave (by creating a Leave fact for their Join)
+        .type(Leave, (leave) => leave.join.player.user.predecessor());
