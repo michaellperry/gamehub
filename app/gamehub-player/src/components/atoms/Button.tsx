@@ -55,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
         className,
     ].filter(Boolean).join(' ');
 
-    const handleClick = (e: React.MouseEvent) => {
+    const handleClick = () => {
         if (!disabled && !loading && onClick) {
             onClick();
         }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from '../atoms/Badge';
 import { Icon } from '../atoms/Icon';
+import { formatDuration } from '../../utils/dateUtils';
 
 export type GameStatusType = 'waiting' | 'active' | 'finished' | 'lobby' | 'paused' | 'loading';
 
@@ -52,11 +53,7 @@ const statusConfig = {
     },
 };
 
-const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-};
+// Removed formatTime function - now using formatDuration from dateUtils
 
 export const GameStatus: React.FC<GameStatusProps> = ({
     status,
@@ -113,7 +110,7 @@ export const GameStatus: React.FC<GameStatusProps> = ({
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-gray-600">Game Time:</span>
                             <span className="text-sm font-medium text-gray-900">
-                                {formatTime(gameTime)}
+                                {formatDuration(gameTime, 'short')}
                             </span>
                         </div>
                     </div>

@@ -1,9 +1,9 @@
 import { Alert, Button, Card, Container, Icon, PageLayout, Typography } from '../components/atoms';
-import { CodeInput, NameInput } from '../components/molecules';
+import { CodeInput, NameInput, PlayerPlaygroundsList } from '../components/molecules';
 import { useHomePage } from '../hooks/useHomePage';
 
 export default function HomePage() {
-    const { playerName, playgroundLobby } = useHomePage();
+    const { playerName, playgroundLobby, playerPlaygrounds } = useHomePage();
 
     if (playerName.showNameInput) {
         return (
@@ -55,7 +55,7 @@ export default function HomePage() {
                     <div className="space-y-4">
                         <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
                         <Typography variant="h1" className="text-3xl font-bold text-gray-900">
-                            GameHub Playground
+                            GameHub Lobby
                         </Typography>
                         <Typography variant="body" className="text-gray-600">
                             Welcome back, {playerName.playerName}!
@@ -134,6 +134,14 @@ export default function HomePage() {
                             </Button>
                         </div>
                     </Card>
+
+                    {/* Player Playgrounds List */}
+                    <PlayerPlaygroundsList
+                        playgrounds={playerPlaygrounds.playgrounds}
+                        loading={playerPlaygrounds.loading}
+                        error={playerPlaygrounds.error}
+                        onClearError={playerPlaygrounds.clearError}
+                    />
 
                     {/* Change Name Option */}
                     <div className="text-center">

@@ -148,7 +148,7 @@ export const GameCard: React.FC<GameCardProps> = ({
 
                 <div className="flex items-center space-x-2">
                     <div className="flex -space-x-2">
-                        {players.slice(0, 4).map((player, index) => (
+                        {players.slice(0, 4).map((player) => (
                             <Avatar
                                 key={player.id}
                                 src={player.avatar}

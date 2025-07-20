@@ -1,10 +1,12 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
 import { PlaygroundGame, usePlaygroundPage } from '../hooks/usePlaygroundPage';
+import { getFriendlyDate } from '../utils/dateUtils';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
     const viewModel = usePlaygroundPage(code);
+    const navigate = useNavigate();
 
     if (!code) {
         return (
@@ -30,7 +32,7 @@ export default function PlaygroundPage() {
                         </Alert>
                         <Button
                             variant="primary"
-                            onClick={() => window.location.href = '/'}
+                            onClick={() => navigate('/')}
                         >
                             Back to Home
                         </Button>
@@ -106,9 +108,14 @@ export default function PlaygroundPage() {
                                                 >
                                                     <div className="flex items-center space-x-3">
                                                         <Icon name="profile" size="sm" className="text-gray-500" />
-                                                        <Typography variant="body" className="font-medium">
-                                                            {player.name}
-                                                        </Typography>
+                                                        <div>
+                                                            <Typography variant="body" className="font-medium">
+                                                                {player.name}
+                                                            </Typography>
+                                                            <Typography variant="body-sm" className="text-gray-500">
+                                                                Joined {getFriendlyDate(player.joinedAt)}
+                                                            </Typography>
+                                                        </div>
                                                     </div>
                                                     {player.isCurrentPlayer ? (
                                                         <Typography variant="body" className="font-medium">
@@ -172,7 +179,7 @@ export default function PlaygroundPage() {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => window.location.href = '/'}
+                                    onClick={() => navigate('/')}
                                     className="text-gray-500 hover:text-gray-700"
                                 >
                                     Back to Home

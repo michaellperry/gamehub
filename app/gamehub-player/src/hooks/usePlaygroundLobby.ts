@@ -1,4 +1,4 @@
-import { Join, Player, Playground } from '@model/model';
+import { Join, Playground } from '@model/model';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../auth/UserProvider';
