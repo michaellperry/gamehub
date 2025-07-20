@@ -1,12 +1,11 @@
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { defineConfig, loadEnv } from 'vite';
-
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(function (_a) {
+    var mode = _a.mode;
     // Load env file based on mode
-    const env = loadEnv(mode, process.cwd(), 'VITE_');
-
+    var env = loadEnv(mode, process.cwd(), 'VITE_');
     return {
         plugins: [react()],
         base: env.VITE_BASE_NAME || '/', // Use VITE_BASE_NAME from env files

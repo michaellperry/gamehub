@@ -16,10 +16,7 @@ const UserContext = createContext<UserContextValue>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useUser = () => useContext(UserContext);
 
-interface UserProviderProps {
-    j: Jinaga;
-    authProvider: AuthProvider;
-}
+
 
 export function UserProvider({
     j,
@@ -41,7 +38,7 @@ export function UserProvider({
         } else if (token) {
             authProvider.setToken(token);
             j.login<User>()
-                .then(({ userFact, profile }) => setUser(userFact))
+                .then(({ userFact }) => setUser(userFact))
                 .catch((error) => setError(error));
         } else {
             setUser(null);

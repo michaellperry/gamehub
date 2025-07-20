@@ -1,11 +1,14 @@
-import { useContext, useEffect } from 'react';
+import { authProvider, j } from '@/jinaga-config.ts';
+import { PropsWithChildren, useContext, useEffect } from 'react';
 import {
     AuthContext,
     AuthProvider,
+    IAuthContext,
     type TAuthConfig,
     type TRefreshTokenExpiredEvent,
 } from 'react-oauth2-code-pkce';
 import { getEnv } from '../utils/environment.ts';
+import { UserProvider } from './UserProvider.tsx';
 
 // Function to detect private browsing mode
 const isPrivateBrowsingMode = (): boolean => {
@@ -18,7 +21,7 @@ const isPrivateBrowsingMode = (): boolean => {
     }
 };
 
-export function AccessProvider({ children }: { children: React.ReactNode }) {
+export function AccessProvider({ children }: PropsWithChildren<{}>) {
     // Check for private browsing mode
     useEffect(() => {
         if (isPrivateBrowsingMode()) {
@@ -30,7 +33,11 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     if (import.meta.env.DEV) {
-        return <>{children}</>;
+        return (
+            <UserProvider j={j} authProvider={authProvider}>
+                {children}
+            </UserProvider>
+        );
     }
 
     const authConfig: TAuthConfig = {
@@ -50,17 +57,23 @@ export function AccessProvider({ children }: { children: React.ReactNode }) {
         logoutEndpoint: getEnv('VITE_LOGOUT_ENDPOINT'),
     };
 
-    return <AuthProvider authConfig={authConfig}>{children}</AuthProvider>;
+    return (
+        <AuthProvider authConfig={authConfig}>
+            <UserProvider j={j} authProvider={authProvider}>
+                {children}
+            </UserProvider>
+        </AuthProvider>
+    )
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAccess = () => {
-    const { logIn: authLogIn, logOut: authLogOut } = useContext(AuthContext);
+    const { logIn: authLogIn, logOut: authLogOut } = useContext(AuthContext as React.Context<IAuthContext>);
 
     if (import.meta.env.DEV) {
         return {
-            logIn: async () => {},
-            logOut: () => {},
+            logIn: async () => { },
+            logOut: () => { },
         };
     }
 
