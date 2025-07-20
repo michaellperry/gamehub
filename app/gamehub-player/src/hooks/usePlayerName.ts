@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useSpecification } from 'jinaga-react';
 import { Player, PlayerName, Tenant, model } from 'gamehub-model/model';
 import { User } from 'jinaga';
-import { j } from '../jinaga-config';
+import { useSpecification } from 'jinaga-react';
+import { useState } from 'react';
 import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
+import { j } from '../jinaga-config';
 
 export interface PlayerNameViewModel {
     playerName: string;
@@ -15,7 +15,6 @@ export interface PlayerNameViewModel {
 
 export function usePlayerName(): PlayerNameViewModel {
     const [showNameInput, setShowNameInput] = useState<boolean>(true);
-    const [playerName, setPlayerName] = useState<string>('');
 
     const { user } = useUser();
     const tenant = useTenant();
@@ -35,20 +34,6 @@ export function usePlayerName(): PlayerNameViewModel {
         tenant
     );
 
-    // Update player name and show name input based on Jinaga data
-    useEffect(() => {
-        if (playerNames !== null) {
-            if (playerNames.length > 0) {
-                // Found a current player name, use it
-                setPlayerName(playerNames[0].name);
-                setShowNameInput(false);
-            } else {
-                // No player name found, show the input
-                setShowNameInput(true);
-            }
-        }
-    }, [playerNames]);
-
     const handleNameSubmit = async (name: string) => {
         if (!user || !tenant) {
             console.error('User or tenant not available');
@@ -60,21 +45,20 @@ export function usePlayerName(): PlayerNameViewModel {
             const player = await j.fact(new Player(user, tenant));
 
             // Get current player names to use as prior
-            const currentNames = (playerNames as PlayerName[]) || [];
+            const currentNames = playerNames || [];
 
             // Create new PlayerName fact
-            await j.fact(new PlayerName(player, name, currentNames));
-
-            setPlayerName(name);
-            setShowNameInput(false);
+            if (currentNames.length !== 1 || currentNames[0].name !== name) {
+                await j.fact(new PlayerName(player, name, currentNames));
+            }
         } catch (error) {
             console.error('Error creating player name:', error);
         }
     };
 
     return {
-        playerName,
-        showNameInput,
+        playerName: playerNames?.[0]?.name || '',
+        showNameInput: showNameInput || playerNames?.length === 0,
         handleNameSubmit,
         setShowNameInput,
     };
