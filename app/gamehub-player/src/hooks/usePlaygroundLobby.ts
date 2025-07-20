@@ -1,4 +1,4 @@
-import { Join, Playground } from '@model/model';
+import { Join, Player, Playground } from '@model/model';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../auth/UserProvider';
@@ -46,13 +46,21 @@ export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
         setActionError(null);
 
         try {
+            if (!player) {
+                setActionError('Player not available. Please try logging in again.');
+                return;
+            }
+
             // Generate a random 6-letter code
             const code = Array.from({ length: 6 }, () =>
                 String.fromCharCode(65 + Math.floor(Math.random() * 26))
             ).join('');
 
             // Create a playground fact when starting
-            await j.fact(new Playground(tenant, code));
+            const playground = await j.fact(new Playground(tenant, code));
+
+            // Create a join fact for the current player
+            await j.fact(new Join(player, playground, new Date()));
 
             // Navigate to the playground
             navigate(`/playground/${code}`);

@@ -110,14 +110,20 @@ export default function PlaygroundPage() {
                                                             {player.name}
                                                         </Typography>
                                                     </div>
-                                                    <Button
-                                                        variant="secondary"
-                                                        size="sm"
-                                                        disabled={player.isCurrentPlayer}
-                                                        onClick={() => viewModel.handleChallengePlayer(player)}
-                                                    >
-                                                        Challenge
-                                                    </Button>
+                                                    {player.isCurrentPlayer ? (
+                                                        <Typography variant="body" className="font-medium">
+                                                            (That's you!)
+                                                        </Typography>
+                                                    ) : (
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="sm"
+                                                            disabled={player.isCurrentPlayer}
+                                                            onClick={() => viewModel.handleChallengePlayer(player)}
+                                                        >
+                                                            Challenge
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
