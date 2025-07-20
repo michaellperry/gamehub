@@ -29,6 +29,7 @@ export interface PlaygroundPageViewModel {
     data: PlaygroundPageData | null;
     error: string | null;
     loading: boolean;
+    isValidCode: boolean;
     clearError: () => void;
     handleChallengePlayer: (player: PlaygroundPlayer) => void;
     handleJoinGame: (game: PlaygroundGame) => void;
@@ -52,10 +53,13 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     const tenant = useTenant();
     const { playerId, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
 
-    // Create playground fact if code and tenant are available (memoized to prevent infinite updates)
+    // Validate playground code format
+    const isValidCode = Boolean(code && /^[A-Z]{6}$/.test(code));
+
+    // Create playground fact if code and tenant are available and code is valid (memoized to prevent infinite updates)
     const playground = useMemo(() =>
-        code && tenant ? new Playground(tenant, code) : null,
-        [code, tenant]
+        code && tenant && isValidCode ? new Playground(tenant, code) : null,
+        [code, tenant, isValidCode]
     );
 
     // Create the playground fact if it doesn't exist
@@ -121,6 +125,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         } : null,
         error: combinedError,
         loading: isLoading,
+        isValidCode,
         clearError,
         handleChallengePlayer,
         handleJoinGame,

@@ -4,7 +4,7 @@ import { PlaygroundGame, usePlaygroundPage } from '../hooks/usePlaygroundPage';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
-    const playground = usePlaygroundPage(code);
+    const viewModel = usePlaygroundPage(code);
 
     if (!code) {
         return (
@@ -20,6 +20,26 @@ export default function PlaygroundPage() {
         );
     }
 
+    if (!viewModel.isValidCode) {
+        return (
+            <PageLayout variant="default">
+                <Container variant="hero">
+                    <div className="text-center space-y-4">
+                        <Alert variant="error" title="Invalid Playground Code">
+                            Playground code must be exactly 6 uppercase letters (e.g., ABCDEF).
+                        </Alert>
+                        <Button
+                            variant="primary"
+                            onClick={() => window.location.href = '/'}
+                        >
+                            Back to Home
+                        </Button>
+                    </div>
+                </Container>
+            </PageLayout>
+        );
+    }
+
     return (
         <PageLayout variant="default">
             <Container variant="hero">
@@ -28,7 +48,7 @@ export default function PlaygroundPage() {
                     <div className="text-center space-y-4">
                         <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
                         <Typography variant="h1" className="text-3xl font-bold text-gray-900">
-                            Playground: {code.toUpperCase()}
+                            Playground: {code}
                         </Typography>
                         <Typography variant="body" className="text-gray-600">
                             Share this code with friends to join the playground
@@ -36,20 +56,20 @@ export default function PlaygroundPage() {
                     </div>
 
                     {/* Error Display */}
-                    {playground.error && (
+                    {viewModel.error && (
                         <Alert
                             variant="error"
                             title="Playground Error"
                             dismissible
-                            onDismiss={playground.clearError}
+                            onDismiss={viewModel.clearError}
                             className="max-w-md mx-auto"
                         >
-                            {playground.error}
+                            {viewModel.error}
                         </Alert>
                     )}
 
                     {/* Loading State */}
-                    {playground.loading && (
+                    {viewModel.loading && (
                         <div className="text-center py-12">
                             <LoadingIndicator
                                 size="lg"
@@ -60,18 +80,18 @@ export default function PlaygroundPage() {
                     )}
 
                     {/* Playground Content */}
-                    {!playground.loading && playground.data && (
+                    {!viewModel.loading && viewModel.data && (
                         <div className="space-y-6">
                             {/* Players Section */}
                             <Card variant="game" size="lg">
                                 <div className="space-y-4">
                                     <div className="text-center">
                                         <Typography variant="h2" className="text-xl font-semibold text-gray-900">
-                                            Players ({playground.data.players.length})
+                                            Players ({viewModel.data.players.length})
                                         </Typography>
                                     </div>
 
-                                    {playground.data.players.length === 0 ? (
+                                    {viewModel.data.players.length === 0 ? (
                                         <div className="text-center py-8">
                                             <Typography variant="body" className="text-gray-600">
                                                 No players have joined yet. Share the code to invite friends!
@@ -79,7 +99,7 @@ export default function PlaygroundPage() {
                                         </div>
                                     ) : (
                                         <div className="space-y-2">
-                                            {playground.data.players.map(player => (
+                                            {viewModel.data.players.map(player => (
                                                 <div
                                                     key={player.playerId}
                                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -94,7 +114,7 @@ export default function PlaygroundPage() {
                                                         variant="secondary"
                                                         size="sm"
                                                         disabled={player.isCurrentPlayer}
-                                                        onClick={() => playground.handleChallengePlayer(player)}
+                                                        onClick={() => viewModel.handleChallengePlayer(player)}
                                                     >
                                                         Challenge
                                                     </Button>
@@ -106,17 +126,17 @@ export default function PlaygroundPage() {
                             </Card>
 
                             {/* Active Games Section */}
-                            {playground.data.games.length > 0 && (
+                            {viewModel.data.games.length > 0 && (
                                 <Card variant="game" size="lg">
                                     <div className="space-y-4">
                                         <div className="text-center">
                                             <Typography variant="h2" className="text-xl font-semibold text-gray-900">
-                                                Active Games ({playground.data.games.length})
+                                                Active Games ({viewModel.data.games.length})
                                             </Typography>
                                         </div>
 
                                         <div className="space-y-2">
-                                            {playground.data.games.map((game: PlaygroundGame) => (
+                                            {viewModel.data.games.map((game: PlaygroundGame) => (
                                                 <div
                                                     key={game.id}
                                                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -130,7 +150,7 @@ export default function PlaygroundPage() {
                                                     <Button
                                                         variant="primary"
                                                         size="sm"
-                                                        onClick={() => playground.handleJoinGame(game)}
+                                                        onClick={() => viewModel.handleJoinGame(game)}
                                                     >
                                                         {game.status === 'waiting' ? 'Join' : 'Watch'}
                                                     </Button>
