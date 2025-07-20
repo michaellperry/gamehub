@@ -1,8 +1,4 @@
-import React from 'react';
-import { Card } from '../atoms/Card';
-import { Badge } from '../atoms/Badge';
-import { Icon } from '../atoms/Icon';
-import { Avatar } from '../atoms/Avatar';
+import { Avatar, Badge, Card, Icon } from '../atoms';
 
 export interface GameCardProps {
     id: string;
@@ -25,21 +21,7 @@ export interface GameCardProps {
     className?: string;
 }
 
-const statusColors = {
-    waiting: 'bg-yellow-100 text-yellow-800',
-    active: 'bg-green-100 text-green-800',
-    finished: 'bg-gray-100 text-gray-800',
-    lobby: 'bg-blue-100 text-blue-800',
-};
-
-const difficultyColors = {
-    easy: 'bg-green-100 text-green-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    hard: 'bg-red-100 text-red-800',
-};
-
 export const GameCard: React.FC<GameCardProps> = ({
-    id,
     title,
     description,
     image,
