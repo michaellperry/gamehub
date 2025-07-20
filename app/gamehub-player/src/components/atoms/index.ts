@@ -2,7 +2,7 @@ export { Button } from './Button';
 export type { ButtonProps } from './Button';
 
 export { Icon } from './Icon';
-export type { IconProps, IconName } from './Icon';
+export type { IconName, IconProps } from './Icon';
 
 export { Card } from './Card';
 export type { CardProps } from './Card';
@@ -22,5 +22,8 @@ export type { ContainerProps } from './Container';
 export { PageLayout } from './PageLayout';
 export type { PageLayoutProps } from './PageLayout';
 
-export { Typography, Heading1, Heading2, Heading3, Body, BodySmall, Caption } from './Typography';
-export type { TypographyProps } from './Typography'; 
+export { Body, BodySmall, Caption, Heading1, Heading2, Heading3, Typography } from './Typography';
+export type { TypographyProps } from './Typography';
+
+export { LoadingIndicator } from './LoadingIndicator';
+export type { LoadingIndicatorProps } from './LoadingIndicator';

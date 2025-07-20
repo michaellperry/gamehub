@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
-import { Alert, Button, Card, Container, Icon, PageLayout, Typography } from '../components/atoms';
-import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
+import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
+import { PlaygroundGame, usePlaygroundPage } from '../hooks/usePlaygroundPage';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
@@ -50,10 +50,12 @@ export default function PlaygroundPage() {
 
                     {/* Loading State */}
                     {playground.loading && (
-                        <div className="text-center">
-                            <Typography variant="body" className="text-gray-600">
-                                Loading playground...
-                            </Typography>
+                        <div className="text-center py-12">
+                            <LoadingIndicator
+                                size="lg"
+                                variant="spinner"
+                                text="Loading playground..."
+                            />
                         </div>
                     )}
 
