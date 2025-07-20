@@ -17,23 +17,23 @@ export interface PlaygroundViewModel {
 
 export function usePlayground(): PlaygroundViewModel {
     const [playgroundCode, setPlaygroundCode] = useState<string>('');
-    const [error, setError] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [actionError, setActionError] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState<boolean>(false);
     const { user } = useUser();
     const tenant = useTenant();
 
     const clearError = () => {
-        setError(null);
+        setActionError(null);
     };
 
     const handleStartPlayground = async () => {
         if (!user || !tenant) {
-            setError('User or tenant not available. Please try logging in again.');
+            setActionError('User or tenant not available. Please try logging in again.');
             return;
         }
 
-        setIsLoading(true);
-        setError(null);
+        setActionLoading(true);
+        setActionError(null);
 
         try {
             // Generate a random 6-letter code
@@ -48,25 +48,25 @@ export function usePlayground(): PlaygroundViewModel {
             window.location.href = `/playground/${code}`;
         } catch (error) {
             console.error('Error creating playground fact:', error);
-            setError('Failed to create playground. Please try again.');
+            setActionError('Failed to create playground. Please try again.');
         } finally {
-            setIsLoading(false);
+            setActionLoading(false);
         }
     };
 
     const handleJoinPlayground = async () => {
         if (!user || !tenant) {
-            setError('User or tenant not available. Please try logging in again.');
+            setActionError('User or tenant not available. Please try logging in again.');
             return;
         }
 
         if (playgroundCode.length !== 6) {
-            setError('Please enter a valid 6-letter playground code.');
+            setActionError('Please enter a valid 6-letter playground code.');
             return;
         }
 
-        setIsLoading(true);
-        setError(null);
+        setActionLoading(true);
+        setActionError(null);
 
         try {
             // Create a playground fact when joining
@@ -76,9 +76,9 @@ export function usePlayground(): PlaygroundViewModel {
             window.location.href = `/playground/${playgroundCode}`;
         } catch (error) {
             console.error('Error creating playground fact:', error);
-            setError('Failed to join playground. Please check the code and try again.');
+            setActionError('Failed to join playground. Please check the code and try again.');
         } finally {
-            setIsLoading(false);
+            setActionLoading(false);
         }
     };
 
@@ -87,8 +87,8 @@ export function usePlayground(): PlaygroundViewModel {
     return {
         playgroundCode,
         canJoinPlayground,
-        error,
-        isLoading,
+        error: actionError,
+        isLoading: actionLoading,
         handleStartPlayground,
         handleJoinPlayground,
         setPlaygroundCode,

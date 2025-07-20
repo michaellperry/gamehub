@@ -20,11 +20,26 @@ export default function HomePage() {
                             </Typography>
                         </div>
 
+                        {/* Player Name Error Display */}
+                        {playerName.error && (
+                            <Alert
+                                variant="error"
+                                title="Name Error"
+                                dismissible
+                                onDismiss={playerName.clearError}
+                                className="max-w-md mx-auto"
+                            >
+                                {playerName.error}
+                            </Alert>
+                        )}
+
                         <NameInput
                             value={playerName.playerName}
                             onSubmit={playerName.handleNameSubmit}
                             onCancel={playerName.handleCancel}
                             allowCancel={playerName.allowCancel}
+                            loading={playerName.loading}
+                            disabled={playerName.loading}
                         />
                     </div>
                 </Container>

@@ -7,6 +7,8 @@ export interface NameInputProps {
     onCancel?: () => void;
     allowCancel?: boolean;
     className?: string;
+    loading?: boolean;
+    disabled?: boolean;
 }
 
 export const NameInput: React.FC<NameInputProps> = ({
@@ -15,6 +17,8 @@ export const NameInput: React.FC<NameInputProps> = ({
     onCancel,
     allowCancel = false,
     className = '',
+    loading = false,
+    disabled = false,
 }) => {
     const [name, setName] = useState(value);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -32,7 +36,7 @@ export const NameInput: React.FC<NameInputProps> = ({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (name.trim()) {
+        if (name.trim() && !loading && !disabled) {
             onSubmit(name.trim());
         }
     };
@@ -56,12 +60,13 @@ export const NameInput: React.FC<NameInputProps> = ({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Your name"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                         autoComplete="off"
                         autoFocus
                         required
                         minLength={1}
                         maxLength={20}
+                        disabled={loading || disabled}
                     />
                 </div>
                 {allowCancel ? (
@@ -71,7 +76,8 @@ export const NameInput: React.FC<NameInputProps> = ({
                             variant="primary"
                             size="lg"
                             className="flex-1"
-                            disabled={!name.trim()}
+                            loading={loading}
+                            disabled={!name.trim() || loading || disabled}
                         >
                             OK
                         </Button>
@@ -81,6 +87,7 @@ export const NameInput: React.FC<NameInputProps> = ({
                             size="lg"
                             className="flex-1"
                             onClick={handleCancel}
+                            disabled={loading || disabled}
                         >
                             Cancel
                         </Button>
@@ -91,7 +98,8 @@ export const NameInput: React.FC<NameInputProps> = ({
                         variant="primary"
                         size="lg"
                         fullWidth
-                        disabled={!name.trim()}
+                        loading={loading}
+                        disabled={!name.trim() || loading || disabled}
                     >
                         Continue
                     </Button>
