@@ -1,44 +1,19 @@
-import { useEffect, useState } from 'react';
 import { Button, Card, Container, Icon, PageLayout, Typography } from '../components/atoms';
 import { CodeInput, NameInput } from '../components/molecules';
+import { useHomePage } from '../hooks/useHomePage';
 
 export default function HomePage() {
-    const [playerName, setPlayerName] = useState<string>('');
-    const [playgroundCode, setPlaygroundCode] = useState<string>('');
-    const [showNameInput, setShowNameInput] = useState<boolean>(true);
-
-    // Load player name from localStorage on component mount
-    useEffect(() => {
-        const savedName = localStorage.getItem('gamehub-player-name');
-        if (savedName) {
-            setPlayerName(savedName);
-            setShowNameInput(false);
-        }
-    }, []);
-
-    const handleNameSubmit = (name: string) => {
-        setPlayerName(name);
-        localStorage.setItem('gamehub-player-name', name);
-        setShowNameInput(false);
-    };
-
-    const handleStartPlayground = () => {
-        // Generate a random 6-letter code
-        const code = Array.from({ length: 6 }, () =>
-            String.fromCharCode(65 + Math.floor(Math.random() * 26))
-        ).join('');
-
-        // Navigate to the playground
-        window.location.href = `/playground/${code}`;
-    };
-
-    const handleJoinPlayground = () => {
-        if (playgroundCode.length === 6) {
-            window.location.href = `/playground/${playgroundCode}`;
-        }
-    };
-
-    const canJoinPlayground = playgroundCode.length === 6;
+    const {
+        playerName,
+        playgroundCode,
+        showNameInput,
+        canJoinPlayground,
+        handleNameSubmit,
+        handleStartPlayground,
+        handleJoinPlayground,
+        setPlaygroundCode,
+        setShowNameInput,
+    } = useHomePage();
 
     if (showNameInput) {
         return (
