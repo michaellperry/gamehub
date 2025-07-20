@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { fetchPublicKeys } from "../services/relayService";
-import { RawService } from "./useServicePrincipals";
+import { useEffect, useState } from 'react';
+import { fetchPublicKeys } from '../services/relayService';
+import { RawService } from './useServicePrincipals';
 
 const relayServiceUrl = import.meta.env.VITE_RELAY_SERVICE_URL;
 

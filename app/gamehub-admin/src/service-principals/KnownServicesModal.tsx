@@ -52,10 +52,11 @@ const ServiceItem: React.FC<ServiceItemProps> = ({ service, isSelected, onToggle
                         <div className="flex items-center space-x-2">
                             <label
                                 htmlFor={`service-${service.serviceName}`}
-                                className={`text-sm font-medium ${service.alreadyExists
-                                    ? 'text-gray-400 dark:text-gray-500'
-                                    : 'text-gray-900 dark:text-gray-100'
-                                    } ${service.alreadyExists ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`text-sm font-medium ${
+                                    service.alreadyExists
+                                        ? 'text-gray-400 dark:text-gray-500'
+                                        : 'text-gray-900 dark:text-gray-100'
+                                } ${service.alreadyExists ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                             >
                                 {service.serviceName}
                             </label>
@@ -110,7 +111,9 @@ const KnownServicesModal: React.FC<KnownServicesModalProps> = ({
     onProvisionServices,
 }) => {
     const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
-    const [provisioningResult, setProvisioningResult] = useState<BulkProvisioningResult | null>(null);
+    const [provisioningResult, setProvisioningResult] = useState<BulkProvisioningResult | null>(
+        null
+    );
 
     // Reset state when modal opens/closes
     useEffect(() => {
@@ -120,8 +123,8 @@ const KnownServicesModal: React.FC<KnownServicesModalProps> = ({
         }
     }, [isOpen]);
 
-    const availableServices = knownServices.filter(service => !service.alreadyExists);
-    const existingServices = knownServices.filter(service => service.alreadyExists);
+    const availableServices = knownServices.filter((service) => !service.alreadyExists);
+    const existingServices = knownServices.filter((service) => service.alreadyExists);
 
     const handleToggleService = (serviceName: string) => {
         const newSelected = new Set(selectedServices);
@@ -134,7 +137,7 @@ const KnownServicesModal: React.FC<KnownServicesModalProps> = ({
     };
 
     const handleSelectAll = () => {
-        const allAvailable = new Set(availableServices.map(s => s.serviceName));
+        const allAvailable = new Set(availableServices.map((s) => s.serviceName));
         setSelectedServices(allAvailable);
     };
 
@@ -272,7 +275,9 @@ const KnownServicesModal: React.FC<KnownServicesModalProps> = ({
             title="Provision Known Services"
             size="lg"
             footer={
-                !knownServicesLoading && !knownServicesError && availableServices.length > 0 && (
+                !knownServicesLoading &&
+                !knownServicesError &&
+                availableServices.length > 0 && (
                     <div className="sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
                         <Button
                             variant="primary"
@@ -283,8 +288,7 @@ const KnownServicesModal: React.FC<KnownServicesModalProps> = ({
                         >
                             {bulkProvisioningLoading
                                 ? 'Provisioning...'
-                                : `Provision ${selectedServices.size} Service${selectedServices.size !== 1 ? 's' : ''}`
-                            }
+                                : `Provision ${selectedServices.size} Service${selectedServices.size !== 1 ? 's' : ''}`}
                         </Button>
                         <Button
                             variant="secondary"
@@ -315,11 +319,16 @@ const KnownServicesModal: React.FC<KnownServicesModalProps> = ({
                                 title="Provisioning Failed"
                                 message={
                                     <div>
-                                        <p className="mb-2">Failed to provision {provisioningResult.failed.length} service{provisioningResult.failed.length !== 1 ? 's' : ''}:</p>
+                                        <p className="mb-2">
+                                            Failed to provision {provisioningResult.failed.length}{' '}
+                                            service
+                                            {provisioningResult.failed.length !== 1 ? 's' : ''}:
+                                        </p>
                                         <ul className="list-disc list-inside space-y-1">
                                             {provisioningResult.failed.map((failure, index) => (
                                                 <li key={index} className="text-sm">
-                                                    <strong>{failure.serviceName}:</strong> {failure.error}
+                                                    <strong>{failure.serviceName}:</strong>{' '}
+                                                    {failure.error}
                                                 </li>
                                             ))}
                                         </ul>

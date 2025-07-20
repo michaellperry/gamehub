@@ -1,0 +1,365 @@
+---
+description: "GameHub frontend development standards for React admin portal, status dashboard, and setup wizard using Atomic Design methodology. Includes React 18 with TypeScript, TailwindCSS styling, Jinaga real-time data integration, component composition patterns, design system with atoms/molecules/organisms, accessibility-first principles, responsive design, theme support, and comprehensive styling guidelines for consistent UI development."
+alwaysApply: false
+---
+# Frontend Development Guidelines
+
+## React Admin Portal (`app/gamehub-admin/`)
+
+### Project Structure
+- **[src/](app/gamehub-admin/src/)** - Main source code
+  - **[components/](app/gamehub-admin/src/components/)** - Reusable UI components
+  - **[auth/](app/gamehub-admin/src/auth/)** - Authentication logic
+  - **[services/](app/gamehub-admin/src/services/)** - API service layer
+  - **[config/](app/gamehub-admin/src/config/)** - Configuration management
+  - **[frame/](app/gamehub-admin/src/frame/)** - Application frame/layout
+  - **[theme/](app/gamehub-admin/src/theme/)** - Styling and theming
+  - **[styles/](app/gamehub-admin/src/styles/)** - Global styles
+
+### Key Files
+- **[main.tsx](app/gamehub-admin/src/main.tsx)** - Application entry point
+- **[App.tsx](app/gamehub-admin/src/App.tsx)** - Main application component
+- **[jinaga-config.ts](app/gamehub-admin/src/jinaga-config.ts)** - Jinaga client configuration
+- **[index.css](app/gamehub-admin/src/index.css)** - Global styles
+
+### Technology Stack
+- **Vite** - Build tool and dev server
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **TailwindCSS** - Utility-first CSS framework
+- **Jinaga** - Real-time data synchronization
+
+### Development Patterns
+
+1. **Component Structure**: Use functional components with hooks
+2. **TypeScript**: Strict typing for all components and functions
+3. **Styling**: TailwindCSS utility classes, custom CSS in `styles/`
+4. **State Management**: React hooks + Jinaga for real-time data
+5. **Authentication**: OAuth 2.0 with FusionAuth integration
+
+## Status Dashboard (`mesh/nginx/html/status/`)
+
+### Key Files
+- **[app.js](mesh/nginx/html/status/app.js)** - Main dashboard logic (vanilla JavaScript)
+- **[index.html](mesh/nginx/html/status/index.html)** - Dashboard HTML structure
+- **[styles.css](mesh/nginx/html/status/styles.css)** - Dashboard styling
+
+### Features
+- Real-time service monitoring via HTTP polling
+- Bundle discovery and configuration checking
+- Connection status indicators
+- Auto-refresh with manual controls
+- Error handling and retry logic
+
+### Development Notes
+- Uses vanilla JavaScript (no framework)
+- HTTP polling-based monitoring
+- Modular class-based architecture
+- Bundle manager for service discovery
+- Tooltip system for detailed information
+
+## Setup Wizard (`mesh/nginx/html/setup/`)
+
+- Static HTML/JS application for initial configuration
+- FusionAuth setup and tenant creation
+- Service configuration and validation
+
+## Coding Standards
+
+### React Components
+```typescript
+// Use functional components with TypeScript
+interface ComponentProps {
+  title: string;
+  onAction: () => void;
+}
+
+export const MyComponent: React.FC<ComponentProps> = ({ title, onAction }) => {
+  return (
+    <div className="p-4 bg-white rounded-lg shadow">
+      <h2 className="text-xl font-semibold">{title}</h2>
+      <button onClick={onAction} className="btn-primary">
+        Action
+      </button>
+    </div>
+  );
+};
+```
+
+### Jinaga Integration
+```typescript
+// Use Jinaga for real-time data
+import { useJinaga } from '../jinaga-config';
+
+const MyComponent = () => {
+  const { jinaga } = useJinaga();
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    return jinaga.observe(factType, (facts) => {
+      setData(facts);
+    });
+  }, [jinaga]);
+
+  return <div>{/* render data */}</div>;
+};
+```
+
+## Atomic Design System
+
+GameHub uses Atomic Design methodology to create a consistent, reusable, and maintainable design system. The design system is organized into atoms, molecules, and organisms.
+
+### Design System Structure
+
+#### **Atoms** (`src/components/atoms/`)
+Basic building blocks of the UI:
+- **Button**: Primary action component with variants (primary, secondary, danger, text)
+- **Icon**: SVG icon component with standardized API
+- **Card**: Container component for grouping related content
+- **Alert**: Notification component for displaying messages
+- **Avatar**: User profile image component
+- **LoadingIndicator**: Spinner and loading states
+- **ImageUploader**: File upload component
+
+#### **Molecules** (`src/components/molecules/`)
+Combinations of atoms that form more complex UI components:
+- **Modal**: Dialog component with backdrop and focus management
+- **FormField**: Input field with label and validation
+- **PageHeader**: Page title and action buttons
+- **ListItem**: List item with consistent spacing
+- **EmptyState**: Empty state with illustration and message
+- **LogoUploader**: Specialized image uploader for logos
+
+#### **Organisms** (`src/components/organisms/`)
+Complex UI components composed of molecules and atoms:
+- **ResourceList**: Complete list component with search and pagination
+
+### Design System Usage
+
+#### Importing Components
+```typescript
+// Import atomic components
+import { Button, Card, Icon, Alert } from './components/atoms';
+
+// Import molecular components
+import { Modal, FormField, PageHeader } from './components/molecules';
+
+// Import organism components
+import { ResourceList } from './components/organisms';
+```
+
+#### Component Variants
+```typescript
+// Button with variants
+<Button variant="primary" size="md" icon="plus">
+  Create New
+</Button>
+
+<Button variant="secondary" size="sm">
+  Cancel
+</Button>
+
+<Button variant="danger" size="lg">
+  Delete
+</Button>
+```
+
+### Design Tokens
+
+Design tokens are defined in `src/theme/tokens.js` and extend Tailwind's default theme:
+
+#### Colors
+```javascript
+export const colors = {
+  primary: {
+    50: '#eff6ff',
+    100: '#dbeafe',
+    // ... full palette
+    900: '#1e3a8a',
+  },
+  // Dark theme colors
+  'dark-surface': '#1f2937',
+  'dark-border': '#374151',
+};
+```
+
+#### Typography
+```javascript
+export const typography = {
+  fontFamily: {
+    sans: ['Inter', 'system-ui', 'sans-serif'],
+    mono: ['Fira Code', 'monospace'],
+  },
+  fontSize: {
+    xs: ['0.75rem', { lineHeight: '1rem' }],
+    sm: ['0.875rem', { lineHeight: '1.25rem' }],
+    // ... more sizes
+  },
+};
+```
+
+### TailwindCSS Integration
+
+#### Custom Component Classes
+Define reusable component classes using `@layer components`:
+
+```css
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
+  }
+  
+  .card-base {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
+  }
+}
+```
+
+#### Theme Configuration
+```javascript
+// tailwind.config.js
+import { colors, typography, spacing, borderRadius, shadows } from './src/theme/tokens.js';
+
+export default {
+  theme: {
+    extend: {
+      colors,
+      fontFamily: typography.fontFamily,
+      fontSize: typography.fontSize,
+      spacing,
+      borderRadius,
+      boxShadow: shadows,
+    },
+  },
+};
+```
+
+### Design System Principles
+
+#### 1. **Consistency Over Customization**
+- Use design system components instead of custom TailwindCSS classes
+- Maintain consistent spacing, colors, and typography
+- Follow established patterns for similar UI elements
+
+#### 2. **Component Composition**
+- Build complex components by composing simpler ones
+- Prefer composition over inheritance
+- Keep components focused and single-purpose
+
+#### 3. **Accessibility First**
+- All components must be accessible
+- Include proper ARIA attributes
+- Support keyboard navigation
+- Provide screen reader support
+
+#### 4. **Responsive Design**
+- Components should work on all screen sizes
+- Use Tailwind's responsive prefixes
+- Test on mobile, tablet, and desktop
+
+#### 5. **Theme Support**
+- Components should support both light and dark themes
+- Use semantic color tokens
+- Test components in both themes
+
+### Styling Guidelines
+
+#### **Prefer Design System Over Custom CSS**
+- Use design system components instead of custom TailwindCSS classes
+- Minimize the number of TailwindCSS rules in application components
+- Concentrate styling in design system variants
+
+#### **When to Use Custom Classes**
+- Only for truly unique layouts not covered by the design system
+- For page-specific styling that won't be reused
+- For temporary styling during development (refactor to design system later)
+
+#### **Component Variants**
+```typescript
+// Good: Use design system variants
+<Button variant="primary" size="md">Submit</Button>
+
+// Avoid: Custom TailwindCSS classes
+<button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+  Submit
+</button>
+```
+
+#### **Responsive Design**
+- Use mobile-first approach
+- Test components at all breakpoints
+- Use Tailwind's responsive utilities consistently
+
+#### **Theme Support**
+- Use semantic color tokens (primary, secondary, gray)
+- Support both light and dark themes
+- Test components in both themes
+
+### Adding New Components
+
+#### 1. **Determine Component Level**
+- **Atom**: Basic UI element (Button, Icon, Input)
+- **Molecule**: Combination of atoms (Modal, FormField)
+- **Organism**: Complex section (ResourceList, Navigation)
+
+#### 2. **Create Component Structure**
+```typescript
+// src/components/atoms/NewComponent.tsx
+import React from 'react';
+
+export interface NewComponentProps {
+  // Define props with TypeScript
+  variant?: 'default' | 'primary' | 'secondary';
+  size?: 'sm' | 'md' | 'lg';
+  children: React.ReactNode;
+}
+
+const NewComponent: React.FC<NewComponentProps> = ({
+  variant = 'default',
+  size = 'md',
+  children,
+  ...props
+}) => {
+  // Component implementation
+};
+
+export default NewComponent;
+```
+
+#### 3. **Export from Index**
+```typescript
+// src/components/atoms/index.ts
+export { default as NewComponent } from './NewComponent';
+```
+
+#### 4. **Add to Style Guide**
+Update `StyleGuide.tsx` to showcase the new component with all variants.
+
+### Icon System
+
+Icons are managed through the `Icon` component:
+
+```typescript
+// Using icons
+<Icon name="plus" size={18} className="text-gray-500" />
+
+// Available icon names
+type IconName = 'plus' | 'minus' | 'edit' | 'delete' | 'loading' | /* ... */;
+```
+
+### Color System
+
+Use semantic color tokens:
+- **Primary**: Primary actions and branding
+- **Secondary**: Secondary actions and UI elements  
+- **Gray**: Text, backgrounds, and borders
+- **Semantic**: Red (error), Yellow (warning), Green (success), Blue (info)
+
+### Typography System
+
+Standardized text styles:
+- **Heading 1**: `text-3xl font-bold text-gray-900`
+- **Heading 2**: `text-2xl font-semibold text-gray-900`
+- **Heading 3**: `text-lg font-medium text-gray-900`
+- **Body Text**: `text-base text-gray-700`
+- **Small Text**: `text-sm text-gray-500`

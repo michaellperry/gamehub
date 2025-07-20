@@ -1,33 +1,28 @@
 {
-  "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "target": "ES2020",
-    "lib": ["ES2020"],
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "resolveJsonModule": true,
-    "declaration": false,
-    "declarationMap": false,
-    "sourceMap": true,
-    "strict": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "noEmit": false,
-    "baseUrl": ".",
-    "paths": {
-      "gamehub-model": ["./node_modules/gamehub-model/dist/types/index"],
-      "gamehub-model/*": ["./node_modules/gamehub-model/dist/types/*"]
-    }
-  },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+    "compilerOptions": {
+        "outDir": "./dist",
+        "rootDir": "./src",
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "target": "ES2020",
+        "lib": ["ES2020"],
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "resolveJsonModule": true,
+        "declaration": false,
+        "declarationMap": false,
+        "sourceMap": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": true,
+        "noEmit": false,
+        "baseUrl": ".",
+        "paths": {
+            "gamehub-model": ["./node_modules/gamehub-model/dist/types/index"],
+            "gamehub-model/*": ["./node_modules/gamehub-model/dist/types/*"]
+        }
+    },
+    "include": ["src/**/*"],
+    "exclude": ["node_modules", "dist"]
 }

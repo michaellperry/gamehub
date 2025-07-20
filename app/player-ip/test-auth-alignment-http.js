@@ -2,7 +2,7 @@
 
 /**
  * GameHub Authentication & Authorization Alignment Test Suite
- * 
+ *
  * This test suite verifies that player-ip authentication and authorization
  * implementation aligns with the existing GameHub architecture by testing
  * the actual HTTP endpoints and service integration.
@@ -24,19 +24,19 @@ const TEST_CONFIG = {
     serviceIpUrl: 'http://localhost:8083',
     testDbPath: path.join(__dirname, 'test-data', 'test-auth-alignment.db'),
     timeout: 30000,
-    
+
     // OAuth 2.0 test client configuration
     testClient: {
         client_id: 'test-gamehub-admin',
         redirect_uri: 'http://localhost:3001/auth/callback',
-        scope: 'openid profile offline_access'
+        scope: 'openid profile offline_access',
     },
-    
+
     // Expected JWT claims for GameHub integration
     expectedJwtClaims: {
         iss: 'player-ip',
-        aud: 'gamehub-players'
-    }
+        aud: 'gamehub-players',
+    },
 };
 
 // Colors for console output
@@ -47,15 +47,14 @@ const colors = {
     yellow: '\x1b[33m',
     blue: '\x1b[34m',
     magenta: '\x1b[35m',
-    cyan: '\x1b[36m'
+    cyan: '\x1b[36m',
 };
 
 class AuthAlignmentTestRunner {
     constructor() {
         this.results = [];
+        this.server = null;
         this.serverProcess = null;
-        this.testGapId = null;
-        this.testCookieValue = null;
     }
 
     log(message, color = colors.reset) {
@@ -68,9 +67,9 @@ class AuthAlignmentTestRunner {
             status,
             details,
             error: error?.message || null,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
-        
+
         if (status === 'PASSED') {
             this.log(`✅ ${name}: ${details}`, colors.green);
         } else {
@@ -79,7 +78,7 @@ class AuthAlignmentTestRunner {
                 this.log(`   Error: ${error.message}`, colors.red);
             }
         }
-        
+
         this.results.push(result);
     }
 
@@ -92,7 +91,7 @@ class AuthAlignmentTestRunner {
         return {
             codeVerifier,
             codeChallenge,
-            codeChallengeMethod: 'S256'
+            codeChallengeMethod: 'S256',
         };
     }
 
@@ -101,7 +100,7 @@ class AuthAlignmentTestRunner {
      */
     async setupTestEnvironment() {
         this.log('\n🔧 Setting up test environment...', colors.blue);
-        
+
         try {
             // Ensure test data directory exists
             const testDataDir = path.join(__dirname, 'test-data');
@@ -122,10 +121,18 @@ class AuthAlignmentTestRunner {
             process.env.CORS_ORIGIN = '*';
             process.env.SKIP_JINAGA_SUBSCRIPTION = 'true';
 
-            this.logTest('Test Environment Setup', 'PASSED', 'Test environment configured successfully');
-            
+            this.logTest(
+                'Test Environment Setup',
+                'PASSED',
+                'Test environment configured successfully'
+            );
         } catch (error) {
-            this.logTest('Test Environment Setup', 'FAILED', 'Failed to setup test environment', error);
+            this.logTest(
+                'Test Environment Setup',
+                'FAILED',
+                'Failed to setup test environment',
+                error
+            );
             throw error;
         }
     }
@@ -135,14 +142,14 @@ class AuthAlignmentTestRunner {
      */
     async startServer() {
         this.log('\n🚀 Starting player-ip server...', colors.blue);
-        
+
         return new Promise((resolve, reject) => {
             const serverPath = path.join(__dirname, 'src', 'server.ts');
-            
+
             // Use tsx to run TypeScript directly
             this.serverProcess = spawn('npx', ['tsx', serverPath], {
                 env: { ...process.env },
-                stdio: ['pipe', 'pipe', 'pipe']
+                stdio: ['pipe', 'pipe', 'pipe'],
             });
 
             let serverReady = false;
@@ -155,11 +162,18 @@ class AuthAlignmentTestRunner {
 
             this.serverProcess.stdout.on('data', (data) => {
                 const output = data.toString();
-                if (output.includes('Server running on port') || output.includes('listening on port')) {
+                if (
+                    output.includes('Server running on port') ||
+                    output.includes('listening on port')
+                ) {
                     if (!serverReady) {
                         serverReady = true;
                         clearTimeout(timeout);
-                        this.logTest('Server Startup', 'PASSED', 'Player-IP server started successfully');
+                        this.logTest(
+                            'Server Startup',
+                            'PASSED',
+                            'Player-IP server started successfully'
+                        );
                         // Wait a bit more for full initialization
                         setTimeout(resolve, 2000);
                     }
@@ -199,11 +213,11 @@ class AuthAlignmentTestRunner {
      */
     async testHealthCheck() {
         this.log('\n🏥 Testing Health Check and Basic Connectivity...', colors.cyan);
-        
+
         try {
             const response = await fetch(`${TEST_CONFIG.playerIpUrl}/health`, {
                 method: 'GET',
-                headers: { 'Accept': 'application/json' }
+                headers: { Accept: 'application/json' },
             });
 
             if (!response.ok) {
@@ -211,24 +225,14 @@ class AuthAlignmentTestRunner {
             }
 
             const data = await response.json();
-            
+
             if (data.status !== 'ok') {
                 throw new Error(`Unexpected health status: ${data.status}`);
             }
 
-            this.logTest(
-                'Health Check Endpoint',
-                'PASSED',
-                `Service is healthy: ${data.status}`
-            );
-
+            this.logTest('Health Check Endpoint', 'PASSED', `Service is healthy: ${data.status}`);
         } catch (error) {
-            this.logTest(
-                'Health Check Endpoint',
-                'FAILED',
-                'Health check endpoint failed',
-                error
-            );
+            this.logTest('Health Check Endpoint', 'FAILED', 'Health check endpoint failed', error);
         }
     }
 
@@ -237,13 +241,11 @@ class AuthAlignmentTestRunner {
      */
     async testOAuthPKCEFlow() {
         this.log('\n🔐 Testing OAuth 2.0 + PKCE Authentication Flow...', colors.cyan);
-        
+
         try {
             // First, we need to create a test GAP
-            await this.createTestGAP();
-            
             const pkce = this.generatePKCE();
-            
+
             // Test authentication endpoint with PKCE
             const authUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
             authUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
@@ -252,12 +254,11 @@ class AuthAlignmentTestRunner {
             authUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
             authUrl.searchParams.set('code_challenge', pkce.codeChallenge);
             authUrl.searchParams.set('code_challenge_method', pkce.codeChallengeMethod);
-            authUrl.searchParams.set('gap_id', this.testGapId);
             authUrl.searchParams.set('state', 'test-state-123');
 
             const authResponse = await fetch(authUrl.toString(), {
                 method: 'GET',
-                redirect: 'manual' // Don't follow redirects automatically
+                redirect: 'manual', // Don't follow redirects automatically
             });
 
             // Should either redirect (302) or show a page (200)
@@ -283,7 +284,10 @@ class AuthAlignmentTestRunner {
             } else {
                 // Check if it's the QR code page or authentication page
                 const responseText = await authResponse.text();
-                if (responseText.includes('QR Code Required') || responseText.includes('authentication')) {
+                if (
+                    responseText.includes('QR Code Required') ||
+                    responseText.includes('authentication')
+                ) {
                     this.logTest(
                         'OAuth 2.0 Authentication Page',
                         'PASSED',
@@ -293,7 +297,6 @@ class AuthAlignmentTestRunner {
                     throw new Error('Unexpected authentication response');
                 }
             }
-
         } catch (error) {
             this.logTest(
                 'OAuth 2.0 + PKCE Flow',
@@ -309,12 +312,12 @@ class AuthAlignmentTestRunner {
      */
     async testJWTTokenStructure() {
         this.log('\n🎫 Testing JWT Token Structure and Claims...', colors.cyan);
-        
+
         try {
             // We'll test this by examining the JWT utility functions through the database
             // Since we can't easily get a token without completing the full OAuth flow,
             // we'll test the token structure by checking the configuration
-            
+
             const configResponse = await fetch(`${TEST_CONFIG.playerIpUrl}/health`);
             if (!configResponse.ok) {
                 throw new Error('Cannot verify JWT configuration');
@@ -323,13 +326,17 @@ class AuthAlignmentTestRunner {
             // Check that JWT configuration environment variables are properly set
             const expectedIssuer = process.env.JWT_ISSUER || 'player-ip';
             const expectedAudience = process.env.JWT_AUDIENCE || 'gamehub-players';
-            
+
             if (expectedIssuer !== TEST_CONFIG.expectedJwtClaims.iss) {
-                throw new Error(`JWT issuer mismatch: expected ${TEST_CONFIG.expectedJwtClaims.iss}, got ${expectedIssuer}`);
+                throw new Error(
+                    `JWT issuer mismatch: expected ${TEST_CONFIG.expectedJwtClaims.iss}, got ${expectedIssuer}`
+                );
             }
-            
+
             if (expectedAudience !== TEST_CONFIG.expectedJwtClaims.aud) {
-                throw new Error(`JWT audience mismatch: expected ${TEST_CONFIG.expectedJwtClaims.aud}, got ${expectedAudience}`);
+                throw new Error(
+                    `JWT audience mismatch: expected ${TEST_CONFIG.expectedJwtClaims.aud}, got ${expectedAudience}`
+                );
             }
 
             this.logTest(
@@ -337,7 +344,6 @@ class AuthAlignmentTestRunner {
                 'PASSED',
                 `JWT configured for GameHub: iss=${expectedIssuer}, aud=${expectedAudience}`
             );
-
         } catch (error) {
             this.logTest(
                 'JWT Token Structure',
@@ -353,22 +359,28 @@ class AuthAlignmentTestRunner {
      */
     async testCORSConfiguration() {
         this.log('\n🌐 Testing CORS Configuration...', colors.cyan);
-        
+
         try {
             // Test CORS preflight request
             const corsResponse = await fetch(`${TEST_CONFIG.playerIpUrl}/authenticate`, {
                 method: 'OPTIONS',
                 headers: {
-                    'Origin': 'http://localhost:3001',
+                    Origin: 'http://localhost:3001',
                     'Access-Control-Request-Method': 'GET',
-                    'Access-Control-Request-Headers': 'Content-Type'
-                }
+                    'Access-Control-Request-Headers': 'Content-Type',
+                },
             });
 
             const corsHeaders = {
-                'access-control-allow-origin': corsResponse.headers.get('access-control-allow-origin'),
-                'access-control-allow-methods': corsResponse.headers.get('access-control-allow-methods'),
-                'access-control-allow-headers': corsResponse.headers.get('access-control-allow-headers')
+                'access-control-allow-origin': corsResponse.headers.get(
+                    'access-control-allow-origin'
+                ),
+                'access-control-allow-methods': corsResponse.headers.get(
+                    'access-control-allow-methods'
+                ),
+                'access-control-allow-headers': corsResponse.headers.get(
+                    'access-control-allow-headers'
+                ),
             };
 
             // Check if CORS is properly configured
@@ -381,14 +393,8 @@ class AuthAlignmentTestRunner {
                 'PASSED',
                 `CORS properly configured: origin=${corsHeaders['access-control-allow-origin']}`
             );
-
         } catch (error) {
-            this.logTest(
-                'CORS Configuration',
-                'FAILED',
-                'CORS configuration test failed',
-                error
-            );
+            this.logTest('CORS Configuration', 'FAILED', 'CORS configuration test failed', error);
         }
     }
 
@@ -397,21 +403,24 @@ class AuthAlignmentTestRunner {
      */
     async testServiceToServiceConfig() {
         this.log('\n🔗 Testing Service-to-Service Configuration...', colors.cyan);
-        
+
         try {
             // Check if service-ip client configuration exists
-            const clientConfigPath = path.join(__dirname, '../../mesh/secrets/service-ip/clients/player-ip.json');
-            
+            const clientConfigPath = path.join(
+                __dirname,
+                '../../mesh/secrets/service-ip/clients/player-ip.json'
+            );
+
             if (!fs.existsSync(clientConfigPath)) {
                 throw new Error('Service-IP client configuration not found');
             }
-            
+
             const clientConfig = JSON.parse(fs.readFileSync(clientConfigPath, 'utf-8'));
-            
+
             if (clientConfig.client_id !== 'player-ip') {
                 throw new Error('Invalid client configuration');
             }
-            
+
             if (!clientConfig.grant_types.includes('client_credentials')) {
                 throw new Error('Client credentials grant type not configured');
             }
@@ -421,7 +430,6 @@ class AuthAlignmentTestRunner {
                 'PASSED',
                 `Service client configured: ${clientConfig.name}`
             );
-
         } catch (error) {
             this.logTest(
                 'Service-to-Service Configuration',
@@ -433,113 +441,75 @@ class AuthAlignmentTestRunner {
     }
 
     /**
-     * Test 6: GAP (Game Access Path) Integration
-     */
-    async testGAPIntegration() {
-        this.log('\n🎮 Testing GAP Integration...', colors.cyan);
-        
-        try {
-            // Test that GAP creation and retrieval works through the database
-            // This tests the integration with the GameHub model
-            
-            if (!this.testGapId) {
-                await this.createTestGAP();
-            }
-
-            // Verify GAP was created with correct structure
-            if (!this.testGapId || this.testGapId.length < 10) {
-                throw new Error('GAP creation failed - invalid GAP ID');
-            }
-
-            this.logTest(
-                'GAP Creation and Storage',
-                'PASSED',
-                `GAP created successfully: ${this.testGapId}`
-            );
-
-            // Test GAP-based authentication flow
-            const authUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
-            authUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
-            authUrl.searchParams.set('redirect_uri', TEST_CONFIG.testClient.redirect_uri);
-            authUrl.searchParams.set('response_type', 'code');
-            authUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
-            authUrl.searchParams.set('code_challenge', 'test-challenge');
-            authUrl.searchParams.set('code_challenge_method', 'S256');
-            authUrl.searchParams.set('gap_id', this.testGapId);
-
-            const gapAuthResponse = await fetch(authUrl.toString(), {
-                method: 'GET',
-                redirect: 'manual'
-            });
-
-            if (gapAuthResponse.status !== 302 && gapAuthResponse.status !== 200) {
-                throw new Error(`GAP authentication failed with status: ${gapAuthResponse.status}`);
-            }
-
-            this.logTest(
-                'GAP-based Authentication',
-                'PASSED',
-                'GAP-based authentication flow working correctly'
-            );
-
-        } catch (error) {
-            this.logTest(
-                'GAP Integration',
-                'FAILED',
-                'GAP integration test failed',
-                error
-            );
-        }
-    }
-
-    /**
-     * Test 7: Error Handling and Security
+     * Test 6: Error Handling and Security
      */
     async testErrorHandlingAndSecurity() {
-        this.log('\n🚨 Testing Error Handling and Security...', colors.cyan);
-        
+        this.log('\n🛡️ Testing Error Handling and Security...', colors.cyan);
+
         try {
-            // Test invalid OAuth parameters
-            const invalidAuthUrl = `${TEST_CONFIG.playerIpUrl}/authenticate?invalid=params`;
-            const invalidResponse = await fetch(invalidAuthUrl);
-            
-            if (invalidResponse.status !== 400) {
-                throw new Error(`Expected 400 for invalid parameters, got ${invalidResponse.status}`);
+            // Test missing required parameters
+            const missingParamsUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
+            missingParamsUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
+            // Intentionally omit required parameters
+
+            const missingParamsResponse = await fetch(missingParamsUrl.toString(), {
+                method: 'GET',
+                redirect: 'manual',
+            });
+
+            if (missingParamsResponse.status !== 400) {
+                throw new Error(`Expected 400 for missing parameters, got ${missingParamsResponse.status}`);
             }
 
             this.logTest(
-                'Invalid Parameter Handling',
+                'Missing Parameters Validation',
                 'PASSED',
-                'Invalid OAuth parameters properly rejected'
+                'Properly validates required OAuth parameters'
             );
 
-            // Test missing GAP ID
-            const missingGapUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
-            missingGapUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
-            missingGapUrl.searchParams.set('redirect_uri', TEST_CONFIG.testClient.redirect_uri);
-            missingGapUrl.searchParams.set('response_type', 'code');
-            missingGapUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
-            missingGapUrl.searchParams.set('code_challenge', 'test-challenge');
-            missingGapUrl.searchParams.set('code_challenge_method', 'S256');
-            // Intentionally omit gap_id
+            // Test invalid response_type
+            const invalidResponseTypeUrl = new URL(`${TEST_CONFIG.playerIpUrl}/authenticate`);
+            invalidResponseTypeUrl.searchParams.set('client_id', TEST_CONFIG.testClient.client_id);
+            invalidResponseTypeUrl.searchParams.set('redirect_uri', TEST_CONFIG.testClient.redirect_uri);
+            invalidResponseTypeUrl.searchParams.set('response_type', 'invalid');
+            invalidResponseTypeUrl.searchParams.set('scope', TEST_CONFIG.testClient.scope);
+            invalidResponseTypeUrl.searchParams.set('code_challenge', 'test-challenge');
+            invalidResponseTypeUrl.searchParams.set('code_challenge_method', 'S256');
 
-            const missingGapResponse = await fetch(missingGapUrl.toString());
-            
-            if (missingGapResponse.status !== 400) {
-                throw new Error(`Expected 400 for missing GAP ID, got ${missingGapResponse.status}`);
-            }
+            const invalidResponseTypeResponse = await fetch(invalidResponseTypeUrl.toString(), {
+                method: 'GET',
+                redirect: 'manual',
+            });
 
-            const responseText = await missingGapResponse.text();
-            if (!responseText.includes('QR Code Required')) {
-                throw new Error('Missing GAP ID should show QR code page');
+            if (invalidResponseTypeResponse.status !== 400) {
+                throw new Error(`Expected 400 for invalid response_type, got ${invalidResponseTypeResponse.status}`);
             }
 
             this.logTest(
-                'Missing GAP ID Handling',
+                'Invalid Response Type Validation',
                 'PASSED',
-                'Missing GAP ID properly handled with user-friendly message'
+                'Properly validates response_type parameter'
             );
 
+            // Test CORS preflight
+            const corsResponse = await fetch(`${TEST_CONFIG.playerIpUrl}/authenticate`, {
+                method: 'OPTIONS',
+                headers: {
+                    Origin: 'http://localhost:3001',
+                    'Access-Control-Request-Method': 'GET',
+                    'Access-Control-Request-Headers': 'Content-Type',
+                },
+            });
+
+            if (corsResponse.status !== 200) {
+                throw new Error(`CORS preflight failed with status: ${corsResponse.status}`);
+            }
+
+            this.logTest(
+                'CORS Security',
+                'PASSED',
+                'CORS preflight requests handled correctly'
+            );
         } catch (error) {
             this.logTest(
                 'Error Handling and Security',
@@ -551,83 +521,64 @@ class AuthAlignmentTestRunner {
     }
 
     /**
-     * Helper: Create a test GAP for testing
-     */
-    async createTestGAP() {
-        try {
-            // Generate a test GAP ID
-            this.testGapId = `test-gap-${crypto.randomUUID()}`;
-            
-            // In a real implementation, this would create a GAP in the database
-            // For testing purposes, we'll simulate this by setting the ID
-            // The actual GAP creation would happen through the repository layer
-            
-            this.log(`📝 Created test GAP: ${this.testGapId}`, colors.yellow);
-            
-        } catch (error) {
-            throw new Error(`Failed to create test GAP: ${error.message}`);
-        }
-    }
-
-    /**
      * Generate comprehensive test report
      */
     generateTestReport() {
-        const passed = this.results.filter(r => r.status === 'PASSED').length;
-        const failed = this.results.filter(r => r.status === 'FAILED').length;
+        const passed = this.results.filter((r) => r.status === 'PASSED').length;
+        const failed = this.results.filter((r) => r.status === 'FAILED').length;
         const total = this.results.length;
         const successRate = total > 0 ? passed / total : 0;
 
         this.log('\n' + '='.repeat(80), colors.blue);
         this.log('🎯 GAMEHUB AUTHENTICATION & AUTHORIZATION ALIGNMENT REPORT', colors.blue);
         this.log('='.repeat(80), colors.blue);
-        
+
         this.log(`\n📊 Test Summary:`, colors.cyan);
         this.log(`   Total Tests: ${total}`);
         this.log(`   Passed: ${passed} (${Math.round(successRate * 100)}%)`, colors.green);
         this.log(`   Failed: ${failed} (${Math.round((1 - successRate) * 100)}%)`, colors.red);
-        
+
         if (failed > 0) {
             this.log(`\n❌ Failed Tests:`, colors.red);
             this.results
-                .filter(r => r.status === 'FAILED')
-                .forEach(result => {
+                .filter((r) => r.status === 'FAILED')
+                .forEach((result) => {
                     this.log(`   • ${result.name}: ${result.details}`, colors.red);
                     if (result.error) {
                         this.log(`     Error: ${result.error}`, colors.red);
                     }
                 });
         }
-        
+
         this.log(`\n✅ Passed Tests:`, colors.green);
         this.results
-            .filter(r => r.status === 'PASSED')
-            .forEach(result => {
+            .filter((r) => r.status === 'PASSED')
+            .forEach((result) => {
                 this.log(`   • ${result.name}: ${result.details}`, colors.green);
             });
-        
+
         // Alignment assessment
         let alignmentStatus, recommendation;
-        
+
         if (successRate >= 0.95) {
             alignmentStatus = '🟢 EXCELLENT ALIGNMENT';
             recommendation = 'APPROVED for production deployment';
         } else if (successRate >= 0.85) {
             alignmentStatus = '🟡 GOOD ALIGNMENT';
             recommendation = 'APPROVED with minor fixes recommended';
-        } else if (successRate >= 0.70) {
+        } else if (successRate >= 0.7) {
             alignmentStatus = '🟠 PARTIAL ALIGNMENT';
             recommendation = 'REQUIRES fixes before production deployment';
         } else {
             alignmentStatus = '🔴 POOR ALIGNMENT';
             recommendation = 'REQUIRES significant fixes before deployment';
         }
-        
+
         this.log(`\n🎯 GameHub Architecture Alignment: ${alignmentStatus}`, colors.magenta);
         this.log(`📋 Recommendation: ${recommendation}`, colors.magenta);
-        
+
         this.log('\n' + '='.repeat(80), colors.blue);
-        
+
         return { successRate, alignmentStatus, recommendation, results: this.results };
     }
 
@@ -635,27 +586,28 @@ class AuthAlignmentTestRunner {
      * Run all authentication alignment tests
      */
     async runAllTests() {
-        this.log('🚀 Starting GameHub Authentication & Authorization Alignment Tests...', colors.blue);
+        this.log(
+            '🚀 Starting GameHub Authentication & Authorization Alignment Tests...',
+            colors.blue
+        );
         this.log('='.repeat(80), colors.blue);
-        
+
         try {
             await this.setupTestEnvironment();
             await this.startServer();
-            
+
             // Run all test suites
             await this.testHealthCheck();
             await this.testOAuthPKCEFlow();
             await this.testJWTTokenStructure();
             await this.testCORSConfiguration();
             await this.testServiceToServiceConfig();
-            await this.testGAPIntegration();
             await this.testErrorHandlingAndSecurity();
-            
+
             // Generate final report
             const report = this.generateTestReport();
-            
+
             return report;
-            
         } catch (error) {
             this.log(`\n💥 Test execution failed: ${error.message}`, colors.red);
             throw error;
@@ -668,10 +620,11 @@ class AuthAlignmentTestRunner {
 // Run tests if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
     const testRunner = new AuthAlignmentTestRunner();
-    
-    testRunner.runAllTests()
+
+    testRunner
+        .runAllTests()
         .then((report) => {
-            process.exit(report.results.filter(r => r.status === 'FAILED').length > 0 ? 1 : 0);
+            process.exit(report.results.filter((r) => r.status === 'FAILED').length > 0 ? 1 : 0);
         })
         .catch((error) => {
             console.error('Test execution failed:', error);

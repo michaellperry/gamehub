@@ -24,23 +24,22 @@ export class PublicKeyService {
         const services: Record<string, PublicKeyServiceData> = {};
 
         // Get services that have public key endpoints
-        const servicesWithPublicKeys = Object.entries(this.relayConfig.services)
-            .filter(([, serviceConfig]) => serviceConfig.publicKeyEndpoint);
+        const servicesWithPublicKeys = Object.entries(this.relayConfig.services).filter(
+            ([, serviceConfig]) => serviceConfig.publicKeyEndpoint
+        );
 
         // Check all services with public key endpoints in parallel
-        const servicePromises = servicesWithPublicKeys.map(
-            async ([serviceId, serviceConfig]) => {
-                const publicKeyData = await this.fetchServicePublicKey(serviceConfig);
-                services[serviceId] = publicKeyData;
-            }
-        );
+        const servicePromises = servicesWithPublicKeys.map(async ([serviceId, serviceConfig]) => {
+            const publicKeyData = await this.fetchServicePublicKey(serviceConfig);
+            services[serviceId] = publicKeyData;
+        });
 
         // Wait for all checks to complete
         await Promise.allSettled([...servicePromises]);
 
         const response: PublicKeyResponse = {
             timestamp,
-            services
+            services,
         };
 
         // Cache the response
@@ -49,7 +48,9 @@ export class PublicKeyService {
         return response;
     }
 
-    private async fetchServicePublicKey(serviceConfig: ServiceConfig): Promise<PublicKeyServiceData> {
+    private async fetchServicePublicKey(
+        serviceConfig: ServiceConfig
+    ): Promise<PublicKeyServiceData> {
         const startTime = Date.now();
         const lastChecked = new Date().toISOString();
 
@@ -58,7 +59,7 @@ export class PublicKeyService {
             return {
                 lastChecked,
                 responseTime: 0,
-                error: 'Service does not provide public key endpoint'
+                error: 'Service does not provide public key endpoint',
             };
         }
 
@@ -75,16 +76,15 @@ export class PublicKeyService {
                 return {
                     publicKey: response.data.publicKey,
                     lastChecked,
-                    responseTime
+                    responseTime,
                 };
             } else {
                 return {
                     lastChecked,
                     responseTime,
-                    error: 'Invalid response format or missing public key'
+                    error: 'Invalid response format or missing public key',
                 };
             }
-
         } catch (error) {
             const responseTime = Date.now() - startTime;
             let errorMessage = 'Unknown error';
@@ -98,7 +98,7 @@ export class PublicKeyService {
             return {
                 lastChecked,
                 responseTime,
-                error: errorMessage
+                error: errorMessage,
             };
         }
     }
@@ -110,7 +110,7 @@ export class PublicKeyService {
             try {
                 const response = await axios.get(url, {
                     timeout,
-                    validateStatus: (status: number) => status < 500 // Accept 4xx as valid responses
+                    validateStatus: (status: number) => status < 500, // Accept 4xx as valid responses
                 });
                 return response;
             } catch (error) {
@@ -119,7 +119,9 @@ export class PublicKeyService {
                     // This is likely an axios error with a code property
                     const axiosError = error as any;
                     if (axiosError.code) {
-                        lastError = new Error(`${axiosError.code}${axiosError.address ? ' ' + axiosError.address : ''}${axiosError.port ? ':' + axiosError.port : ''}`);
+                        lastError = new Error(
+                            `${axiosError.code}${axiosError.address ? ' ' + axiosError.address : ''}${axiosError.port ? ':' + axiosError.port : ''}`
+                        );
                     } else {
                         lastError = error instanceof Error ? error : new Error('Unknown error');
                     }
@@ -130,7 +132,7 @@ export class PublicKeyService {
                 if (attempt < retries) {
                     // Exponential backoff: wait 100ms, 200ms, 400ms, etc.
                     const delay = 100 * Math.pow(2, attempt - 1);
-                    await new Promise(resolve => setTimeout(resolve, delay));
+                    await new Promise((resolve) => setTimeout(resolve, delay));
                 }
             }
         }

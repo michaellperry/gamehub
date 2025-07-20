@@ -32,94 +32,94 @@ const getUserIdByCookieStmt = db.prepare(`
  * Create a new user
  */
 export const createUser = (): User => {
-  const userId = uuidv4();
-  const now = new Date().toISOString();
-  
-  const user: User = {
-    id: userId,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
-  
-  createUserStmt.run(userId, now, now);
-  
-  return user;
+    const userId = uuidv4();
+    const now = new Date().toISOString();
+
+    const user: User = {
+        id: userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+
+    createUserStmt.run(userId, now, now);
+
+    return user;
 };
 
 /**
  * Get user by ID
  */
 export const getUserById = (userId: string): User | undefined => {
-  const row = getUserByIdStmt.get(userId) as any;
-  
-  if (!row) {
-    return undefined;
-  }
-  
-  return {
-    id: row.id,
-    identityCookie: row.identity_cookie,
-    email: row.email,
-    phoneNumber: row.phone_number,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at)
-  };
+    const row = getUserByIdStmt.get(userId) as any;
+
+    if (!row) {
+        return undefined;
+    }
+
+    return {
+        id: row.id,
+        identityCookie: row.identity_cookie,
+        email: row.email,
+        phoneNumber: row.phone_number,
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+    };
 };
 
 /**
  * Update user
  */
 export const updateUser = (user: User): User => {
-  user.updatedAt = new Date();
-  
-  updateUserStmt.run(
-    user.identityCookie || null,
-    user.email || null,
-    user.phoneNumber || null,
-    user.updatedAt.toISOString(),
-    user.id
-  );
-  
-  return user;
+    user.updatedAt = new Date();
+
+    updateUserStmt.run(
+        user.identityCookie || null,
+        user.email || null,
+        user.phoneNumber || null,
+        user.updatedAt.toISOString(),
+        user.id
+    );
+
+    return user;
 };
 
 /**
  * Store user identity
  */
 export const storeUserIdentity = (userId: string, cookieValue: string): UserIdentity => {
-  if (!userId || !cookieValue) {
-    throw new Error('User ID and cookie value are required');
-  }
+    if (!userId || !cookieValue) {
+        throw new Error('User ID and cookie value are required');
+    }
 
-  // Check if user exists
-  const user = getUserById(userId);
-  if (!user) {
-    throw new Error('User not found');
-  }
+    // Check if user exists
+    const user = getUserById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
 
-  // Begin transaction
-  const transaction = db.transaction(() => {
-    // Store mapping from cookie to user ID
-    storeUserIdentityStmt.run(cookieValue, userId);
+    // Begin transaction
+    const transaction = db.transaction(() => {
+        // Store mapping from cookie to user ID
+        storeUserIdentityStmt.run(cookieValue, userId);
 
-    // Update the user with the identity cookie
-    user.identityCookie = cookieValue;
-    updateUser(user);
-  });
+        // Update the user with the identity cookie
+        user.identityCookie = cookieValue;
+        updateUser(user);
+    });
 
-  // Execute transaction
-  transaction();
+    // Execute transaction
+    transaction();
 
-  return { userId, cookieValue };
+    return { userId, cookieValue };
 };
 
 /**
  * Get user ID by cookie
  */
 export const getUserIdByCookie = (cookieValue: string): string | null => {
-  if (!cookieValue) {
-    return null;
-  }
-  const row = getUserIdByCookieStmt.get(cookieValue) as any;
-  return row ? row.user_id : null;
+    if (!cookieValue) {
+        return null;
+    }
+    const row = getUserIdByCookieStmt.get(cookieValue) as any;
+    return row ? row.user_id : null;
 };

@@ -108,8 +108,6 @@ export class FileGenerator {
             // This file contains only the values that need to be customized per developer/deployment
             const containerLocalEnvContent = `# Developer-specific environment overrides for GameHub Admin
 # This file overrides values from .env.container
-
-VITE_CLIENT_ID=${appResult.clientId}
 `;
 
             // Environment file path - Updated for GameHub structure

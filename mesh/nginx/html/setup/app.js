@@ -8,7 +8,7 @@ class SetupWizard {
         this.pollingInterval = null;
         this.pollingDelay = 10000; // 10 seconds
         this.currentStep = 1;
-        this.totalSteps = 3;
+        this.totalSteps = 2;
         this.stepData = {};
         this.statusData = null;
         this.isConnected = false;
@@ -22,23 +22,16 @@ class SetupWizard {
             {
                 id: 1,
                 title: 'FusionAuth Configuration',
-                description: 'Configure OAuth applications and API keys',
+                description: 'Configure OAuth applications and API keys for admin and player apps',
                 estimatedTime: '15 minutes',
                 validationKey: 'fusionauth'
             },
             {
                 id: 2,
                 title: 'Tenant Creation',
-                description: 'Create tenant and configure public keys',
+                description: 'Create tenant and configure public keys for all services',
                 estimatedTime: '10 minutes',
                 validationKey: 'tenant'
-            },
-            {
-                id: 3,
-                title: 'Service Principal Authorization',
-                description: 'Authorize service principal for tenant access',
-                estimatedTime: '5 minutes',
-                validationKey: 'servicePrincipal'
             }
         ];
 
@@ -230,11 +223,17 @@ class SetupWizard {
         console.log('🔍 Starting bundle scanning...');
         const bundleStatuses = {};
 
-        // Bundle configurations for setup application - targeting admin portal
+        // Bundle configurations for setup application - targeting admin portal and player app
         const bundleConfigs = {
             'admin-portal': {
                 name: 'Admin Portal',
                 discoveryUrl: '/portal/',
+                discoveryMethod: 'html-parse',
+                configFunction: 'getConfigured'
+            },
+            'player-app': {
+                name: 'Player App',
+                discoveryUrl: '/player/',
                 discoveryMethod: 'html-parse',
                 configFunction: 'getConfigured'
             }
@@ -415,9 +414,6 @@ class SetupWizard {
             case 2:
                 this.renderTenantStep();
                 break;
-            case 3:
-                this.renderServicePrincipalStep();
-                break;
         }
     }
 
@@ -431,14 +427,14 @@ class SetupWizard {
                     <li><strong>Access FusionAuth admin interface</strong> at <a href="/auth/admin" target="_blank">http://localhost/auth/admin</a></li>
                     <li><strong>Create an API key</strong> with required permissions</li>
                     <li><strong>Run the FusionAuth setup script</strong> with your API key</li>
-                    <li><strong>Configure OAuth applications</strong> for the admin portal</li>
+                    <li><strong>Configure OAuth applications</strong> for both admin portal and player app</li>
                 </ol>
                 <div style="margin-top: 20px;">
                     <button class="action-button" onclick="setupWizard.promptForApiKey()">Enter API Key</button>
                     <a href="/auth/admin" target="_blank" class="action-button secondary">Open FusionAuth Admin</a>
                 </div>
                 <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when the Admin Portal client configuration group is true.</p>
+                    <p><strong>Validation:</strong> This step is complete when both Admin Portal and Player App client configuration groups are true.</p>
                 </div>
             </div>
         `;
@@ -460,32 +456,13 @@ class SetupWizard {
                     <a href="/portal/tenants" target="_blank" class="action-button secondary">Open Admin Portal</a>
                 </div>
                 <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when the Admin Portal tenant configuration group is true.</p>
+                    <p><strong>Validation:</strong> This step is complete when Admin Portal, Player IP service, and Player App tenant configuration groups are all true.</p>
                 </div>
             </div>
         `;
     }
 
-    renderServicePrincipalStep() {
-        this.stepContent.innerHTML = `
-            <div class="step-instructions">
-                <h3>Service Principal Authorization</h3>
-                <p>Use the automated service provisioning workflow to set up service principals:</p>
-                <ol>
-                    <li><strong>Open the Admin Portal</strong> Service Principals page</li>
-                    <li><strong>Click "Provision Known Services"</strong> to automatically discover available services</li>
-                    <li><strong>Select the services</strong> you want to provision from the list</li>
-                    <li><strong>Click "Provision Selected Services"</strong> to automatically add them to your tenant</li>
-                </ol>
-                <div style="margin-top: 20px;">
-                    <a href="/portal/service-principals" target="_blank" class="action-button">Open Service Principals Page</a>
-                </div>
-                <div style="margin-top: 15px;">
-                    <p><strong>Validation:</strong> This step is complete when the automated workflow has successfully configured service principal authorization for the Player IP service.</p>
-                </div>
-            </div>
-        `;
-    }
+
 
     // Step validation methods
     isStepCompleted(stepId) {
@@ -502,16 +479,12 @@ class SetupWizard {
                 return result;
             case 2: // Tenant Creation
                 result = this.bundleData?.['admin-portal']?.configuredGroups?.tenant === true &&
-                    this.statusData?.services?.['player-ip']?.configuredGroups?.tenant === true;
+                    this.bundleData?.['player-app']?.configuredGroups?.tenant === true;
                 console.log(`✅ Step 2 (Tenant) - tenant configured: ${result}`);
                 console.log(`   Admin portal data:`, JSON.stringify(this.bundleData?.['admin-portal'], null, 2));
-                console.log(`   Player IP data:`, JSON.stringify(this.statusData?.services?.['player-ip'], null, 2));
+                console.log(`   Player app data:`, JSON.stringify(this.bundleData?.['player-app'], null, 2));
                 return result;
-            case 3: // Service Principal Authorization
-                result = this.statusData?.services?.['player-ip']?.configuredGroups?.servicePrincipal === true;
-                console.log(`✅ Step 3 (Service Principal) - service principal configured: ${result}`);
-                console.log(`   Player IP service principal data:`, JSON.stringify(this.statusData?.services?.['player-ip']?.configuredGroups, null, 2));
-                return result;
+
             default:
                 console.log(`❓ Unknown step ${stepId}`);
                 return false;
@@ -533,7 +506,7 @@ class SetupWizard {
 
     canSkipStep(stepId) {
         // Allow skipping most steps except critical ones
-        return stepId !== 3; // Don't allow skipping service principal authorization
+        return stepId !== 2; // Don't allow skipping tenant creation
     }
 
     allStepsCompleted() {

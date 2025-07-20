@@ -10,11 +10,11 @@ export const IDENTITY_COOKIE_NAME = 'IDENTITY';
 
 // Cookie options
 export const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // Secure in production
-  sameSite: 'lax' as const,
-  maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  path: '/'
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // Secure in production
+    sameSite: 'lax' as const,
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    path: '/',
 };
 
 /**
@@ -22,7 +22,7 @@ export const COOKIE_OPTIONS = {
  * @returns Unique cookie value
  */
 export const generateCookieValue = (): string => {
-  return uuidv4();
+    return uuidv4();
 };
 
 /**
@@ -31,10 +31,10 @@ export const generateCookieValue = (): string => {
  * @param cookieValue Value to set in the cookie
  */
 export const setIdentityCookie = (res: Response | null, cookieValue: string | undefined): void => {
-  if (!res || cookieValue === undefined) {
-    return; // Handle null response or undefined cookie value gracefully
-  }
-  res.cookie(IDENTITY_COOKIE_NAME, cookieValue, COOKIE_OPTIONS);
+    if (!res || cookieValue === undefined) {
+        return; // Handle null response or undefined cookie value gracefully
+    }
+    res.cookie(IDENTITY_COOKIE_NAME, cookieValue, COOKIE_OPTIONS);
 };
 
 /**
@@ -42,5 +42,5 @@ export const setIdentityCookie = (res: Response | null, cookieValue: string | un
  * @param res Express response object
  */
 export const clearIdentityCookie = (res: Response): void => {
-  res.clearCookie(IDENTITY_COOKIE_NAME, { path: '/' });
+    res.clearCookie(IDENTITY_COOKIE_NAME, { path: '/' });
 };

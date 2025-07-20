@@ -1,0 +1,545 @@
+---
+description: "GameHub coding standards for TypeScript/JavaScript development with React frontend and Node.js backend services. Includes modular design principles, error handling patterns, performance optimization, security best practices, testing standards, documentation requirements, Git workflows, monitoring/logging standards, and comprehensive health/ready check implementations for microservices architecture."
+alwaysApply: false
+---
+# GameHub Coding Standards
+
+## General Principles
+
+### Code Organization
+- **Modular Design**: Break code into focused, single-responsibility modules
+- **Clear Naming**: Use descriptive names for variables, functions, and classes
+- **Consistent Structure**: Follow established patterns within each codebase
+- **Documentation**: Include JSDoc/TSDoc comments for public APIs
+
+### Error Handling
+- **Graceful Degradation**: Handle errors without crashing the application
+- **User Feedback**: Provide clear error messages to users
+- **Logging**: Log errors with appropriate context and stack traces
+- **Retry Logic**: Implement retry mechanisms for transient failures
+
+### Performance
+- **Efficient Algorithms**: Choose appropriate data structures and algorithms
+- **Resource Management**: Clean up resources (connections, timers, listeners)
+- **Caching**: Cache frequently accessed data when appropriate
+- **Lazy Loading**: Load resources only when needed
+
+## Language-Specific Standards
+
+### TypeScript/JavaScript
+```typescript
+// Use strict TypeScript configuration
+// Prefer const over let, avoid var
+// Use async/await over Promises.then()
+// Use optional chaining and nullish coalescing
+
+// Good: Clear type definitions
+interface ServiceConfig {
+  readonly url: string;
+  readonly timeout: number;
+  readonly retries?: number;
+}
+
+// Good: Async error handling
+async function fetchData(url: string): Promise<Data> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to fetch data:', error);
+    throw new Error('Data fetch failed');
+  }
+}
+```
+
+### React Components
+```typescript
+// Use functional components with hooks
+// Prefer composition over inheritance
+// Use TypeScript for all components
+// Follow the single responsibility principle
+
+interface ComponentProps {
+  readonly title: string;
+  readonly onAction: () => void;
+  readonly disabled?: boolean;
+}
+
+export const MyComponent: React.FC<ComponentProps> = ({ 
+  title, 
+  onAction, 
+  disabled = false 
+}) => {
+  const handleClick = useCallback(() => {
+    if (!disabled) {
+      onAction();
+    }
+  }, [onAction, disabled]);
+
+  return (
+    <button 
+      onClick={handleClick}
+      disabled={disabled}
+      className="btn-primary"
+    >
+      {title}
+    </button>
+  );
+};
+```
+
+### Node.js Services
+```typescript
+// Use Express.js for HTTP services
+// Implement proper middleware chain
+// Use environment variables for configuration
+// Implement health check and ready check endpoints
+
+import express from 'express';
+import { json } from 'express';
+import fs from 'fs';
+import path from 'path';
+
+const app = express();
+
+// Middleware
+app.use(json());
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    service: 'my-service',
+    uptime: process.uptime()
+  });
+});
+
+// Configuration status endpoint
+app.get('/configured', (req, res) => {
+  try {
+    // Check configuration groups
+    const jwtConfigured = !!(process.env.JWT_SECRET && process.env.JWT_EXPIRES_IN);
+    const serviceIpConfigured = !!(process.env.SERVICE_IP_URL && process.env.SERVICE_IP_CLIENT_ID);
+    
+    const configuredGroups = {
+      jwt: jwtConfigured,
+      'service-ip': serviceIpConfigured,
+    };
+    
+    const allConfigured = Object.values(configuredGroups).every(Boolean);
+    
+    res.json({
+      service: 'my-service',
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      configured: allConfigured,
+      configuredGroups,
+      ready: allConfigured, // Service is ready when configured
+    });
+  } catch (error) {
+    console.error('Error checking configuration:', error);
+    res.status(500).json({
+      service: 'my-service',
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      configured: false,
+      configuredGroups: {},
+      ready: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// Ready check endpoint
+app.get('/ready', (req, res) => {
+  try {
+    // Check all required configurations
+    const jwtConfigured = !!(process.env.JWT_SECRET && process.env.JWT_EXPIRES_IN);
+    const serviceIpConfigured = !!(process.env.SERVICE_IP_URL && process.env.SERVICE_IP_CLIENT_ID);
+    
+    const ready = jwtConfigured && serviceIpConfigured;
+    
+    if (ready) {
+      res.status(200).json({
+        status: 'ready',
+        message: 'Service is ready to serve requests',
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      res.status(503).json({
+        status: 'not ready',
+        message: 'Service is not ready yet',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  } catch (error) {
+    console.error('Error checking readiness:', error);
+    res.status(503).json({
+      status: 'not ready',
+      message: 'Error checking readiness',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// Error handling
+app.use((error: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Service error:', error);
+  res.status(500).json({ error: 'Internal server error' });
+});
+```
+
+## Testing Standards
+
+### Unit Tests
+```typescript
+// Use Jest for testing
+// Test both success and failure cases
+// Mock external dependencies
+// Use descriptive test names
+
+describe('Service', () => {
+  it('should handle successful requests', async () => {
+    const mockData = { id: 1, name: 'test' };
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async () => mockData
+    } as Response);
+
+    const result = await fetchData('/api/test');
+    expect(result).toEqual(mockData);
+  });
+
+  it('should handle network errors', async () => {
+    jest.spyOn(global, 'fetch').mockRejectedValue(new Error('Network error'));
+
+    await expect(fetchData('/api/test')).rejects.toThrow('Data fetch failed');
+  });
+});
+```
+
+### Integration Tests
+```typescript
+// Test service interactions
+// Use test databases and mock services
+// Clean up test data after each test
+
+describe('Service Integration', () => {
+  beforeEach(async () => {
+    // Setup test data
+  });
+
+  afterEach(async () => {
+    // Clean up test data
+  });
+
+  it('should create and retrieve facts', async () => {
+    const jinaga = new Jinaga();
+    const fact = new TestFact('test');
+    
+    await jinaga.store(fact);
+    const facts = await jinaga.query(TestFact);
+    
+    expect(facts).toContainEqual(fact);
+  });
+});
+```
+
+## Security Standards
+
+### Authentication
+- **OAuth 2.0**: Use FusionAuth for user authentication
+- **JWT Tokens**: Use JWT for service-to-service authentication
+- **Token Validation**: Always validate tokens before processing requests
+- **Secure Storage**: Store sensitive data securely
+
+### Input Validation
+```typescript
+// Validate all user inputs
+// Sanitize data before processing
+// Use parameterized queries for databases
+
+function validateUserInput(input: unknown): string {
+  if (typeof input !== 'string') {
+    throw new Error('Input must be a string');
+  }
+  
+  if (input.length > 1000) {
+    throw new Error('Input too long');
+  }
+  
+  return input.trim();
+}
+```
+
+### Data Protection
+- **Encryption**: Encrypt sensitive data at rest and in transit
+- **Access Control**: Implement proper authorization checks
+- **Audit Logging**: Log security-relevant events
+- **Input Sanitization**: Prevent injection attacks
+
+## Documentation Standards
+
+### Code Comments
+```typescript
+/**
+ * Fetches user data from the API
+ * @param userId - The unique identifier for the user
+ * @param includeProfile - Whether to include profile information
+ * @returns Promise resolving to user data
+ * @throws {Error} When the user is not found or API is unavailable
+ */
+async function fetchUserData(userId: string, includeProfile = false): Promise<UserData> {
+  // Implementation
+}
+```
+
+### README Files
+- **Project Overview**: Clear description of what the project does
+- **Setup Instructions**: Step-by-step setup guide
+- **API Documentation**: Document all public APIs
+- **Architecture**: Explain the system design
+- **Contributing**: Guidelines for contributors
+
+## Git Standards
+
+### Commit Messages
+```
+feat: add user authentication system
+fix: resolve memory leak in polling service
+docs: update API documentation
+test: add unit tests for user service
+refactor: simplify error handling logic
+```
+
+### Branch Naming
+- `feature/user-authentication` - New features
+- `bugfix/memory-leak` - Bug fixes
+- `hotfix/security-patch` - Critical fixes
+- `docs/api-update` - Documentation updates
+
+## Performance Standards
+
+### Frontend Performance
+- **Bundle Size**: Keep JavaScript bundles under 500KB
+- **Lazy Loading**: Load components and routes on demand
+- **Image Optimization**: Compress and optimize images
+- **Caching**: Implement appropriate caching strategies
+
+### Backend Performance
+- **Response Time**: Keep API responses under 200ms
+- **Database Queries**: Optimize database queries and use indexes
+- **Connection Pooling**: Use connection pools for databases
+- **Caching**: Cache frequently accessed data
+
+## Monitoring and Logging
+
+### Logging Standards
+```typescript
+// Use structured logging
+// Include correlation IDs
+// Log at appropriate levels
+
+const logger = {
+  info: (message: string, context?: object) => {
+    console.log(JSON.stringify({
+      level: 'info',
+      message,
+      timestamp: new Date().toISOString(),
+      ...context
+    }));
+  },
+  
+  error: (message: string, error?: Error, context?: object) => {
+    console.error(JSON.stringify({
+      level: 'error',
+      message,
+      error: error?.message,
+      stack: error?.stack,
+      timestamp: new Date().toISOString(),
+      ...context
+    }));
+  }
+};
+```
+
+### Health Checks
+- **Service Health**: All services must implement `/health` endpoints
+- **Dependency Health**: Check database and external service connectivity
+- **Metrics**: Expose performance and business metrics
+- **Alerts**: Set up monitoring and alerting for critical issues
+
+### Ready Checks
+
+All GameHub services must implement standardized ready check endpoints to support the status dashboard and setup wizard. Ready checks determine if a service is fully configured and ready to handle requests.
+
+#### Required Endpoints
+
+**GET /health**
+Basic health check indicating the service is running.
+
+```typescript
+router.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        service: 'service-name',
+    });
+});
+```
+
+**GET /configured**
+Configuration status check with detailed group information.
+
+```typescript
+router.get('/configured', (req: Request, res: Response) => {
+    try {
+        // Check configuration groups
+        const jwtConfigured = !!(process.env.JWT_SECRET && process.env.JWT_EXPIRES_IN);
+        const serviceIpConfigured = !!(process.env.SERVICE_IP_URL && process.env.SERVICE_IP_CLIENT_ID);
+        
+        const configuredGroups = {
+            jwt: jwtConfigured,
+            'service-ip': serviceIpConfigured,
+            // Add other configuration groups as needed
+        };
+        
+        const allConfigured = Object.values(configuredGroups).every(Boolean);
+        
+        res.status(200).json({
+            service: 'service-name',
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            configured: allConfigured,
+            configuredGroups,
+            ready: allConfigured, // Service is ready when configured
+        });
+    } catch (error) {
+        console.error('Error checking configuration:', error);
+        res.status(500).json({
+            service: 'service-name',
+            status: 'error',
+            timestamp: new Date().toISOString(),
+            configured: false,
+            configuredGroups: {},
+            ready: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+```
+
+**GET /ready**
+Readiness check indicating if the service is ready to handle requests.
+
+```typescript
+router.get('/ready', (req: Request, res: Response) => {
+    try {
+        // Check all required configurations
+        const jwtConfigured = !!(process.env.JWT_SECRET && process.env.JWT_EXPIRES_IN);
+        const serviceIpConfigured = !!(process.env.SERVICE_IP_URL && process.env.SERVICE_IP_CLIENT_ID);
+        
+        const ready = jwtConfigured && serviceIpConfigured;
+        
+        if (ready) {
+            res.status(200).json({
+                status: 'ready',
+                message: 'Service is ready to serve requests',
+                timestamp: new Date().toISOString(),
+            });
+        } else {
+            res.status(503).json({
+                status: 'not ready',
+                message: 'Service is not ready yet',
+                timestamp: new Date().toISOString(),
+            });
+        }
+    } catch (error) {
+        console.error('Error checking readiness:', error);
+        res.status(503).json({
+            status: 'not ready',
+            message: 'Error checking readiness',
+            timestamp: new Date().toISOString(),
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+```
+
+#### Configuration Groups
+
+Services should check the following configuration groups based on their requirements:
+
+**JWT Configuration**
+```typescript
+const jwtConfigured = !!(
+    process.env.JWT_SECRET &&
+    process.env.JWT_EXPIRES_IN &&
+    process.env.JWT_ISSUER &&
+    process.env.JWT_AUDIENCE &&
+    process.env.JWT_KEY_ID
+);
+```
+
+**Service IP Configuration**
+```typescript
+const serviceIpConfigured = !!(
+    process.env.SERVICE_IP_URL &&
+    process.env.SERVICE_IP_CLIENT_ID &&
+    process.env.SERVICE_IP_CLIENT_SECRET_FILE &&
+    fs.existsSync(process.env.SERVICE_IP_CLIENT_SECRET_FILE)
+);
+```
+
+**File-based Configuration**
+```typescript
+// Check for required files in a directory
+const clientsConfigured = (() => {
+    try {
+        if (fs.existsSync(CLIENTS_DIR)) {
+            const clientFiles = fs.readdirSync(CLIENTS_DIR);
+            const validClients = clientFiles.filter((file) => {
+                const filePath = path.join(CLIENTS_DIR, file);
+                return fs.statSync(filePath).isFile() && file.length > 0;
+            });
+            return validClients.length > 0;
+        }
+        return false;
+    } catch (error) {
+        console.error('Error reading clients directory:', error);
+        return false;
+    }
+})();
+```
+
+#### Status Dashboard Integration
+
+Ready checks are used by the status dashboard to:
+- Display service health status (healthy/unhealthy/unknown)
+- Show configuration status (configured/not configured/partial)
+- Indicate readiness status (ready/not ready/unknown)
+- Provide detailed configuration group information via tooltips
+
+#### Setup Wizard Integration
+
+The setup wizard uses ready checks to:
+- Validate that services are properly configured
+- Guide users through missing configuration steps
+- Provide real-time feedback on setup progress
+- Determine when setup is complete
+
+#### Error Handling
+
+- **Graceful Degradation**: Services should handle configuration errors gracefully
+- **Detailed Logging**: Log configuration check failures with context
+- **User-Friendly Messages**: Provide clear error messages for debugging
+- **Fallback Behavior**: Return appropriate status codes for different error conditions

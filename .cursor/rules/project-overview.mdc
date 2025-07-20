@@ -1,0 +1,69 @@
+---
+description: "GameHub project overview and architecture reference for the multiplayer game platform template built with React, Jinaga, and microservices. Includes project structure, core applications, infrastructure components, build/deployment scripts, technology stack (React 18, TypeScript, Vite, TailwindCSS, Node.js, Express, Jinaga, PostgreSQL, FusionAuth, Docker), development workflow, and service endpoint mappings for local development environment."
+alwaysApply: true
+---
+# GameHub Project Overview
+
+GameHub is a multiplayer game platform template built with React, Jinaga, and modern web technologies. This is a full-stack foundation with real-time data synchronization, OAuth authentication, and microservices architecture.
+
+## Project Structure
+
+### Core Applications (`app/`)
+- **[gamehub-admin/](app/gamehub-admin/)** - React-based administration interface (Vite + TypeScript)
+- **[gamehub-model/](app/gamehub-model/)** - Shared TypeScript library with Jinaga domain model
+- **[gamehub-player/](app/gamehub-player/)** - Player-facing application
+- **[player-ip/](app/player-ip/)** - Node.js console application for player IP management
+- **[relay-service/](app/relay-service/)** - Observability and metrics aggregation
+- **[content-store/](app/content-store/)** - File storage and content management
+- **[service-ip/](app/service-ip/)** - Internal service-to-service authentication
+
+### Infrastructure (`mesh/`)
+- **[docker-compose.yml](mesh/docker-compose.yml)** - Main orchestration configuration
+- **[nginx/](mesh/nginx/)** - Reverse proxy and static file serving
+  - **[nginx.conf](mesh/nginx/nginx.conf)** - NGINX configuration
+  - **[html/](mesh/nginx/html/)** - Static web applications
+    - **[status/](mesh/nginx/html/status/)** - Status dashboard (JavaScript)
+    - **[setup/](mesh/nginx/html/setup/)** - Setup wizard
+- **[replicator/](mesh/replicator/)** - Jinaga replicator configuration
+- **[secrets/](mesh/secrets/)** - Environment secrets and configuration
+
+### Build & Deployment (`scripts/`)
+- **[init-mesh.sh](scripts/init-mesh.sh)** - Initialize Docker mesh environment
+- **[setup-fusionauth.sh](scripts/setup-fusionauth.sh)** - FusionAuth configuration
+- **[setup-tenant.sh](scripts/setup-tenant.sh)** - Tenant setup automation
+- **[build-*.sh](scripts/)** - Service build scripts
+- **[deploy-*.sh](scripts/)** - Deployment automation
+
+### Documentation (`docs/`)
+- Comprehensive getting started guides and architecture documentation
+
+## Key Technologies
+
+- **Frontend**: React 18, TypeScript, Vite, TailwindCSS
+- **Backend**: Node.js, Express, TypeScript
+- **Data Layer**: Jinaga (distributed facts), PostgreSQL
+- **Authentication**: FusionAuth, OAuth 2.0 + PKCE, JWT tokens
+- **Orchestration**: Docker Compose, Nginx reverse proxy
+- **Deployment**: Azure Container Apps, GitHub Actions
+
+## Development Workflow
+
+1. **Model Development**: Define facts in `app/gamehub-model/model/`
+2. **Authorization**: Create rules in `app/gamehub-model/authorization/`
+3. **Frontend**: Build UI in `app/gamehub-admin/src/`
+4. **Backend**: Add logic to services in `app/`
+5. **Deployment**: Use Docker orchestration in `mesh/`
+
+## Service Endpoints (Local Development)
+
+| Service | Endpoint | Description |
+|---------|----------|-------------|
+| Main Gateway | http://localhost | NGINX reverse proxy |
+| Admin Portal | http://localhost/portal/ | GameHub admin interface |
+| Setup Wizard | http://localhost/setup/ | Initial configuration |
+| Status Dashboard | http://localhost/status/ | System monitoring |
+| FusionAuth | http://localhost/auth/ | Identity management |
+| Replicator | http://localhost/replicator/ | Real-time data sync |
+| Player API | http://localhost/player-ip/ | Player authentication |
+| Content Store | http://localhost/content/ | File storage |
+| Relay Service | http://localhost/relay/ | Observability aggregation |

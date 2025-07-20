@@ -29,16 +29,15 @@ const DEFAULT_RELAY_CONFIG: RelayConfig = {
             configuredEndpoint: 'http://service-ip:8083/configured',
             readyEndpoint: 'http://service-ip:8083/ready',
             timeout: 5000,
-            retries: 3
+            retries: 3,
         },
         'player-ip': {
             name: 'Player IP',
             healthEndpoint: 'http://player-ip:8082/health',
             configuredEndpoint: 'http://player-ip:8082/configured',
             readyEndpoint: 'http://player-ip:8082/ready',
-            publicKeyEndpoint: 'http://player-ip:8082/public-key',
             timeout: 5000,
-            retries: 3
+            retries: 3,
         },
         'content-store': {
             name: 'Content Store',
@@ -46,9 +45,9 @@ const DEFAULT_RELAY_CONFIG: RelayConfig = {
             configuredEndpoint: 'http://content-store:8081/configured',
             readyEndpoint: 'http://content-store:8081/ready',
             timeout: 5000,
-            retries: 3
-        }
-    }
+            retries: 3,
+        },
+    },
 };
 
 function parseRelayConfig(configString?: string): RelayConfig {
@@ -67,7 +66,7 @@ function parseRelayConfig(configString?: string): RelayConfig {
 
         // Apply defaults for missing optional fields
         const config: RelayConfig = {
-            services: {}
+            services: {},
         };
 
         // Process services with defaults
@@ -75,7 +74,7 @@ function parseRelayConfig(configString?: string): RelayConfig {
             config.services[key] = {
                 ...service,
                 timeout: service.timeout || 5000,
-                retries: service.retries || 3
+                retries: service.retries || 3,
             };
         }
 
@@ -93,7 +92,7 @@ export const config: EnvironmentConfig = {
     logLevel: process.env['LOG_LEVEL'] || 'info',
     corsOrigin: process.env['CORS_ORIGIN'] || '*',
     relayConfig: parseRelayConfig(process.env['RELAY_CONFIG']),
-    cacheTimeout: parseInt(process.env['CACHE_TIMEOUT'] || '30000', 10) // 30 seconds default
+    cacheTimeout: parseInt(process.env['CACHE_TIMEOUT'] || '30000', 10), // 30 seconds default
 };
 
 export default config;

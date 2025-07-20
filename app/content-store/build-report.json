@@ -1,18 +1,18 @@
 {
-  "buildNumber": "20250706-100357",
-  "gitCommit": "4ee97b0",
-  "environment": "dev",
-  "buildDate": "2025-07-06T15:04:07Z",
-  "imageName": "gamehub-content-store",
-  "tags": [
-    "gamehub-content-store:latest",
-    "gamehub-content-store:20250706-100357",
-    "gamehub-content-store:4ee97b0"
-  ],
-  "registry": "",
-  "skipTests": true,
-  "skipLint": true,
-  "skipSecurity": true,
-  "validated": true,
-  "healthChecked": false
+    "buildNumber": "20250706-100357",
+    "gitCommit": "4ee97b0",
+    "environment": "dev",
+    "buildDate": "2025-07-06T15:04:07Z",
+    "imageName": "gamehub-content-store",
+    "tags": [
+        "gamehub-content-store:latest",
+        "gamehub-content-store:20250706-100357",
+        "gamehub-content-store:4ee97b0"
+    ],
+    "registry": "",
+    "skipTests": true,
+    "skipLint": true,
+    "skipSecurity": true,
+    "validated": true,
+    "healthChecked": false
 }

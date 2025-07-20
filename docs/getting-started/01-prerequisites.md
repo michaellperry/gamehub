@@ -36,8 +36,8 @@ This guide covers the system requirements and prerequisites needed to develop an
 ## Development Tools
 
 ### Node.js and npm
-- **Version**: Node.js 18.x or later
-- **Package Manager**: npm 9.x or later
+- **Version**: Node.js 22.x or later
+- **Package Manager**: npm 10.x or later
 - **Installation**: Download from [nodejs.org](https://nodejs.org/)
 
 ### Docker and Docker Compose
@@ -73,7 +73,7 @@ Create the following environment files in the `mesh/` directory:
 
 ### Check Installations
 ```bash
-# Verify Node.js and npm (should be 18.x or later)
+# Verify Node.js and npm (should be 22.x or later)
 node --version
 npm --version
 

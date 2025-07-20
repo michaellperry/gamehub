@@ -11,7 +11,7 @@ The GameHub model defines the core domain concepts for managing game sessions, p
 This model was migrated from the LaunchKings model with the following domain concept transformations:
 
 - **Event** → **GameSession**: Core gaming events are now called game sessions
-- **Competitor** → **Player**: Entities competing in games are now players  
+- **Competitor** → **Player**: Entities competing in games are now players
 - **Attendee** → **Participant**: People participating in sessions are now participants
 - **VoteAllocation** → **GameAction**: Actions taken during gameplay
 - **EventState** → **SessionState**: State management for game sessions
@@ -30,6 +30,7 @@ The model maintains the same architectural patterns as the source:
 ## Core Models
 
 ### GameHub Core (`model/gamehub.ts`)
+
 - `Tenant`: Multi-tenant organization structure
 - `Administrator`: Tenant administrators with management permissions
 - `Player`: Game players/competitors
@@ -38,6 +39,7 @@ The model maintains the same architectural patterns as the source:
 - `Winner`: Session winners and results
 
 ### Gameplay (`model/gameplay.ts`)
+
 - `SessionState`: Game session state management
 - `GameRound`: Individual rounds within sessions
 - `GameAction`: Actions taken by participants
@@ -45,6 +47,7 @@ The model maintains the same architectural patterns as the source:
 - `Champion`: Overall session champions
 
 ### Supporting Models
+
 - **Bookkeeping** (`model/bookkeeping.ts`): Audit trails and service principals
 - **Invitation** (`model/invitation.ts`): Invitation and approval workflows
 
@@ -55,9 +58,9 @@ import { model, authorization, distribution } from 'gamehub-model';
 
 // Use the model in your Jinaga application
 const j = JinagaBrowser.create({
-  model,
-  authorization,
-  distribution
+    model,
+    authorization,
+    distribution,
 });
 ```
 

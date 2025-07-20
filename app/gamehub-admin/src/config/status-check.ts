@@ -79,12 +79,12 @@ export function getConfigured(): ConfigurationStatus {
     const configuredGroups: ConfiguredGroups = {
         client: checkClientConfiguration(),
         tenant: checkTenantConfiguration(),
-        servicePrincipal: checkServicePrincipalConfiguration()
+        servicePrincipal: checkServicePrincipalConfiguration(),
     };
 
     return {
         configured: checkOverallConfiguration(),
-        configuredGroups
+        configuredGroups,
     };
 }
 

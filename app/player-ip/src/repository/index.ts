@@ -7,7 +7,3 @@
 
 // Export SQLite implementation
 export * from './sqlite/index.js';
-
-// Initialize with a sample GAP for testing
-import { createSampleOpenAccessPath } from './sqlite/index.js';
-createSampleOpenAccessPath();

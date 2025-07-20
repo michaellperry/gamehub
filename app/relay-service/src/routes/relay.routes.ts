@@ -19,7 +19,7 @@ router.get('/', async (_req: Request, res: Response) => {
         res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
 });
@@ -35,7 +35,7 @@ router.get('/health', (_req: Request, res: Response) => {
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         memory: process.memoryUsage(),
-        cache: observabilityService.getCacheStats()
+        cache: observabilityService.getCacheStats(),
     });
 });
 
@@ -50,14 +50,14 @@ router.post('/refresh', async (_req: Request, res: Response) => {
 
         res.json({
             message: 'Cache cleared and status refreshed',
-            status
+            status,
         });
     } catch (error) {
         console.error('Error refreshing status:', error);
         res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
 });
@@ -70,7 +70,7 @@ router.get('/cache/stats', (_req: Request, res: Response) => {
     const stats = observabilityService.getCacheStats();
     res.json({
         cache: stats,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 
@@ -87,7 +87,7 @@ router.get('/public-key', async (_req: Request, res: Response) => {
         res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
 });
@@ -103,14 +103,14 @@ router.post('/public-key/refresh', async (_req: Request, res: Response) => {
 
         res.json({
             message: 'Cache cleared and public keys refreshed',
-            publicKeys
+            publicKeys,
         });
     } catch (error) {
         console.error('Error refreshing public keys:', error);
         res.status(500).json({
             error: 'Internal server error',
             message: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
 });
@@ -123,7 +123,7 @@ router.get('/public-key/cache/stats', (_req: Request, res: Response) => {
     const stats = publicKeyService.getCacheStats();
     res.json({
         cache: stats,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
     });
 });
 

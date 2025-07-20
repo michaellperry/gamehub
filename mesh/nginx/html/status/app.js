@@ -260,6 +260,12 @@ class StatusDashboard {
                 discoveryUrl: '/portal/',
                 discoveryMethod: 'html-parse',
                 configFunction: 'getConfigured'
+            },
+            'player-app': {
+                name: 'Player App',
+                discoveryUrl: '/player/',
+                discoveryMethod: 'html-parse',
+                configFunction: 'getConfigured'
             }
         };
 
@@ -521,14 +527,16 @@ class StatusDashboard {
 
     getBundleDisplayName(bundleId) {
         const names = {
-            'admin-portal': 'Admin Portal'
+            'admin-portal': 'Admin Portal',
+            'player-app': 'Player App'
         };
         return names[bundleId] || this.capitalizeFirst(bundleId.replace('-', ' '));
     }
 
     getBundleIcon(bundleId) {
         const icons = {
-            'admin-portal': '⚙️'
+            'admin-portal': '⚙️',
+            'player-app': '🎮'
         };
         return icons[bundleId] || '📦';
     }

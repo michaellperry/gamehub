@@ -21,7 +21,10 @@ export interface PublicKeysResponse {
  * @param relayServiceUrl The URL of the relay service
  * @returns A promise that resolves to the public keys response
  */
-export async function fetchPublicKeys(relayServiceUrl: string, signal: AbortSignal): Promise<PublicKeysResponse> {
+export async function fetchPublicKeys(
+    relayServiceUrl: string,
+    signal: AbortSignal
+): Promise<PublicKeysResponse> {
     try {
         // Get the public keys of known services from the relay service
         const response = await fetch(`${relayServiceUrl}/public-key`, {

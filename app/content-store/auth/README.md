@@ -12,15 +12,16 @@ Each `.provider` file should be a JSON file with the following structure:
 
 ```json
 {
-  "provider": "provider-name",
-  "issuer": "https://issuer-url.com",
-  "audience": "audience-value",
-  "key_id": "key-identifier",
-  "key": "public-key-in-pem-format"
+    "provider": "provider-name",
+    "issuer": "https://issuer-url.com",
+    "audience": "audience-value",
+    "key_id": "key-identifier",
+    "key": "public-key-in-pem-format"
 }
 ```
 
 Where:
+
 - `provider`: A unique identifier for the authentication provider
 - `issuer`: The issuer URL that should match the `iss` claim in the JWT
 - `audience`: The audience value that should match the `aud` claim in the JWT
@@ -42,6 +43,7 @@ Authorization: Bearer <token>
 ```
 
 The JWT should include the following claims:
+
 - `iss` (issuer): Must match the `issuer` value in a provider configuration
 - `aud` (audience): Must match the `audience` value in a provider configuration
 - `sub` (subject): The user identifier
@@ -53,12 +55,12 @@ When authentication succeeds, the Express request object will include a `user` p
 
 ```js
 req.user = {
-  id: "user-id-from-sub-claim",
-  provider: "provider-name-from-config",
-  profile: {
-    displayName: "display-name-from-claim"
-  }
-}
+    id: 'user-id-from-sub-claim',
+    provider: 'provider-name-from-config',
+    profile: {
+        displayName: 'display-name-from-claim',
+    },
+};
 ```
 
 This user object can be used in route handlers to identify the authenticated user and implement authorization logic.

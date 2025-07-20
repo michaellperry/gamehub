@@ -24,7 +24,7 @@ MESH_DIR="mesh"
 ENV_FILE="$MESH_DIR/.env"
 SECRETS_DIR="$MESH_DIR/secrets"
 SERVICE_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/service-ip/clients/player-ip"
-PLAYER_IP_CLIENT_SECRET_FILE="$SECRETS_DIR/player-ip/player-ip-client-secret"
+
 PROVIDER_DIR="$MESH_DIR/replicator/authentication"
 PLAYER_PROVIDER_FILE="$PROVIDER_DIR/player.provider"
 SERVICE_PROVIDER_FILE="$PROVIDER_DIR/service.provider"
@@ -205,11 +205,7 @@ main() {
     echo -n "$shared_secret" > "$SERVICE_IP_CLIENT_SECRET_FILE"
     print_warning "Generated new service-ip client secret"
     
-    # Generate player-ip client secret (always overwrite)
-    echo -n "$shared_secret" > "$PLAYER_IP_CLIENT_SECRET_FILE"
-    print_warning "Generated player-ip client secret"
-
-    print_success "Client secrets are synchronized"
+    print_success "Service-ip client secret generated"
     
     # Step 6: Generate provider configuration files with shared secret
     print_info "Checking provider configuration files..."
@@ -233,7 +229,7 @@ main() {
     echo "  📁 Environment secrets file: $ENV_FILE"
     echo "  🔐 Secrets directory: $SECRETS_DIR"
     echo "  🔑 Service-IP client secret: $SERVICE_IP_CLIENT_SECRET_FILE"
-    echo "  🔑 Player-IP client secret: $PLAYER_IP_CLIENT_SECRET_FILE"
+
     echo "  🔧 Provider configuration directory: $PROVIDER_DIR"
     echo "  🔧 Player provider file: $PLAYER_PROVIDER_FILE"
     echo "  🔧 Service provider file: $SERVICE_PROVIDER_FILE"

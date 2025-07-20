@@ -1,7 +1,7 @@
 {
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "module": "NodeNext",
-    "outDir": "./dist/esm"
-  }
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "module": "NodeNext",
+        "outDir": "./dist/esm"
+    }
 }
