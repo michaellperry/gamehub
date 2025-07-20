@@ -3,7 +3,7 @@ import { CodeInput, NameInput } from '../components/molecules';
 import { useHomePage } from '../hooks/useHomePage';
 
 export default function HomePage() {
-    const { playerName, playground } = useHomePage();
+    const { playerName, playgroundLobby } = useHomePage();
 
     if (playerName.showNameInput) {
         return (
@@ -63,15 +63,15 @@ export default function HomePage() {
                     </div>
 
                     {/* Error Display */}
-                    {playground.error && (
+                    {playgroundLobby.error && (
                         <Alert
                             variant="error"
                             title="Playground Error"
                             dismissible
-                            onDismiss={playground.clearError}
+                            onDismiss={playgroundLobby.clearError}
                             className="max-w-md mx-auto"
                         >
-                            {playground.error}
+                            {playgroundLobby.error}
                         </Alert>
                     )}
 
@@ -92,9 +92,9 @@ export default function HomePage() {
                                 variant="primary"
                                 size="lg"
                                 fullWidth
-                                loading={playground.isLoading}
-                                disabled={playground.isLoading}
-                                onClick={playground.handleStartPlayground}
+                                loading={playgroundLobby.isLoading}
+                                disabled={playgroundLobby.isLoading}
+                                onClick={playgroundLobby.handleStartPlayground}
                                 icon={<Icon name="play" size="md" />}
                             >
                                 Start Playground
@@ -116,8 +116,8 @@ export default function HomePage() {
                             </div>
 
                             <CodeInput
-                                value={playground.playgroundCode}
-                                onChange={playground.setPlaygroundCode}
+                                value={playgroundLobby.playgroundCode}
+                                onChange={playgroundLobby.setPlaygroundCode}
                                 className="mb-4"
                             />
 
@@ -125,9 +125,9 @@ export default function HomePage() {
                                 variant="secondary"
                                 size="lg"
                                 fullWidth
-                                loading={playground.isLoading}
-                                disabled={!playground.canJoinPlayground || playground.isLoading}
-                                onClick={playground.handleJoinPlayground}
+                                loading={playgroundLobby.isLoading}
+                                disabled={!playgroundLobby.canJoinPlayground || playgroundLobby.isLoading}
+                                onClick={playgroundLobby.handleJoinPlayground}
                                 icon={<Icon name="join" size="md" />}
                             >
                                 Join Playground

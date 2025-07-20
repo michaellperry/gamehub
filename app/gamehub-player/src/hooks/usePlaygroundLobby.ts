@@ -6,7 +6,7 @@ import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
 import { usePlayer } from './usePlayer';
 
-export interface PlaygroundViewModel {
+export interface PlaygroundLobbyViewModel {
     playgroundCode: string;
     canJoinPlayground: boolean;
     error: string | null;
@@ -17,7 +17,7 @@ export interface PlaygroundViewModel {
     clearError: () => void;
 }
 
-export function usePlayground(): PlaygroundViewModel {
+export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
     const [playgroundCode, setPlaygroundCode] = useState<string>('');
     const [actionError, setActionError] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<boolean>(false);

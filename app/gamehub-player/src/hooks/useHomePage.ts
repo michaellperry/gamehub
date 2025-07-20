@@ -1,17 +1,17 @@
 import { usePlayerName, PlayerNameViewModel } from './usePlayerName';
-import { usePlayground, PlaygroundViewModel } from './usePlayground';
+import { usePlaygroundLobby, PlaygroundLobbyViewModel } from './usePlaygroundLobby';
 
 export interface HomePageViewModel {
     playerName: PlayerNameViewModel;
-    playground: PlaygroundViewModel;
+    playgroundLobby: PlaygroundLobbyViewModel;
 }
 
 export function useHomePage(): HomePageViewModel {
     const playerName = usePlayerName();
-    const playground = usePlayground();
+    const playgroundLobby = usePlaygroundLobby();
 
     return {
         playerName,
-        playground,
+        playgroundLobby,
     };
 } 
