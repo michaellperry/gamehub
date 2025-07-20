@@ -1,4 +1,4 @@
-import { Button, Card, Container, Icon, PageLayout, Typography } from '../components/atoms';
+import { Alert, Button, Card, Container, Icon, PageLayout, Typography } from '../components/atoms';
 import { CodeInput, NameInput } from '../components/molecules';
 import { useHomePage } from '../hooks/useHomePage';
 
@@ -47,6 +47,19 @@ export default function HomePage() {
                         </Typography>
                     </div>
 
+                    {/* Error Display */}
+                    {playground.error && (
+                        <Alert
+                            variant="error"
+                            title="Playground Error"
+                            dismissible
+                            onDismiss={playground.clearError}
+                            className="max-w-md mx-auto"
+                        >
+                            {playground.error}
+                        </Alert>
+                    )}
+
                     {/* Start Playground Section */}
                     <Card variant="game" size="lg" className="max-w-md mx-auto">
                         <div className="space-y-4">
@@ -64,6 +77,8 @@ export default function HomePage() {
                                 variant="primary"
                                 size="lg"
                                 fullWidth
+                                loading={playground.isLoading}
+                                disabled={playground.isLoading}
                                 onClick={playground.handleStartPlayground}
                                 icon={<Icon name="play" size="md" />}
                             >
@@ -95,7 +110,8 @@ export default function HomePage() {
                                 variant="secondary"
                                 size="lg"
                                 fullWidth
-                                disabled={!playground.canJoinPlayground}
+                                loading={playground.isLoading}
+                                disabled={!playground.canJoinPlayground || playground.isLoading}
                                 onClick={playground.handleJoinPlayground}
                                 icon={<Icon name="join" size="md" />}
                             >
