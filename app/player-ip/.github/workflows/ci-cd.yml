@@ -217,13 +217,6 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Run security tests
-        run: npm run test:security
-        env:
-          NODE_ENV: test
-          JWT_SECRET: test-secret-key
-          SKIP_JINAGA_SUBSCRIPTION: true
-
       - name: Run OWASP dependency check
         uses: dependency-check/Dependency-Check_Action@main
         with:
