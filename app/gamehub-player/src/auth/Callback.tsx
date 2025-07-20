@@ -2,8 +2,6 @@ import { useContext, useEffect, useState } from 'react';
 import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { useNavigate } from 'react-router-dom';
 import { usePlayer } from '../hooks/usePlayer';
-import { useUser } from './UserProvider';
-import { useTenant } from './useTenant.ts';
 
 /**
  * Callback component for handling the OAuth callback

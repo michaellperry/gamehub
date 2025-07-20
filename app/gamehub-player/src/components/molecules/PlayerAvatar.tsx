@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, AvatarProps, PlayerStatus } from '../atoms/Avatar';
+import { Avatar, PlayerStatus } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
 import { Icon } from '../atoms/Icon';
 
@@ -21,7 +21,6 @@ export interface PlayerAvatarProps {
 }
 
 export const PlayerAvatar: React.FC<PlayerAvatarProps> = ({
-    id,
     name,
     avatar,
     status,
