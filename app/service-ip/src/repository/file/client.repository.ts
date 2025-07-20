@@ -4,8 +4,27 @@
 
 import fs from 'fs-extra';
 import path from 'path';
+import crypto from 'crypto';
 import { CLIENTS_DIR } from '../../config/environment.js';
 import { ClientCredentials } from '../../models/index.js';
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ * @param a First string to compare
+ * @param b Second string to compare
+ * @returns True if strings are equal, false otherwise
+ */
+const constantTimeCompare = (a: string, b: string): boolean => {
+    if (a.length !== b.length) {
+        return false;
+    }
+    
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+};
 
 /**
  * Get client secret from file
@@ -57,8 +76,8 @@ export const validateClientCredentials = async (
         // Get client secret from file
         const storedClientSecret = await getClientSecret(clientId);
 
-        // Check if client exists and secret matches
-        return !!storedClientSecret && storedClientSecret === clientSecret;
+        // Use constant-time comparison to prevent timing attacks
+        return !!storedClientSecret && constantTimeCompare(storedClientSecret, clientSecret);
     } catch (error) {
         console.error('Error validating client credentials:', error);
         return false;

@@ -30,64 +30,74 @@ db.pragma('foreign_keys = ON');
 
 // Initialize database schema
 const initializeDatabase = () => {
-    // Create users table
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      identity_cookie TEXT UNIQUE,
-      email TEXT,
-      phone_number TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    )
-  `);
+    try {
+        // Create users table
+        db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          identity_cookie TEXT UNIQUE,
+          email TEXT,
+          phone_number TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL
+        )
+      `);
 
-    // Create user_identities table
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS user_identities (
-      cookie_value TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+        // Create user_identities table
+        db.exec(`
+        CREATE TABLE IF NOT EXISTS user_identities (
+          cookie_value TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
 
-    // Create auth_codes table
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS auth_codes (
-      code TEXT PRIMARY KEY,
-      client_id TEXT NOT NULL,
-      redirect_uri TEXT NOT NULL,
-      code_challenge TEXT NOT NULL,
-      code_challenge_method TEXT NOT NULL,
-      expires_at TEXT NOT NULL,
-      user_id TEXT NOT NULL,
-      event_id TEXT NOT NULL,
-      scope TEXT NOT NULL DEFAULT '',
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+        // Create auth_codes table
+        db.exec(`
+        CREATE TABLE IF NOT EXISTS auth_codes (
+          code TEXT PRIMARY KEY,
+          client_id TEXT NOT NULL,
+          redirect_uri TEXT NOT NULL,
+          code_challenge TEXT NOT NULL,
+          code_challenge_method TEXT NOT NULL,
+          expires_at TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          event_id TEXT NOT NULL,
+          scope TEXT NOT NULL DEFAULT '',
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
 
-    // Create refresh_tokens table
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS refresh_tokens (
-      token TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL,
-      client_id TEXT NOT NULL,
-      scope TEXT NOT NULL,
-      event_id TEXT NOT NULL,
-      expires_at TEXT NOT NULL,
-      revoked BOOLEAN DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )
-  `);
+        // Create refresh_tokens table
+        db.exec(`
+        CREATE TABLE IF NOT EXISTS refresh_tokens (
+          token TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          client_id TEXT NOT NULL,
+          scope TEXT NOT NULL,
+          event_id TEXT NOT NULL,
+          expires_at TEXT NOT NULL,
+          revoked BOOLEAN DEFAULT 0,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+      `);
 
-    console.log('Database schema initialized');
+        console.log('Database schema initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize database schema:', error);
+        throw new Error(`Database initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 };
 
 // Initialize the database
-initializeDatabase();
+try {
+    initializeDatabase();
+} catch (error) {
+    console.error('Critical error: Failed to initialize database:', error);
+    process.exit(1);
+}
 
 // Export the database instance
 export default db;

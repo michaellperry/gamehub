@@ -88,16 +88,18 @@ async function run() {
     const gracefulShutdown = (signal: string) => {
         console.log(`=== GRACEFUL SHUTDOWN (${signal}) ===`);
 
-        server.close(() => {
-            console.log('HTTP server closed');
-            process.exit(0);
-        });
-
-        // Force shutdown after 10 seconds
-        setTimeout(() => {
+        // Store timeout reference so we can clear it if server closes normally
+        const forceShutdownTimeout = setTimeout(() => {
             console.error('Forced shutdown after timeout');
             process.exit(1);
         }, 10000);
+
+        server.close(() => {
+            console.log('HTTP server closed');
+            // Clear the timeout since server closed normally
+            clearTimeout(forceShutdownTimeout);
+            process.exit(0);
+        });
     };
 
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
