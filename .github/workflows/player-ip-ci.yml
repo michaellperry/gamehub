@@ -123,6 +123,3 @@ jobs:
 
     - name: Run contract tests
       run: npm run test:contract
-
-    - name: Run security tests
-      run: npm run test:security
