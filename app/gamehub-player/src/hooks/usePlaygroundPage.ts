@@ -1,9 +1,9 @@
-import { Join, Player, PlayerName, Playground, model } from '@model/model';
+import { Join, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
+import { usePlayer } from './usePlayer';
 
 export interface PlaygroundPlayer {
     playerId: string;
@@ -49,24 +49,8 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
 
 export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewModel {
     const [error, setError] = useState<string | null>(null);
-    const { user } = useUser();
     const tenant = useTenant();
-
-    // Create player fact if user is available
-    const player = useMemo(() =>
-        user && tenant ? new Player(user, tenant) : null,
-        [user, tenant]
-    );
-
-    // Create player fact if it doesn't exist
-    useEffect(() => {
-        if (player) {
-            j.fact(player).catch((error) => {
-                console.error('Error creating player:', error);
-                setError('Failed to load player. Please check the code and try again.');
-            });
-        }
-    }, [player]);
+    const { playerId, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
 
     // Create playground fact if code and tenant are available (memoized to prevent infinite updates)
     const playground = useMemo(() =>
@@ -105,11 +89,12 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         playerId: session.playerId,
         name: session.names[0],
         joinedAt: new Date(session.joinedAt),
-        isCurrentPlayer: session.playerId === (player ? j.hash(player) : null)
+        isCurrentPlayer: session.playerId === playerId
     })) : undefined;
 
     const clearError = () => {
         setError(null);
+        clearPlayerError();
     };
 
     const handleChallengePlayer = (player: PlaygroundPlayer) => {
@@ -122,11 +107,11 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         console.log('Join game:', game);
     };
 
-    // Loading state is handled by useSpecification
-    const isLoading = playersLoading;
+    // Loading state combines player loading and specification loading
+    const isLoading = playerLoading || playersLoading;
 
     // Combine errors
-    const combinedError = error || (specificationError ? specificationError.message : null);
+    const combinedError = error || playerError || (specificationError ? specificationError.message : null);
 
     return {
         playground,

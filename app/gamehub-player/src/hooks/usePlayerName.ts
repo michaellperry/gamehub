@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
+import { usePlayer } from './usePlayer';
 
 export interface PlayerNameViewModel {
     playerName: string;
@@ -31,6 +32,7 @@ export function usePlayerName(): PlayerNameViewModel {
 
     const { user } = useUser();
     const tenant = useTenant();
+    const { player, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
 
     // Use Jinaga to load the player name
     const { data: playerNames, error: specificationError, loading } = useSpecification(
@@ -42,6 +44,7 @@ export function usePlayerName(): PlayerNameViewModel {
 
     const clearError = () => {
         setActionError(null);
+        clearPlayerError();
     };
 
     const handleNameSubmit = async (name: string) => {
@@ -58,8 +61,11 @@ export function usePlayerName(): PlayerNameViewModel {
         setActionError(null);
 
         try {
-            // Create or get the Player fact
-            const player = await j.fact(new Player(user, tenant));
+            // Use the player from usePlayer hook (it's already created)
+            if (!player) {
+                setActionError('Player not available. Please try logging in again.');
+                return;
+            }
 
             // Get current player names to use as prior
             const currentNames = playerNames || [];
@@ -81,15 +87,16 @@ export function usePlayerName(): PlayerNameViewModel {
         setActionError(null);
     };
 
-    // Combine specification error with action error
-    const combinedError = actionError || (specificationError ? specificationError.message : null);
+    // Combine specification error with action error and player error
+    const combinedError = actionError || playerError || (specificationError ? specificationError.message : null);
+    const combinedLoading = playerLoading || loading;
 
     return {
         playerName: playerNames?.[0]?.name || '',
         showNameInput: showNameInput || playerNames?.length === 0,
         allowCancel: playerNames?.length !== 0,
         error: combinedError,
-        loading,
+        loading: combinedLoading,
         handleNameSubmit,
         handleCancel,
         setShowNameInput,

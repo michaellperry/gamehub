@@ -1,9 +1,10 @@
-import { Join, Player, Playground } from '@model/model';
+import { Join, Playground } from '@model/model';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
+import { usePlayer } from './usePlayer';
 
 export interface PlaygroundViewModel {
     playgroundCode: string;
@@ -23,9 +24,11 @@ export function usePlayground(): PlaygroundViewModel {
     const { user } = useUser();
     const tenant = useTenant();
     const navigate = useNavigate();
+    const { player, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
 
     const clearError = () => {
         setActionError(null);
+        clearPlayerError();
     };
 
     const handleStartPlayground = async () => {
@@ -75,8 +78,11 @@ export function usePlayground(): PlaygroundViewModel {
             const playgroundFact = new Playground(tenant, playgroundCode);
             await j.fact(playgroundFact);
 
-            // Create player fact if it doesn't exist
-            const player = await j.fact(new Player(user, tenant));
+            // Use the player from usePlayer hook (it's already created)
+            if (!player) {
+                setActionError('Player not available. Please try logging in again.');
+                return;
+            }
 
             // Create join fact to join the playground
             await j.fact(new Join(player, playgroundFact, new Date()));
@@ -96,8 +102,8 @@ export function usePlayground(): PlaygroundViewModel {
     return {
         playgroundCode,
         canJoinPlayground,
-        error: actionError,
-        isLoading: actionLoading,
+        error: actionError || playerError,
+        isLoading: actionLoading || playerLoading,
         handleStartPlayground,
         handleJoinPlayground,
         setPlaygroundCode,
