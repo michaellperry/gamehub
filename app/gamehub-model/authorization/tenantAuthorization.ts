@@ -1,5 +1,5 @@
 import { AuthorizationRules } from 'jinaga';
-import { Administrator, Player, Playground, Tenant } from '../model/index.js';
+import { Administrator, Join, Player, Playground, Tenant } from '../model/index.js';
 
 export const tenantAuthorization = (a: AuthorizationRules) =>
     a
@@ -16,4 +16,7 @@ export const tenantAuthorization = (a: AuthorizationRules) =>
         .type(Playground, (playground) =>
             Player.in(playground.tenant)
                 .selectMany((player) => player.user.predecessor())
-        );
+        )
+
+        // Only the player can create their own joins
+        .type(Join, (join) => join.player.user.predecessor());

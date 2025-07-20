@@ -77,6 +77,25 @@ export class Playground {
     }
 }
 
+export class Join {
+    static Type = 'GameHub.Join' as const;
+    public type = Join.Type;
+
+    constructor(
+        public player: Player,
+        public playground: Playground,
+        public joinedAt: Date | string
+    ) { }
+
+    static by(player: LabelOf<Player>) {
+        return player.successors(Join, (join) => join.player);
+    }
+
+    static in(playground: LabelOf<Playground>) {
+        return playground.successors(Join, (join) => join.playground);
+    }
+}
+
 export const gameHubModel = (b: ModelBuilder) =>
     b
         .type(User)
@@ -84,4 +103,5 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(Administrator, (m) => m.predecessor('tenant', Tenant).predecessor('user', User))
         .type(Player, (m) => m.predecessor('user', User).predecessor('tenant', Tenant))
         .type(PlayerName, (m) => m.predecessor('player', Player).predecessor('prior', PlayerName))
-        .type(Playground, (m) => m.predecessor('tenant', Tenant));
+        .type(Playground, (m) => m.predecessor('tenant', Tenant))
+        .type(Join, (m) => m.predecessor('player', Player).predecessor('playground', Playground));
