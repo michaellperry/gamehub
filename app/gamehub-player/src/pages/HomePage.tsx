@@ -3,19 +3,9 @@ import { CodeInput, NameInput } from '../components/molecules';
 import { useHomePage } from '../hooks/useHomePage';
 
 export default function HomePage() {
-    const {
-        playerName,
-        playgroundCode,
-        showNameInput,
-        canJoinPlayground,
-        handleNameSubmit,
-        handleStartPlayground,
-        handleJoinPlayground,
-        setPlaygroundCode,
-        setShowNameInput,
-    } = useHomePage();
+    const { playerName, playground } = useHomePage();
 
-    if (showNameInput) {
+    if (playerName.showNameInput) {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
@@ -30,7 +20,7 @@ export default function HomePage() {
                             </Typography>
                         </div>
 
-                        <NameInput onSubmit={handleNameSubmit} />
+                        <NameInput onSubmit={playerName.handleNameSubmit} />
                     </div>
                 </Container>
             </PageLayout>
@@ -48,7 +38,7 @@ export default function HomePage() {
                             GameHub Playground
                         </Typography>
                         <Typography variant="body" className="text-gray-600">
-                            Welcome back, {playerName}!
+                            Welcome back, {playerName.playerName}!
                         </Typography>
                     </div>
 
@@ -69,7 +59,7 @@ export default function HomePage() {
                                 variant="primary"
                                 size="lg"
                                 fullWidth
-                                onClick={handleStartPlayground}
+                                onClick={playground.handleStartPlayground}
                                 icon={<Icon name="play" size="md" />}
                             >
                                 Start Playground
@@ -91,8 +81,8 @@ export default function HomePage() {
                             </div>
 
                             <CodeInput
-                                value={playgroundCode}
-                                onChange={setPlaygroundCode}
+                                value={playground.playgroundCode}
+                                onChange={playground.setPlaygroundCode}
                                 className="mb-4"
                             />
 
@@ -100,8 +90,8 @@ export default function HomePage() {
                                 variant="secondary"
                                 size="lg"
                                 fullWidth
-                                disabled={!canJoinPlayground}
-                                onClick={handleJoinPlayground}
+                                disabled={!playground.canJoinPlayground}
+                                onClick={playground.handleJoinPlayground}
                                 icon={<Icon name="join" size="md" />}
                             >
                                 Join Playground
@@ -114,7 +104,7 @@ export default function HomePage() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setShowNameInput(true)}
+                            onClick={() => playerName.setShowNameInput(true)}
                             className="text-gray-500 hover:text-gray-700"
                         >
                             Change Name
