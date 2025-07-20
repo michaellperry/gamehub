@@ -1,9 +1,8 @@
 import { Join, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
 import { usePlayer } from './usePlayer';
+import { usePlayground } from './usePlayground';
 
 export interface PlaygroundPlayer {
     playerId: string;
@@ -49,28 +48,8 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
 );
 
 export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewModel {
-    const [error, setError] = useState<string | null>(null);
-    const tenant = useTenant();
     const { playerId, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
-
-    // Validate playground code format
-    const isValidCode = Boolean(code && /^[A-Z]{6}$/.test(code));
-
-    // Create playground fact if code and tenant are available and code is valid (memoized to prevent infinite updates)
-    const playground = useMemo(() =>
-        code && tenant && isValidCode ? new Playground(tenant, code) : null,
-        [code, tenant, isValidCode]
-    );
-
-    // Create the playground fact if it doesn't exist
-    useEffect(() => {
-        if (playground) {
-            j.fact(playground).catch((error) => {
-                console.error('Error creating playground:', error);
-                setError('Failed to load playground. Please check the code and try again.');
-            });
-        }
-    }, [playground]);
+    const { playground, isValidCode, error: playgroundError, loading: playgroundLoading, clearError: clearPlaygroundError } = usePlayground(code);
 
     // Use Jinaga to load all players in the playground
     const { data: playerSessions, error: specificationError, loading: playersLoading } = useSpecification(
@@ -97,7 +76,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     })) : undefined;
 
     const clearError = () => {
-        setError(null);
+        clearPlaygroundError();
         clearPlayerError();
     };
 
@@ -111,11 +90,11 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         console.log('Join game:', game);
     };
 
-    // Loading state combines player loading and specification loading
-    const isLoading = playerLoading || playersLoading;
+    // Loading state combines player loading, playground loading, and specification loading
+    const isLoading = playerLoading || playgroundLoading || playersLoading;
 
     // Combine errors
-    const combinedError = error || playerError || (specificationError ? specificationError.message : null);
+    const combinedError = playgroundError || playerError || (specificationError ? specificationError.message : null);
 
     return {
         playground,

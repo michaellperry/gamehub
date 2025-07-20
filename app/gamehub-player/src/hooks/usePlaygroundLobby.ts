@@ -5,6 +5,7 @@ import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
 import { usePlayer } from './usePlayer';
+import { usePlayground } from './usePlayground';
 
 export interface PlaygroundLobbyViewModel {
     playgroundCode: string;
@@ -26,9 +27,13 @@ export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
     const navigate = useNavigate();
     const { player, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
 
+    // Use the new usePlayground hook for validation and creation
+    const { playground, isValidCode, error: playgroundError, loading: playgroundLoading, clearError: clearPlaygroundError } = usePlayground(playgroundCode);
+
     const clearError = () => {
         setActionError(null);
         clearPlayerError();
+        clearPlaygroundError();
     };
 
     const handleStartPlayground = async () => {
@@ -65,7 +70,7 @@ export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
             return;
         }
 
-        if (playgroundCode.length !== 6) {
+        if (!isValidCode) {
             setActionError('Please enter a valid 6-letter playground code.');
             return;
         }
@@ -74,9 +79,10 @@ export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
         setActionError(null);
 
         try {
-            // Create the playground fact if it doesn't exist
-            const playgroundFact = new Playground(tenant, playgroundCode);
-            await j.fact(playgroundFact);
+            if (!playground) {
+                setActionError('Playground not available. Please try again.');
+                return;
+            }
 
             // Use the player from usePlayer hook (it's already created)
             if (!player) {
@@ -85,7 +91,7 @@ export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
             }
 
             // Create join fact to join the playground
-            await j.fact(new Join(player, playgroundFact, new Date()));
+            await j.fact(new Join(player, playground, new Date()));
 
             // Navigate to the playground
             navigate(`/playground/${playgroundCode}`);
@@ -97,13 +103,13 @@ export function usePlaygroundLobby(): PlaygroundLobbyViewModel {
         }
     };
 
-    const canJoinPlayground = playgroundCode.length === 6;
+    const canJoinPlayground = isValidCode;
 
     return {
         playgroundCode,
         canJoinPlayground,
-        error: actionError || playerError,
-        isLoading: actionLoading || playerLoading,
+        error: actionError || playerError || playgroundError,
+        isLoading: actionLoading || playerLoading || playgroundLoading,
         handleStartPlayground,
         handleJoinPlayground,
         setPlaygroundCode,
