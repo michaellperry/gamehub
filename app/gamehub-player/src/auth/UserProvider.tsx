@@ -1,6 +1,6 @@
 import { Jinaga, User } from 'jinaga';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { AuthContext } from 'react-oauth2-code-pkce';
+import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { AuthProvider } from './AuthProvider';
 
 interface UserContextValue {
@@ -27,7 +27,7 @@ export function UserProvider({
     authProvider: AuthProvider;
     children: ReactNode;
 }) {
-    const { token } = useContext(AuthContext);
+    const { token } = useContext(AuthContext as React.Context<IAuthContext>);
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<Error | null>(null);
 

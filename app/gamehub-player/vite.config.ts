@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
             process: '{"argv":[],"env":{}}',
         },
         server: {
-            port: 3001, // Different port from admin to avoid conflicts
+            port: 3000,
             open: true,
         },
         build: {

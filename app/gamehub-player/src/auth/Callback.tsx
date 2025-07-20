@@ -1,7 +1,7 @@
 import { Player, type Tenant } from 'gamehub-model/model';
 import { User } from 'jinaga';
 import { useContext, useEffect, useState } from 'react';
-import { AuthContext } from 'react-oauth2-code-pkce';
+import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { useNavigate } from 'react-router-dom';
 import { j } from '../jinaga-config.ts';
 import { useUser } from './UserProvider';
@@ -22,7 +22,7 @@ async function addAttendee(user: User | null, tenant: Tenant | null) {
  */
 export function Callback() {
     const navigate = useNavigate();
-    const { token, loginInProgress } = useContext(AuthContext);
+    const { token, loginInProgress } = useContext(AuthContext as React.Context<IAuthContext>);
     const { user } = useUser();
     const tenant = useTenant();
     const [error, setError] = useState<string | null>(null);
