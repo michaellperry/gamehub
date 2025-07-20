@@ -1,5 +1,6 @@
-import { Playground } from 'gamehub-model/model';
+import { Join, Player, Playground } from '@model/model';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
 import { j } from '../jinaga-config';
@@ -21,6 +22,7 @@ export function usePlayground(): PlaygroundViewModel {
     const [actionLoading, setActionLoading] = useState<boolean>(false);
     const { user } = useUser();
     const tenant = useTenant();
+    const navigate = useNavigate();
 
     const clearError = () => {
         setActionError(null);
@@ -45,7 +47,7 @@ export function usePlayground(): PlaygroundViewModel {
             await j.fact(new Playground(tenant, code));
 
             // Navigate to the playground
-            window.location.href = `/playground/${code}`;
+            navigate(`/playground/${code}`);
         } catch (error) {
             console.error('Error creating playground fact:', error);
             setActionError('Failed to create playground. Please try again.');
@@ -69,13 +71,20 @@ export function usePlayground(): PlaygroundViewModel {
         setActionError(null);
 
         try {
-            // Create a playground fact when joining
-            await j.fact(new Playground(tenant, playgroundCode));
+            // Create the playground fact if it doesn't exist
+            const playgroundFact = new Playground(tenant, playgroundCode);
+            await j.fact(playgroundFact);
+
+            // Create player fact if it doesn't exist
+            const player = await j.fact(new Player(user, tenant));
+
+            // Create join fact to join the playground
+            await j.fact(new Join(player, playgroundFact, new Date()));
 
             // Navigate to the playground
-            window.location.href = `/playground/${playgroundCode}`;
+            navigate(`/playground/${playgroundCode}`);
         } catch (error) {
-            console.error('Error creating playground fact:', error);
+            console.error('Error joining playground:', error);
             setActionError('Failed to join playground. Please check the code and try again.');
         } finally {
             setActionLoading(false);

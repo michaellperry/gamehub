@@ -2,9 +2,10 @@ import { Route, Routes } from 'react-router-dom';
 import './App.css';
 
 // Import pages
-import HomePage from '@/pages/HomePage';
 import Callback from './auth/Callback';
 import { StyleGuide } from './components/StyleGuide';
+import HomePage from './pages/HomePage';
+import PlaygroundPage from './pages/PlaygroundPage';
 
 function App() {
     return (
@@ -13,6 +14,8 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/callback" element={<Callback />} />
                 <Route path="/style-guide" element={<StyleGuide />} />
+                <Route path="/playground/:code" element={<PlaygroundPage />} />
+                <Route path="/game/:gameId" element={<div>Game Page (Coming Soon)</div>} />
             </Routes>
         </div>
     );
