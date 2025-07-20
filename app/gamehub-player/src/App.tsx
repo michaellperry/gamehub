@@ -4,6 +4,7 @@ import './App.css';
 // Import pages
 import HomePage from '@/pages/HomePage';
 import Callback from './auth/Callback';
+import { StyleGuide } from './components/StyleGuide';
 
 function App() {
     return (
@@ -11,6 +12,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/callback" element={<Callback />} />
+                <Route path="/style-guide" element={<StyleGuide />} />
             </Routes>
         </div>
     );
