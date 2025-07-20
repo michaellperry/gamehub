@@ -48,6 +48,44 @@ The `/docs` folder contains comprehensive documentation for the GameHub project,
 - [x] Set up version control
 ```
 
+### `/docs/prds/` - Product Requirements Documents
+**Purpose**: Detailed product requirements documents that define feature specifications, user stories, and functional requirements.
+
+**Content Types**:
+- Product feature specifications
+- User experience flows and wireframes
+- Functional requirements and acceptance criteria
+- User story definitions
+- Feature prioritization and scope
+- Non-functional requirements (performance, security, etc.)
+
+**Content Guidelines**:
+- Focus on "what" the product should do, not "how" to implement it
+- Include user personas and use cases
+- Define clear acceptance criteria
+- Document edge cases and error scenarios
+- Include mockups or wireframes when helpful
+- Reference related technical documentation
+
+### `/docs/models/` - Data Model Documentation
+**Purpose**: Visual and textual documentation of data models, entity relationships, and domain models.
+
+**Content Types**:
+- Entity relationship diagrams (DOT files, PlantUML, etc.)
+- Data model specifications
+- Domain model documentation
+- Database schema documentation
+- Jinaga fact model diagrams
+- Entity relationship mappings
+
+**Content Guidelines**:
+- Use standard diagram formats (DOT, PlantUML, Mermaid)
+- Include clear entity definitions
+- Document relationships and cardinality
+- Show inheritance and composition patterns
+- Include version history for model changes
+- Reference related implementation code
+
 ### `/docs/architecture/` - Technical Architecture
 **Purpose**: Detailed technical documentation, system architecture, and design decisions.
 
@@ -82,7 +120,9 @@ The `/docs` folder contains comprehensive documentation for the GameHub project,
 
 ### File Naming Convention
 - Use UPPERCASE with underscores for plan files: `PROJECT_NAME_PLAN.md`
+- Use UPPERCASE with underscores for PRD files: `FEATURE_NAME_PRD.md`
 - Use lowercase with hyphens for guides: `getting-started-guide.md`
+- Use descriptive names for model files: `domain-model.dot`, `entity-relationships.puml`
 - Use descriptive, clear names that indicate content type
 
 ### Markdown Formatting
@@ -153,14 +193,68 @@ Brief description of the project or feature being implemented.
 Additional context, decisions, or important information.
 ```
 
+## PRD File Template
+
+```markdown
+# Product Requirements Document (PRD): [Feature Name]
+
+## Overview
+Brief description of the feature or product being defined.
+
+## Goals
+- Primary objective A
+- Primary objective B
+- Primary objective C
+
+## User Roles
+- **Role A**: Description of user type
+- **Role B**: Description of user type
+
+## Information Architecture
+
+### Routes
+- `/route-a` : Description
+- `/route-b` : Description
+
+### Entities
+- **Entity A**
+  - Property 1 (type, description)
+  - Property 2 (type, description)
+
+## User Experience
+
+### [Screen/Flow Name]
+- Feature description
+- User interaction details
+- Expected behavior
+
+## Non-Functional Requirements
+- Performance requirements
+- Security requirements
+- Accessibility requirements
+
+## Success Criteria
+- [ ] Criterion A
+- [ ] Criterion B
+- [ ] Criterion C
+```
+
 ## Important Notes
 
 1. **Plans vs Implementation**: Plans in `/docs/plans/` should focus on project management, coordination, and tracking. Implementation details belong in code comments, architecture docs, or getting-started guides.
 
-2. **Status Tracking**: Always maintain accurate status indicators and progress summaries in plan files.
+2. **PRDs vs Technical Specs**: PRDs in `/docs/prds/` should focus on user experience and functional requirements. Technical implementation details belong in architecture docs or code comments.
 
-3. **Cross-References**: Plans should reference related documentation but not duplicate implementation details.
+3. **Model Documentation**: Models in `/docs/models/` should focus on data relationships and domain concepts. Implementation details belong in code comments or architecture docs.
 
-4. **Maintenance**: Update plan files as work progresses and phases are completed.
+4. **Status Tracking**: Always maintain accurate status indicators and progress summaries in plan files.
 
-5. **Clarity**: Plans should be clear enough for team members to understand what needs to be done and track progress effectively.
+5. **Cross-References**: Documentation should reference related files but not duplicate content across different types of docs.
+
+6. **Maintenance**: Update documentation as work progresses and features are completed.
+
+7. **Clarity**: All documentation should be clear enough for team members to understand what needs to be done and track progress effectively.
+
+8. **Maintenance**: Update plan files as work progresses and phases are completed.
+
+9. **Clarity**: Plans should be clear enough for team members to understand what needs to be done and track progress effectively.

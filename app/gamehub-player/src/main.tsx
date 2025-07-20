@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <AccessProvider>
             <UserProvider j={j} authProvider={authProvider}>
-                <BrowserRouter>
+                <BrowserRouter basename={import.meta.env.VITE_BASE_NAME ?? '/'}>
                     <App />
                 </BrowserRouter>
             </UserProvider>

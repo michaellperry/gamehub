@@ -1,5 +1,5 @@
 import { DistributionRules, User } from 'jinaga';
-import { Administrator, model, Tenant } from '../model/index.js';
+import { Administrator, Join, model, Playground, Tenant } from '../model/index.js';
 
 export const tenantDistribution = (r: DistributionRules) =>
     r
@@ -19,4 +19,16 @@ export const tenantDistribution = (r: DistributionRules) =>
                     .selectMany((tenant) => tenant.creator.predecessor())
             )
         )
-        .with(model.given(User).match((user) => user.predecessor()));
+        .with(model.given(User).match((user) => user.predecessor()))
+
+        // Share playgrounds with all players in the same tenant
+        .share(
+            model.given(Tenant).match((tenant) => Playground.in(tenant))
+        )
+        .with(model.given(Tenant).match((tenant) => tenant.predecessor()))
+
+        // Share joins with all players in the same playground
+        .share(
+            model.given(Playground).match((playground) => Join.in(playground))
+        )
+        .with(model.given(Playground).match((playground) => playground.predecessor()));

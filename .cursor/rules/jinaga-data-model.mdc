@@ -1,8 +1,19 @@
 ---
-description: "GameHub Jinaga data model development standards for creating immutable facts, authorization rules, and distribution patterns in the event-sourced architecture. Includes fact definition patterns, multi-tenant structures, role-based authorization, hierarchical permissions, share/with distribution rules, client-side React hooks with useSpecification, server-side querying patterns, and best practices for immutable fact design, security, and performance optimization."
+description: "Apply this rule when defining new fact types, authorization rules, or distribution patterns in the Jinaga data model. Use for creating immutable facts, multi-tenant structures, role-based authorization, and share/with distribution rules."
 alwaysApply: false
 ---
 # Jinaga Data Model Development
+
+## Related Rules
+
+- **jinaga-usage-patterns**: Use this rule when you need to load or create facts from React components
+- **frontend-development**: Use this rule when implementing UI components that interact with facts
+
+## When to Use Both Rules Together
+
+When building UI components that create new facts:
+1. **First**: Use **jinaga-data-model** to define the fact structure, authorization, and distribution rules
+2. **Then**: Use **jinaga-usage-patterns** to implement the React components that create and display those facts
 
 ## Model Architecture (`app/gamehub-model/`)
 
@@ -10,7 +21,7 @@ alwaysApply: false
 - **[index.ts](app/gamehub-model/index.ts)** - Main exports and model entry point
 - **[model/](app/gamehub-model/model/)** - Fact definitions and domain model
 - **[authorization/](app/gamehub-model/authorization/)** - Security rules and policies
-- **[distribution/](app/gamehub-model/distribution/)** - Fact distribution logic using `share`/`with` pattern
+- **[distribution/](app/gamehub-model/distribution/)** - Query execution control using `share`/`with` pattern
 
 ## Fact Definition Patterns
 
@@ -171,145 +182,188 @@ export const hierarchicalAuthorization = (a: AuthorizationRules) =>
 
 ## Distribution Rules (`app/gamehub-model/distribution/`)
 
-Distribution rules use the `share`/`with` pattern to control how facts are distributed across users and services. The `share` clause defines what facts to share, and the `with` clause defines who receives them.
+Distribution rules use the `share`/`with` pattern to control what queries users can execute. The `share` clause defines the query structure that users are allowed to run, and the `with` clause defines who can execute those queries.
 
-### Fact Distribution
+### Distribution Rule Patterns (`share`/`with`)
+
+#### Basic Share/With Pattern
 ```typescript
-// app/gamehub-model/distribution/tenantDistribution.ts
-import { DistributionRules, User } from 'jinaga';
-import { Administrator, model, Tenant } from '../model/index.js';
+// CORRECT: Simple share/with pattern
+.share(
+  model.given(Tenant).match((tenant) => SomeFact.in(tenant))
+)
+.with(model.given(Tenant).match((tenant) => 
+  Player.in(tenant).selectMany((player) => player.user.predecessor())
+));
 
-export const tenantDistribution = (r: DistributionRules) =>
-  r
-    // Share tenant administrators with other administrators
+// This enables users to execute queries like:
+const factsSpec = model.given(Tenant).match((tenant) => SomeFact.in(tenant));
+const facts = await jinaga.query(factsSpec, tenant);
+```
+
+#### Common Mistakes to Avoid
+```typescript
+// ❌ WRONG: Complex joins in share clause
     .share(
-      model
-        .given(Tenant, User)
-        .match((tenant, user) => Administrator.of(tenant).join((admin) => admin.user, user))
+  model.given(Tenant, User).match((tenant, user) =>
+    SomeFact.in(tenant).join((fact) => fact.user, user)
+  )
+)
+// This forces users to write complex queries with multiple parameters
+
+// ❌ WRONG: Trying to filter in share clause
+    .share(
+  model.given(Tenant).match((tenant) => 
+    SomeFact.in(tenant).where(fact => fact.isActive)
+  )
+)
+// This makes the query structure more complex than necessary
+```
+
+#### Rule of Thumb
+- `share` clause: Define WHAT queries users can execute (keep simple)
+- `with` clause: Define WHO can execute those queries (can be complex)
+- The share clause should match the structure of queries you want users to write
+- Avoid complex joins in the `share` clause as they force complex user queries
+- Use `selectMany` and `predecessor()` in the `with` clause for user traversal
+
+### Why Simple Share Clauses Matter
+
+Complex share clauses force users to write complex queries, which:
+- Reduces usability for simple use cases
+- Increases complexity for frontend developers
+- Makes the API harder to understand and debug
+- Can cause performance issues with unnecessary joins
+- Creates barriers to adoption
+
+The goal is to enable users to write intuitive, simple queries that match their mental model of the data.
+
+### Distribution Rule Validation Checklist
+
+Before implementing a distribution rule, verify:
+
+1. **Share Clause Simplicity**
+   - [ ] Share clause only defines the query structure users should write
+   - [ ] No complex joins or filtering in share clause
+   - [ ] Uses simple traversals like `Fact.in(tenant)`
+   - [ ] Query structure is intuitive for users
+
+2. **With Clause Completeness**
+   - [ ] With clause defines who can execute the queries
+   - [ ] Properly traverses to User objects (required for distribution)
+   - [ ] Uses `selectMany` and `predecessor()` for user traversal
+
+3. **Query Usability**
+   - [ ] Users can write simple, intuitive queries
+   - [ ] Query parameters are reasonable (not requiring complex joins)
+   - [ ] Query structure matches the share clause
+   - [ ] Query complexity matches the use case
+
+4. **Pattern Consistency**
+   - [ ] Follows existing patterns in the codebase
+   - [ ] Matches the structure of other distribution rules
+   - [ ] Uses the same traversal patterns as existing rules
+
+5. **Testing**
+   - [ ] Rule compiles without TypeScript errors
+   - [ ] Rule follows the established `share`/`with` pattern
+   - [ ] Users can successfully execute the intended queries
+
+### Common Distribution Patterns
+
+#### Enable Queries for All Players in Tenant
+```typescript
+.share(
+  model.given(Tenant).match((tenant) => SomeFact.in(tenant))
+)
+.with(model.given(Tenant).match((tenant) => 
+  Player.in(tenant).selectMany((player) => player.user.predecessor())
+));
+
+// Users can execute:
+const factsSpec = model.given(Tenant).match((tenant) => SomeFact.in(tenant));
+const facts = await jinaga.query(factsSpec, tenant);
+```
+
+#### Enable Queries for Administrators Only
+```typescript
+    .share(
+  model.given(Tenant).match((tenant) => AdminFact.in(tenant))
     )
-    .with(model.given(Tenant, User).match((tenant, user) => Administrator.usersOf(tenant)))
+.with(model.given(Tenant).match((tenant) => 
+  Administrator.usersOf(tenant)
+));
 
-    // Share tenants of administrator with the user
+// Administrators can execute:
+const adminFactsSpec = model.given(Tenant).match((tenant) => AdminFact.in(tenant));
+const adminFacts = await jinaga.query(adminFactsSpec, tenant);
+```
+
+#### Enable Queries for Specific User
+```typescript
     .share(
-      model.given(User).match((user) =>
-        Administrator.by(user)
-          .selectMany((admin) => admin.tenant.predecessor())
-          .selectMany((tenant) => tenant.creator.predecessor())
-      )
+  model.given(User).match((user) => UserSpecificFact.by(user))
     )
     .with(model.given(User).match((user) => user.predecessor()));
+
+// Users can execute:
+const userFactsSpec = model.given(User).match((user) => UserSpecificFact.by(user));
+const userFacts = await jinaga.query(userFactsSpec, currentUser);
 ```
 
-### Selective Distribution
-```typescript
-// Distribute facts only to specific users or contexts
-import { DistributionRules, User } from 'jinaga';
-import { model, Tenant, Player } from '../model/index.js';
+### Error Prevention Guidelines
 
-export const selectiveDistribution = (r: DistributionRules) =>
-  r
-    // Share player facts only with the player's tenant
-    .share(
-      model
-        .given(Player)
-        .match((player) => player.tenant.predecessor())
-    )
-    .with(model.given(Tenant).match((tenant) => Player.in(tenant)))
+#### Before Writing Distribution Rules
+1. **Study Existing Rules**: Look at `tenantDistribution.ts` for patterns
+2. **Keep Share Simple**: The share clause should enable simple, intuitive user queries
+3. **Complexity in With**: Put complex logic in the `with` clause, not the `share` clause
+4. **Test Query Usability**: Verify that users can write simple queries
+5. **Follow the Pattern**: If your rule looks different from existing ones, reconsider
 
-    // Share private facts only with the creator
-    .share(
-      model
-        .given(PrivateFact)
-        .match((fact) => fact.createdBy.predecessor())
-    )
-    .with(model.given(User).match((user) => user.predecessor()));
-```
+#### Common Error Patterns
+- ❌ `model.given(Tenant, User)` for simple distributions (forces complex user queries)
+- ❌ Complex joins in share clause (makes user queries complex)
+- ❌ Missing `selectMany` and `predecessor()` in with clause
+- ❌ Share clause doesn't match intended user query structure
+- ❌ Requiring multiple parameters for simple queries
 
-## Model Usage Patterns
+### Step-by-Step Distribution Rule Creation
 
-### Client-side Usage
-```typescript
-// In React components
-import { model, ServicePrincipal, Tenant } from '@model/model';
-import { User } from 'jinaga';
-import { useSpecification } from 'jinaga-react';
-import { useState } from 'react';
-import { j } from '../jinaga-config';
-import { useTenant } from '../tenants/useTenant';
+1. **Identify the Query Structure**
+   ```typescript
+   // What query should users be able to execute?
+   model.given(Tenant).match((tenant) => Playground.in(tenant))
+   ```
 
-// Define specification for querying facts
-const servicePrincipalsInTenant = model
-  .given(Tenant)
-  .match((tenant) => ServicePrincipal.of(tenant));
+2. **Identify the Recipients**
+   ```typescript
+   // Who should be able to execute these queries?
+   Player.in(tenant).selectMany((player) => player.user.predecessor())
+   ```
 
-// Create facts using fact method
-async function createServicePrincipal(tenant: Tenant, publicKey: string) {
-  await j.fact(new ServicePrincipal(new User(publicKey), tenant, new Date()));
-}
+3. **Create the Share Clause**
+   ```typescript
+   .share(
+     model.given(Tenant).match((tenant) => Playground.in(tenant))
+   )
+   ```
 
-async function createTenant(user: User) {
-  const tenant = await j.fact(new Tenant(user));
-  await j.fact(new Administrator(tenant, user, new Date()));
-}
+4. **Create the With Clause**
+   ```typescript
+   .with(model.given(Tenant).match((tenant) => 
+     Player.in(tenant).selectMany((player) => player.user.predecessor())
+   ))
+   ```
 
-// React hook using useSpecification
-export function useServicePrincipals() {
-  const tenant = useTenant();
-  const { data, error, loading } = useSpecification(j, servicePrincipalsInTenant, tenant);
-  const [actionError, setActionError] = useState<Error | null>(null);
+5. **Verify the Pattern**
+   - Share clause enables simple user queries
+   - With clause properly traverses to User objects
+   - Follows existing codebase patterns
+   - Query structure is intuitive for users
 
-  const addServicePrincipal = (publicKey: string) => {
-    if (tenant) {
-      createServicePrincipal(tenant, publicKey)
-        .then(() => setActionError(null))
-        .catch(setActionError);
-    }
-  };
+### Advanced Distribution Patterns
 
-  return {
-    isConfigured: !!tenant,
-    servicePrincipals: data?.map((sp) => ({
-      id: j.hash(sp),
-      createdAt: sp.createdAt,
-      publicKey: sp.user.publicKey,
-    })) || null,
-    error: actionError || error,
-    loading: loading,
-    canAddServicePrincipal: !!tenant,
-    addServicePrincipal,
-  };
-}
-```
-
-### Server-side Usage
-```typescript
-// In backend services
-import { Jinaga } from 'jinaga';
-import { Game, GameSession, PlayerMove, Tenant, model } from '@gamehub/model';
-
-const jinaga = new Jinaga();
-
-// Define specifications for querying
-const gamesSpec = model.given(User).match((user) => 
-  Game.of(user).select(game => ({
-    id: game.hash,
-    name: game.name,
-    type: game.gameType
-  }))
-);
-
-// Query facts using specifications
-const games = await jinaga.query(gamesSpec, user);
-
-// Observe facts with specifications
-const observer = jinaga.watch(gamesSpec, user, (game) => {
-  console.log('Active game:', game);
-});
-
-// Store new facts using fact method
-const game = await jinaga.fact(new Game(tenant, 'Chess Game', 'chess', user));
-const session = await jinaga.fact(new GameSession(game, user));
-```
+For more complex distribution scenarios, refer to the existing patterns in `app/gamehub-model/distribution/tenantDistribution.ts`. The key principle remains: keep the `share` clause simple to enable simple user queries, and put complexity in the `with` clause.
 
 ## Best Practices
 
@@ -324,8 +378,14 @@ const session = await jinaga.fact(new GameSession(game, user));
 3. **Inheritance**: Child facts inherit parent permissions
 4. **Explicit**: Make authorization rules explicit and testable
 
+### Query Design
+1. **Simple**: Enable simple, intuitive user queries
+2. **Consistent**: Use consistent patterns across similar facts
+3. **Efficient**: Avoid unnecessary complexity in query structures
+4. **Usable**: Design queries that match user mental models
+
 ### Performance Considerations
 1. **Indexing**: Use appropriate fact types for efficient queries
-2. **Distribution**: Minimize unnecessary fact distribution
+2. **Distribution**: Minimize unnecessary query complexity
 3. **Caching**: Cache frequently accessed facts on the client
 4. **Pagination**: Handle large fact sets with pagination

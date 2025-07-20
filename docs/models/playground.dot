@@ -1,0 +1,17 @@
+digraph {
+    rankdir=BT
+    User [label="User\n(publicKey: string)"]
+
+    Tenant -> User [label="creator"]
+    Player -> User, Tenant
+
+    PlayerName [label="PlayerName\n(name: string)"]
+    PlayerName -> Player
+    PlayerName -> PlayerName [label="prior *"]
+
+    Playground -> Tenant [label="tenant"]
+    Playground [label="Playground\n(code: string)"]
+
+    Join [label="Join\n(joinedAt: Date|string)"]
+    Join -> Player, Playground
+}

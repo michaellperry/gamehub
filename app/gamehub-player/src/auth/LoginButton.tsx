@@ -1,9 +1,9 @@
-import { AuthContext } from 'react-oauth2-code-pkce';
+import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { useContext } from 'react';
 import { useAccess } from './AccessProvider';
 
 export function LoginButton() {
-    const { logIn: authLogIn, token, error } = useContext(AuthContext);
+    const { logIn: authLogIn, token, error } = useContext(AuthContext as React.Context<IAuthContext>);
     const { logOut } = useAccess();
 
     if (error) {

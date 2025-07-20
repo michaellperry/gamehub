@@ -1,0 +1,251 @@
+---
+description: "Apply this rule whenever developing React components or hooks to ensure proper separation of concerns, maintainable architecture, and reusable business logic patterns."
+alwaysApply: false
+---
+# Composable Custom Hooks with View Models
+
+## Overview
+This rule defines patterns for creating composable custom hooks that return view models, enabling clean separation of concerns and reusable business logic. **Application components should strongly prefer custom hooks with view models over managing state directly in render functions.**
+
+## Hook Structure Pattern
+
+### Single Responsibility Principle
+- Each hook should have **one clear responsibility**
+- Extract related state and logic into focused hooks
+- Avoid mixing unrelated concerns in a single hook
+
+### View Model Interface Pattern
+```typescript
+export interface [Feature]ViewModel {
+    // State properties
+    [propertyName]: [type];
+    
+    // Event handlers
+    handle[Action]: (params?) => void;
+    
+    // State setters (when needed)
+    set[Property]: (value: [type]) => void;
+}
+```
+
+### Hook Implementation Pattern
+```typescript
+export function use[Feature](): [Feature]ViewModel {
+    // 1. State declarations
+    const [state, setState] = useState<[type]>(initialValue);
+    
+    // 2. External dependencies (other hooks, context)
+    const { data } = useSomeOtherHook();
+    
+    // 3. Side effects
+    useEffect(() => {
+        // Effect logic
+    }, [dependencies]);
+    
+    // 4. Event handlers
+    const handleAction = useCallback((params) => {
+        // Handler logic
+    }, [dependencies]);
+    
+    // 5. Computed values
+    const computedValue = useMemo(() => {
+        // Computation logic
+    }, [dependencies]);
+    
+    // 6. Return view model
+    return {
+        // State
+        property: state,
+        
+        // Handlers
+        handleAction,
+        
+        // Setters
+        setProperty: setState,
+    };
+}
+```
+
+## Composition Pattern
+
+### Composing Multiple Hooks
+```typescript
+export interface [Page]ViewModel {
+    [feature1]: [Feature1]ViewModel;
+    [feature2]: [Feature2]ViewModel;
+}
+
+export function use[Page](): [Page]ViewModel {
+    const feature1 = use[Feature1]();
+    const feature2 = use[Feature2]();
+    
+    return {
+        feature1,
+        feature2,
+    };
+}
+```
+
+## Naming Conventions
+
+### Hook Names
+- Use `use[Feature]` format
+- Be specific about the feature/responsibility
+- Examples: `usePlayerName`, `usePlayground`, `useAuthentication`
+
+### View Model Names
+- Use `[Feature]ViewModel` format
+- Match the hook name
+- Examples: `PlayerNameViewModel`, `PlaygroundViewModel`
+
+### Interface Properties
+- **State properties**: Use descriptive nouns (`playerName`, `isLoading`)
+- **Event handlers**: Use `handle[Action]` format (`handleSubmit`, `handleStartPlayground`)
+- **Setters**: Use `set[Property]` format (`setShowNameInput`, `setPlaygroundCode`)
+
+## Best Practices
+
+### 1. Encapsulation
+- Keep internal state and logic private to the hook
+- Only expose what the component needs through the view model
+- Use TypeScript interfaces to define clear contracts
+
+### 2. Immutability
+- Return new objects/arrays rather than mutating existing ones
+- Use spread operators for object updates
+- Prefer functional updates for state setters
+
+### 3. Performance
+- Use `useCallback` for event handlers that are passed to child components
+- Use `useMemo` for expensive computations
+- Minimize re-renders by carefully managing dependencies
+
+### 4. Error Handling
+- Handle errors gracefully within the hook
+- Provide meaningful error states in the view model
+- Log errors appropriately for debugging
+
+### 5. Testing Considerations
+- Design hooks to be easily testable
+- Avoid tight coupling to external services
+- Consider dependency injection for external dependencies
+
+## Example: Refactoring Complex Hooks
+
+### Before (Mixed Concerns)
+```typescript
+export function useHomePage() {
+    // Player name logic mixed with playground logic
+    const [playerName, setPlayerName] = useState('');
+    const [playgroundCode, setPlaygroundCode] = useState('');
+    // ... mixed logic
+}
+```
+
+### After (Composed Concerns)
+```typescript
+// Separate, focused hooks
+export function usePlayerName(): PlayerNameViewModel { /* ... */ }
+export function usePlayground(): PlaygroundViewModel { /* ... */ }
+
+// Composed hook
+export function useHomePage(): HomePageViewModel {
+    const playerName = usePlayerName();
+    const playground = usePlayground();
+    
+    return { playerName, playground };
+}
+```
+
+## Integration with Components
+
+### ✅ Recommended: Custom Hooks with View Models
+**Strongly prefer this approach for all application components.**
+
+```typescript
+function MyComponent() {
+    const viewModel = useMyHook();
+    
+    return (
+        <div>
+            <input 
+                value={viewModel.property}
+                onChange={viewModel.setProperty}
+            />
+            <button onClick={viewModel.handleAction}>
+                Action
+            </button>
+        </div>
+    );
+}
+```
+
+### ❌ Avoid: Direct State Management in Components
+**Avoid managing complex state directly in component render functions.**
+
+```typescript
+// ❌ DON'T DO THIS
+function MyComponent() {
+    const [state, setState] = useState('');
+    const [loading, setLoading] = useState(false);
+    
+    const handleAction = () => {
+        setLoading(true);
+        // Complex business logic mixed with UI
+        doSomething().then(() => setLoading(false));
+    };
+    
+    return (
+        <div>
+            <input value={state} onChange={setState} />
+            <button onClick={handleAction} disabled={loading}>
+                Action
+            </button>
+        </div>
+    );
+}
+```
+
+### Benefits of Custom Hooks with View Models
+
+1. **Separation of Concerns**: Business logic is separated from presentation
+2. **Reusability**: Hooks can be shared across multiple components
+3. **Testability**: Business logic can be tested independently of UI
+4. **Maintainability**: Changes to business logic don't require UI changes
+5. **Type Safety**: View models provide clear contracts for component usage
+6. **Performance**: Optimized re-renders through proper dependency management
+
+## When to Apply This Pattern
+
+### ✅ Strongly Recommended For
+- **All application components** - Use custom hooks with view models as the default approach
+- Complex state management
+- Reusable business logic
+- Data fetching and caching
+- Form handling
+- Authentication flows
+- Real-time data synchronization
+- Any component with more than 2-3 state variables
+- Components that handle user interactions
+- Components that integrate with external services
+
+### ⚠️ Consider For
+- Simple state that might become more complex over time
+- Components that are likely to be reused elsewhere
+- New features where you want to establish good patterns early
+
+### ❌ Only Avoid When
+- Trivial UI-only state (like `isOpen` for a simple modal)
+- One-off logic that will never be reused and is truly component-specific
+- Prototypes or throwaway code
+
+## Migration Strategy
+
+1. **Identify Concerns**: Separate different responsibilities in existing hooks
+2. **Extract Interfaces**: Define clear view model interfaces
+3. **Create Focused Hooks**: Implement single-responsibility hooks
+4. **Compose**: Use composition to combine related hooks
+5. **Update Components**: Refactor components to use the new structure
+6. **Test**: Ensure functionality is preserved and improved
+
+This pattern promotes maintainable, testable, and reusable code while keeping components focused on presentation concerns. **By default, extract business logic into custom hooks rather than managing complex state within component render functions.** 

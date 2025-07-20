@@ -1,6 +1,6 @@
 import { Jinaga, User } from 'jinaga';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { AuthContext } from 'react-oauth2-code-pkce';
+import { AuthContext, IAuthContext } from 'react-oauth2-code-pkce';
 import { AuthProvider } from './AuthProvider';
 
 interface UserContextValue {
@@ -16,10 +16,7 @@ const UserContext = createContext<UserContextValue>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useUser = () => useContext(UserContext);
 
-interface UserProviderProps {
-    j: Jinaga;
-    authProvider: AuthProvider;
-}
+
 
 export function UserProvider({
     j,
@@ -30,18 +27,18 @@ export function UserProvider({
     authProvider: AuthProvider;
     children: ReactNode;
 }) {
-    const { token } = useContext(AuthContext);
+    const { token } = useContext(AuthContext as React.Context<IAuthContext>);
     const [user, setUser] = useState<User | null>(null);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
         if (import.meta.env.DEV) {
-            setUser(new User('-----ATTENDEE USER-----'));
+            setUser(new User('-----PLAYER USER-----'));
             setError(null);
         } else if (token) {
             authProvider.setToken(token);
             j.login<User>()
-                .then(({ userFact, profile }) => setUser(userFact))
+                .then(({ userFact }) => setUser(userFact))
                 .catch((error) => setError(error));
         } else {
             setUser(null);

@@ -1,0 +1,273 @@
+---
+description: "Apply this rule when loading facts for display in React components or creating facts from user interactions. Use for useSpecification hooks, loading states, error handling, and real-time data synchronization."
+alwaysApply: false
+---
+# Jinaga Usage Patterns and useSpecification
+
+## Related Rules
+
+- **jinaga-data-model**: Use this rule when defining new fact types and their security rules
+- **frontend-development**: Use this rule when building React components that display or modify facts
+
+## Rule Selection Decision Tree
+
+### Are you working with existing facts in the UI?
+→ Use **jinaga-usage-patterns**
+
+### Are you building React components that create new facts?
+→ Use **jinaga-data-model** first, then **jinaga-usage-patterns**
+
+### Are you implementing server-side fact creation only?
+→ Use **jinaga-data-model** only
+
+### Are you defining new fact types without UI integration?
+→ Use **jinaga-data-model** only
+
+## Model Usage Patterns
+
+### Client-side Usage
+```typescript
+// In React components
+import { model, ServicePrincipal, Tenant } from '@model/model';
+import { User } from 'jinaga';
+import { useSpecification } from 'jinaga-react';
+import { useState } from 'react';
+import { j } from '../jinaga-config';
+import { useTenant } from '../tenants/useTenant';
+
+// Define specification for querying facts
+const servicePrincipalsInTenant = model
+  .given(Tenant)
+  .match((tenant) => ServicePrincipal.of(tenant));
+
+// Create facts using fact method
+async function createServicePrincipal(tenant: Tenant, publicKey: string) {
+  await j.fact(new ServicePrincipal(new User(publicKey), tenant, new Date()));
+}
+
+async function createTenant(user: User) {
+  const tenant = await j.fact(new Tenant(user));
+  await j.fact(new Administrator(tenant, user, new Date()));
+}
+
+// React hook using useSpecification
+export function useServicePrincipals() {
+  const tenant = useTenant();
+  const { data, error, loading } = useSpecification(j, servicePrincipalsInTenant, tenant);
+  const [actionError, setActionError] = useState<Error | null>(null);
+
+  const addServicePrincipal = (publicKey: string) => {
+    if (tenant) {
+      createServicePrincipal(tenant, publicKey)
+        .then(() => setActionError(null))
+        .catch(setActionError);
+    }
+  };
+
+  return {
+    isConfigured: !!tenant,
+    servicePrincipals: data?.map((sp) => ({
+      id: j.hash(sp),
+      createdAt: sp.createdAt,
+      publicKey: sp.user.publicKey,
+    })) || null,
+    error: actionError || error,
+    loading: loading,
+    canAddServicePrincipal: !!tenant,
+    addServicePrincipal,
+  };
+}
+```
+
+### Client-side Usage - useSpecification Best Practices
+```typescript
+// Correct pattern for useSpecification with conditional parameters
+export function useConditionalData() {
+  const user = useUser();
+  const tenant = useTenant();
+  
+  // Define specification that expects both parameters
+  const dataSpec = model.given(User, Tenant).match((user, tenant) => 
+    SomeFact.in(tenant).join(fact => fact.user, user)
+  );
+  
+  // Pass null parameters - useSpecification will only load when all are non-null
+  const { data, loading } = useSpecification(j, dataSpec, user, tenant);
+  
+  return { data, loading };
+}
+```
+
+### Common Mistakes to Avoid
+```typescript
+// ❌ WRONG: Creating fallback objects
+const { data } = useSpecification(j, spec, user || new User(''), tenant || new Tenant(new User('')));
+
+// ❌ WRONG: Conditional specification creation
+const spec = user && tenant ? model.given(User, Tenant).match(...) : null;
+
+// ❌ WRONG: Specification recreation on every render (CAUSES INFINITE LOOPS)
+export function useMyHook() {
+  const spec = model.given(User, Tenant).match((user, tenant) => ...); // Recreated every render!
+  const { data } = useSpecification(j, spec, user, tenant);
+}
+
+// ✅ CORRECT: Always define the specification, let useSpecification handle nulls
+const spec = model.given(User, Tenant).match((user, tenant) => ...);
+const { data } = useSpecification(j, spec, user, tenant);
+```
+
+### Specification Definition Patterns
+```typescript
+// ✅ CORRECT: Define specification once, use with conditional parameters
+const playerNameSpec = model.given(User, Tenant).match((user, tenant) => 
+  Player.in(tenant)
+    .join(player => player.user, user)
+    .selectMany(player => PlayerName.current(player))
+);
+
+// ✅ CORRECT: Pass actual parameters (including null)
+const { data } = useSpecification(j, playerNameSpec, user, tenant);
+```
+
+### Server-side Usage
+```typescript
+// In backend services
+import { Jinaga } from 'jinaga';
+import { Game, GameSession, PlayerMove, Tenant, model } from '@gamehub/model';
+
+const jinaga = new Jinaga();
+
+// Define specifications for querying
+const gamesSpec = model.given(User).match((user) => 
+  Game.of(user).select(game => ({
+    id: game.hash,
+    name: game.name,
+    type: game.gameType
+  }))
+);
+
+// Query facts using specifications
+const games = await jinaga.query(gamesSpec, user);
+
+// Observe facts with specifications
+const observer = jinaga.watch(gamesSpec, user, (game) => {
+  console.log('Active game:', game);
+});
+
+// Store new facts using fact method
+const game = await jinaga.fact(new Game(tenant, 'Chess Game', 'chess', user));
+const session = await jinaga.fact(new GameSession(game, user));
+```
+
+## useSpecification Best Practices
+
+### Parameter Handling
+1. **Never create fallback objects**: Don't create dummy User/Tenant objects when parameters are null
+2. **Let useSpecification handle nulls**: The hook automatically waits for all parameters to be non-null
+3. **Define specifications unconditionally**: Always define the full specification, don't conditionally create it
+4. **Trust the loading state**: The `loading` flag properly indicates when data is being fetched
+
+### Specification Stability (Critical for Performance)
+1. **Never recreate specifications inside hooks**: This causes infinite loops and performance issues
+2. **Define specifications outside hooks**: Move specification definitions to module level
+
+### Loading State Management
+1. **Automatic loading detection**: `useSpecification` automatically sets `loading: true` when parameters are null
+2. **No manual loading logic**: Don't manually track loading states for parameter availability
+3. **Real-time updates**: The hook automatically re-runs when parameters change from null to non-null
+4. **Loading flag vs Data availability**: 
+   - `loading: true` → Show loading indicator in UI
+   - `data !== null` → Data has been loaded (may be empty array)
+   - `data === null` → Still loading or error occurred
+5. **Check data, not loading**: Use `data !== null` to determine if data is available, not the loading flag
+
+### Error Handling
+```typescript
+// ✅ CORRECT: Handle errors from useSpecification
+const { data, error, loading } = useSpecification(j, spec, user, tenant);
+
+// ✅ CORRECT: Check for parameter availability before actions
+const handleAction = async () => {
+  if (!user || !tenant) {
+    console.error('Required parameters not available');
+    return;
+  }
+  // Proceed with action
+};
+```
+
+### Performance Considerations
+1. **Indexing**: Use appropriate fact types for efficient queries
+2. **Distribution**: Minimize unnecessary fact distribution
+3. **Caching**: Cache frequently accessed facts on the client
+4. **Pagination**: Handle large fact sets with pagination
+5. **Specification stability**: Avoid recreating specifications to prevent infinite loops
+
+### React Component Integration
+```typescript
+// Example: Complete React component using useSpecification
+import React from 'react';
+import { useSpecification } from 'jinaga-react';
+import { model, Tenant, User } from '@gamehub/model';
+import { j } from '../jinaga-config';
+
+const userTenantsSpec = model.given(User).match((user) => 
+  Administrator.by(user)
+    .selectMany(admin => admin.tenant.predecessor())
+);
+
+export function UserTenants() {
+  const user = useUser();
+  const { data: tenants, loading, error } = useSpecification(j, userTenantsSpec, user);
+
+  if (loading) {
+    return <div>Loading tenants...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading tenants: {error.message}</div>;
+  }
+
+  if (!tenants || tenants.length === 0) {
+    return <div>No tenants found</div>;
+  }
+
+  return (
+    <div>
+      <h2>Your Tenants</h2>
+      <ul>
+        {tenants.map(tenant => (
+          <li key={j.hash(tenant)}>
+            Tenant: {tenant.name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+```
+
+### Custom Hooks with useSpecification
+```typescript
+// Example: Custom hook that combines multiple useSpecification calls
+export function useUserDashboard() {
+  const user = useUser();
+  
+  // Multiple specifications for different data
+  const { data: tenants, loading: tenantsLoading } = useSpecification(j, userTenantsSpec, user);
+  const { data: games, loading: gamesLoading } = useSpecification(j, userGamesSpec, user);
+  const { data: invitations, loading: invitationsLoading } = useSpecification(j, userInvitationsSpec, user);
+
+  const loading = tenantsLoading || gamesLoading || invitationsLoading;
+  const hasData = tenants !== null && games !== null && invitations !== null;
+
+  return {
+    loading,
+    hasData,
+    tenants: tenants || [],
+    games: games || [],
+    invitations: invitations || [],
+  };
+}
+``` 
