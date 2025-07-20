@@ -1,8 +1,27 @@
 ---
-description: "Apply this rule whenever you need to load persistent data into a view model for display, or modify persistent data from a view. GameHub Jinaga usage patterns and useSpecification best practices for React applications. Includes client-side React hooks with useSpecification, server-side querying patterns, parameter handling, loading state management, error handling, and performance optimization for real-time data synchronization."
+description: "Apply this rule when loading facts for display in React components or creating facts from user interactions. Use for useSpecification hooks, loading states, error handling, and real-time data synchronization."
 alwaysApply: false
 ---
 # Jinaga Usage Patterns and useSpecification
+
+## Related Rules
+
+- **jinaga-data-model**: Use this rule when defining new fact types and their security rules
+- **frontend-development**: Use this rule when building React components that display or modify facts
+
+## Rule Selection Decision Tree
+
+### Are you working with existing facts in the UI?
+→ Use **jinaga-usage-patterns**
+
+### Are you building React components that create new facts?
+→ Use **jinaga-data-model** first, then **jinaga-usage-patterns**
+
+### Are you implementing server-side fact creation only?
+→ Use **jinaga-data-model** only
+
+### Are you defining new fact types without UI integration?
+→ Use **jinaga-data-model** only
 
 ## Model Usage Patterns
 
