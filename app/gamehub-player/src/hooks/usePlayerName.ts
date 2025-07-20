@@ -21,7 +21,7 @@ const playerNameSpec = model.given(User, Tenant).match((user, tenant) =>
 );
 
 export function usePlayerName(): PlayerNameViewModel {
-    const [showNameInput, setShowNameInput] = useState<boolean>(true);
+    const [showNameInput, setShowNameInput] = useState<boolean>(false);
 
     const { user } = useUser();
     const tenant = useTenant();
@@ -35,6 +35,7 @@ export function usePlayerName(): PlayerNameViewModel {
     );
 
     const handleNameSubmit = async (name: string) => {
+        setShowNameInput(false);
         if (!user || !tenant) {
             console.error('User or tenant not available');
             return;
