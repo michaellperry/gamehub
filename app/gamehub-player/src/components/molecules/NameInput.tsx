@@ -1,28 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '../atoms';
 
 export interface NameInputProps {
     value: string;
     onSubmit: (name: string) => void;
+    onCancel?: () => void;
+    allowCancel?: boolean;
     className?: string;
 }
 
 export const NameInput: React.FC<NameInputProps> = ({
     value,
     onSubmit,
+    onCancel,
+    allowCancel = false,
     className = '',
 }) => {
     const [name, setName] = useState(value);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setName(value);
     }, [value]);
+
+    useEffect(() => {
+        // Select the text when component mounts or when allowCancel becomes true
+        if (inputRef.current && allowCancel) {
+            inputRef.current.select();
+        }
+    }, [allowCancel]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (name.trim()) {
             onSubmit(name.trim());
         }
+    };
+
+    const handleCancel = () => {
+        setName(value);
+        onCancel?.();
     };
 
     return (
@@ -33,6 +50,7 @@ export const NameInput: React.FC<NameInputProps> = ({
                         Enter your name to start playing
                     </label>
                     <input
+                        ref={inputRef}
                         id="player-name"
                         type="text"
                         value={name}
@@ -46,15 +64,38 @@ export const NameInput: React.FC<NameInputProps> = ({
                         maxLength={20}
                     />
                 </div>
-                <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    fullWidth
-                    disabled={!name.trim()}
-                >
-                    Continue
-                </Button>
+                {allowCancel ? (
+                    <div className="flex gap-3">
+                        <Button
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            className="flex-1"
+                            disabled={!name.trim()}
+                        >
+                            OK
+                        </Button>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            size="lg"
+                            className="flex-1"
+                            onClick={handleCancel}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                ) : (
+                    <Button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        fullWidth
+                        disabled={!name.trim()}
+                    >
+                        Continue
+                    </Button>
+                )}
             </form>
         </div>
     );

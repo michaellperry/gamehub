@@ -9,7 +9,9 @@ import { j } from '../jinaga-config';
 export interface PlayerNameViewModel {
     playerName: string;
     showNameInput: boolean;
+    allowCancel: boolean;
     handleNameSubmit: (name: string) => void;
+    handleCancel: () => void;
     setShowNameInput: (show: boolean) => void;
 }
 
@@ -57,10 +59,16 @@ export function usePlayerName(): PlayerNameViewModel {
         }
     };
 
+    const handleCancel = () => {
+        setShowNameInput(false);
+    };
+
     return {
         playerName: playerNames?.[0]?.name || '',
         showNameInput: showNameInput || playerNames?.length === 0,
+        allowCancel: playerNames?.length !== 0,
         handleNameSubmit,
+        handleCancel,
         setShowNameInput,
     };
 } 

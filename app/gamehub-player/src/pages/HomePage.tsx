@@ -20,7 +20,12 @@ export default function HomePage() {
                             </Typography>
                         </div>
 
-                        <NameInput value={playerName.playerName} onSubmit={playerName.handleNameSubmit} />
+                        <NameInput
+                            value={playerName.playerName}
+                            onSubmit={playerName.handleNameSubmit}
+                            onCancel={playerName.handleCancel}
+                            allowCancel={playerName.allowCancel}
+                        />
                     </div>
                 </Container>
             </PageLayout>
