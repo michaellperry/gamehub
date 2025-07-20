@@ -1,5 +1,5 @@
 import { AuthorizationRules } from 'jinaga';
-import { Administrator, Tenant } from '../model/index.js';
+import { Administrator, Player, Playground, Tenant } from '../model/index.js';
 
 export const tenantAuthorization = (a: AuthorizationRules) =>
     a
@@ -10,4 +10,10 @@ export const tenantAuthorization = (a: AuthorizationRules) =>
         .type(Administrator, (admin) => admin.tenant.creator.predecessor())
 
         // Administrators can add other administrators to their tenant
-        .type(Administrator, (admin) => Administrator.usersOf(admin.tenant));
+        .type(Administrator, (admin) => Administrator.usersOf(admin.tenant))
+
+        // Any player in the tenant can create a playground
+        .type(Playground, (playground) =>
+            Player.in(playground.tenant)
+                .selectMany((player) => player.user.predecessor())
+        );

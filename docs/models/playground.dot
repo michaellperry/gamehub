@@ -1,6 +1,10 @@
 digraph {
     rankdir=BT
+    Tenant -> User [label="creator"]
     Player -> User, Tenant
     PlayerName -> Player
     PlayerName -> PlayerName [label="prior *"]
+
+    Playground -> Tenant [label="tenant"]
+    Playground [label="Playground\n(code: string)"]
 }

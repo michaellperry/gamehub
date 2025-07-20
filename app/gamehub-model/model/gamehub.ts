@@ -4,7 +4,7 @@ export class Tenant {
     static Type = 'GameHub.Tenant' as const;
     public type = Tenant.Type;
 
-    constructor(public creator: User) {}
+    constructor(public creator: User) { }
 }
 
 export class Administrator {
@@ -15,7 +15,7 @@ export class Administrator {
         public tenant: Tenant,
         public user: User,
         public createdAt: Date | string
-    ) {}
+    ) { }
 
     static of(tenant: LabelOf<Tenant>) {
         return tenant.successors(Administrator, (admin) => admin.tenant);
@@ -39,7 +39,7 @@ export class Player {
     constructor(
         public user: User,
         public tenant: Tenant
-    ) {}
+    ) { }
 
     static in(tenant: LabelOf<Tenant>) {
         return tenant.successors(Player, (player) => player.tenant);
@@ -54,12 +54,26 @@ export class PlayerName {
         public player: Player,
         public name: string,
         public prior: PlayerName[]
-    ) {}
+    ) { }
 
     static current(player: LabelOf<Player>) {
         return player
             .successors(PlayerName, (name) => name.player)
             .notExists((name) => name.successors(PlayerName, (next) => next.prior));
+    }
+}
+
+export class Playground {
+    static Type = 'GameHub.Playground' as const;
+    public type = Playground.Type;
+
+    constructor(
+        public tenant: Tenant,
+        public code: string
+    ) { }
+
+    static in(tenant: LabelOf<Tenant>) {
+        return tenant.successors(Playground, (playground) => playground.tenant);
     }
 }
 
@@ -69,4 +83,5 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(Tenant, (m) => m.predecessor('creator', User))
         .type(Administrator, (m) => m.predecessor('tenant', Tenant).predecessor('user', User))
         .type(Player, (m) => m.predecessor('user', User).predecessor('tenant', Tenant))
-        .type(PlayerName, (m) => m.predecessor('player', Player).predecessor('prior', PlayerName));
+        .type(PlayerName, (m) => m.predecessor('player', Player).predecessor('prior', PlayerName))
+        .type(Playground, (m) => m.predecessor('tenant', Tenant));
