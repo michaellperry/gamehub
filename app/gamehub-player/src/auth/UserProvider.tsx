@@ -33,7 +33,7 @@ export function UserProvider({
 
     useEffect(() => {
         if (import.meta.env.DEV) {
-            setUser(new User('-----ATTENDEE USER-----'));
+            setUser(new User('-----PLAYER USER-----'));
             setError(null);
         } else if (token) {
             authProvider.setToken(token);
