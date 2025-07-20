@@ -13,18 +13,18 @@ export interface PlayerNameViewModel {
     setShowNameInput: (show: boolean) => void;
 }
 
+// Create specification to find current PlayerName facts for the current user
+const playerNameSpec = model.given(User, Tenant).match((user, tenant) =>
+    Player.in(tenant)
+        .join(player => player.user, user)
+        .selectMany(player => PlayerName.current(player))
+);
+
 export function usePlayerName(): PlayerNameViewModel {
     const [showNameInput, setShowNameInput] = useState<boolean>(true);
 
     const { user } = useUser();
     const tenant = useTenant();
-
-    // Create specification to find current PlayerName facts for the current user
-    const playerNameSpec = model.given(User, Tenant).match((user, tenant) =>
-        Player.in(tenant)
-            .join(player => player.user, user)
-            .selectMany(player => PlayerName.current(player))
-    );
 
     // Use Jinaga to load the player name
     const { data: playerNames } = useSpecification(

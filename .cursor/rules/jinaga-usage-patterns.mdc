@@ -87,6 +87,12 @@ const { data } = useSpecification(j, spec, user || new User(''), tenant || new T
 // ❌ WRONG: Conditional specification creation
 const spec = user && tenant ? model.given(User, Tenant).match(...) : null;
 
+// ❌ WRONG: Specification recreation on every render (CAUSES INFINITE LOOPS)
+export function useMyHook() {
+  const spec = model.given(User, Tenant).match((user, tenant) => ...); // Recreated every render!
+  const { data } = useSpecification(j, spec, user, tenant);
+}
+
 // ✅ CORRECT: Always define the specification, let useSpecification handle nulls
 const spec = model.given(User, Tenant).match((user, tenant) => ...);
 const { data } = useSpecification(j, spec, user, tenant);
@@ -143,6 +149,10 @@ const session = await jinaga.fact(new GameSession(game, user));
 3. **Define specifications unconditionally**: Always define the full specification, don't conditionally create it
 4. **Trust the loading state**: The `loading` flag properly indicates when data is being fetched
 
+### Specification Stability (Critical for Performance)
+1. **Never recreate specifications inside hooks**: This causes infinite loops and performance issues
+2. **Define specifications outside hooks**: Move specification definitions to module level
+
 ### Loading State Management
 1. **Automatic loading detection**: `useSpecification` automatically sets `loading: true` when parameters are null
 2. **No manual loading logic**: Don't manually track loading states for parameter availability
@@ -173,6 +183,7 @@ const handleAction = async () => {
 2. **Distribution**: Minimize unnecessary fact distribution
 3. **Caching**: Cache frequently accessed facts on the client
 4. **Pagination**: Handle large fact sets with pagination
+5. **Specification stability**: Avoid recreating specifications to prevent infinite loops
 
 ### React Component Integration
 ```typescript
