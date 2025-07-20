@@ -106,7 +106,7 @@ export default function HomePage() {
                     <Card variant="game" size="lg" className="max-w-md mx-auto">
                         <div className="space-y-4">
                             <div className="text-center">
-                                <Icon name="friends" size="md" className="text-primary-600 mx-auto mb-2" />
+                                <Icon name="door" size="md" className="text-primary-600 mx-auto mb-2" />
                                 <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                                     Join a Playground
                                 </Typography>
