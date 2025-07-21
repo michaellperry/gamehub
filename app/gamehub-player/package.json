@@ -12,7 +12,7 @@
         "lint": "eslint .",
         "preview": "vite preview",
         "typecheck": "tsc --noEmit",
-        "test": "vitest",
+        "test": "vitest run",
         "test:ui": "vitest --ui",
         "test:run": "vitest run",
         "test:coverage": "vitest run --coverage",
