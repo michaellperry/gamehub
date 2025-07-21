@@ -1,14 +1,12 @@
-import { JinagaTest } from 'jinaga/src/jinaga-test';
-import { User } from 'jinaga';
 import {
-    Tenant,
     Administrator,
+    Join,
     Player,
     PlayerName,
     Playground,
-    Join,
-    Leave
+    Tenant
 } from 'gamehub-model/model';
+import { Jinaga, JinagaTest, User } from 'jinaga';
 
 /**
  * Jinaga Test Configuration Options
@@ -103,8 +101,8 @@ export class JinagaTestUtils {
     static async createComplexTestInstance(
         users: User[],
         setupCallback?: (jinaga: any, users: User[]) => Promise<void>
-    ): Promise<{ jinaga: any; users: User[] }> {
-        const jinaga = JinagaTest.create({
+    ): Promise<{ jinaga: Jinaga; users: User[] }> {
+        const jinaga: Jinaga = JinagaTest.create({
             user: users[0], // First user is the "logged in" user
         });
 
@@ -119,7 +117,7 @@ export class JinagaTestUtils {
      * Helper method to setup tenant data
      */
     private static async setupTenantData(
-        jinaga: any,
+        jinaga: Jinaga,
         tenant: Tenant,
         owner: User,
         tenantData: Partial<TestTenant>
@@ -154,7 +152,7 @@ export class JinagaTestUtils {
             /**
              * Create a test tenant with basic setup
              */
-            createTestTenant: async (jinaga: any, owner: User) => {
+            createTestTenant: async (jinaga: Jinaga, owner: User) => {
                 const tenant = await jinaga.fact(new Tenant(owner));
                 const admin = await jinaga.fact(new Administrator(tenant, owner, new Date()));
                 return { tenant, admin };
@@ -163,7 +161,7 @@ export class JinagaTestUtils {
             /**
              * Create a test player
              */
-            createTestPlayer: async (jinaga: any, user: User, tenant: Tenant) => {
+            createTestPlayer: async (jinaga: Jinaga, user: User, tenant: Tenant) => {
                 const player = await jinaga.fact(new Player(user, tenant));
                 const playerName = await jinaga.fact(new PlayerName(player, `Player ${user.publicKey.slice(0, 8)}`, []));
                 return { player, playerName };
@@ -172,14 +170,14 @@ export class JinagaTestUtils {
             /**
              * Create a test playground
              */
-            createTestPlayground: async (jinaga: any, tenant: Tenant, code: string = 'TEST-001') => {
+            createTestPlayground: async (jinaga: Jinaga, tenant: Tenant, code: string = 'TEST-001') => {
                 return await jinaga.fact(new Playground(tenant, code));
             },
 
             /**
              * Create a test join
              */
-            createTestJoin: async (jinaga: any, player: Player, playground: Playground) => {
+            createTestJoin: async (jinaga: Jinaga, player: Player, playground: Playground) => {
                 return await jinaga.fact(new Join(player, playground, new Date()));
             },
         };

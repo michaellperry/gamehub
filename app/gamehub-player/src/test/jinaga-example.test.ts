@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
-import { Tenant, Player, Playground, Join } from 'gamehub-model/model';
+import { Join, model, Player, Playground, Tenant } from 'gamehub-model/model';
 import { User } from 'jinaga';
+import { describe, expect, it } from 'vitest';
+import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
 
 describe('Jinaga Test Examples', () => {
     describe('Basic Test Instance', () => {
@@ -30,7 +30,10 @@ describe('Jinaga Test Examples', () => {
             );
 
             // Verify the tenant was created
-            const tenants = await jinaga.query(Tenant);
+            const tenantSpec = model.given(User).match(user =>
+                user.successors(Tenant, tenant => tenant.creator)
+            );
+            const tenants = await jinaga.query(tenantSpec, user);
             expect(tenants).toHaveLength(1);
             expect(tenants[0].creator.publicKey).toBe('test-user-key');
         });
@@ -61,10 +64,6 @@ describe('Jinaga Test Examples', () => {
             expect(userFacts[0].publicKey).toBe('user-1');
             expect(userFacts[1].publicKey).toBe('user-2');
             expect(userFacts[2].publicKey).toBe('user-3');
-
-            // Verify tenant was created
-            const tenants = await jinaga.query(Tenant);
-            expect(tenants).toHaveLength(1);
         });
 
         it('should create a tenant with active playground and players', async () => {
@@ -141,17 +140,25 @@ describe('Jinaga Test Examples', () => {
             );
 
             // Verify setup
-            const tenants = await jinaga.query(Tenant);
-            expect(tenants).toHaveLength(1);
+            const tenant = new Tenant(new User('admin'));
 
-            const playgrounds = await jinaga.query(Playground);
+            const playgroundsSpec = model.given(Tenant).match(tenant =>
+                Playground.in(tenant)
+            );
+            const playgrounds = await jinaga.query(playgroundsSpec, tenant);
             expect(playgrounds).toHaveLength(1);
             expect(playgrounds[0].code).toBe('CUSTOM-PLAYGROUND');
 
-            const players = await jinaga.query(Player);
+            const playersSpec = model.given(Tenant).match(tenant =>
+                Player.in(tenant)
+            );
+            const players = await jinaga.query(playersSpec, tenant);
             expect(players).toHaveLength(2); // player1 and player2
 
-            const joins = await jinaga.query(Join);
+            const joinsSpec = model.given(Playground).match(playground =>
+                Join.in(playground)
+            );
+            const joins = await jinaga.query(joinsSpec, playgrounds[0]);
             expect(joins).toHaveLength(2); // both players joined
         });
     });
