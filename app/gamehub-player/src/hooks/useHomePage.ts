@@ -2,25 +2,23 @@ import { usePlayerName, PlayerNameViewModel } from './usePlayerName';
 import { usePlaygroundLobby, PlaygroundLobbyViewModel } from './usePlaygroundLobby';
 import { usePlayerPlaygrounds, PlayerPlaygroundsViewModel } from './usePlayerPlaygrounds';
 import { usePlayerSessionsContext } from '../auth/PlayerSessionsProvider';
-import { PlayerSessionsViewModel } from './usePlayerSession';
-import { useTenant } from '../auth/useTenant';
+import { PlayerSessionViewModel } from './usePlayerSession';
 
 export interface HomePageViewModel {
     playerName: PlayerNameViewModel;
     playgroundLobby: PlaygroundLobbyViewModel;
     playerPlaygrounds: PlayerPlaygroundsViewModel;
-    playerSessions: PlayerSessionsViewModel;
+    playerSessions: PlayerSessionViewModel;
 }
 
 export function useHomePage(): HomePageViewModel {
     const playerName = usePlayerName();
     const playgroundLobby = usePlaygroundLobby();
     const playerPlaygrounds = usePlayerPlaygrounds();
-    const tenant = useTenant();
     const playerSessions = usePlayerSessionsContext();
 
-    // Simplified approach - player creation will be handled by the simplified hook in Phase 2
-    // No complex player creation logic needed here
+    // Simplified approach - player creation is handled automatically by the simplified hook
+    // using Jinaga's reactive patterns to detect new playgrounds
 
     return {
         playerName,

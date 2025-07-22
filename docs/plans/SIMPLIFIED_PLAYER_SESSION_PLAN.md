@@ -6,11 +6,11 @@ Implementation plan for replacing the complex `SimulatedPlayerService` with a si
 ## Progress Summary
 - ✅ **Phase 1: Clean Up Existing Complex Implementation** - COMPLETED
 - ✅ **Phase 2: Implement Simplified Hook** - COMPLETED
-- ❌ **Phase 3: Update Integration Points** - PENDING
+- ✅ **Phase 3: Update Integration Points** - COMPLETED
 - ❌ **Phase 4: Testing and Validation** - PENDING
 - ❌ **Phase 5: Documentation and Cleanup** - PENDING
 
-**Current Status**: Phase 2 completed - simplified hook implemented using Jinaga's reactive patterns with useSpecification, automatic playground detection, and simulated player creation. Ready to update integration points in Phase 3.
+**Current Status**: Phase 3 completed - all integration points updated to use simplified hook. PlayerSessionsProvider, useHomePage, and HomePage component now use SimplifiedPlayerSessionViewModel interface. UI simplified to show enable/disable controls instead of complex player management.
 
 ## Prerequisites
 - [x] Jinaga watch API understanding and examples
@@ -167,43 +167,43 @@ async function createSimulatedPlayer(playground: Playground) {
 - [x] Implement development-only activation
 - [x] Add basic error state handling
 
-## Phase 3: Update Integration Points
+## Phase 3: Update Integration Points ✅
 
-### 3.1 Update Player Sessions Provider
+### 3.1 Update Player Sessions Provider ✅
 **Location**: `app/gamehub-player/src/auth/PlayerSessionsProvider.tsx`
 
 **Required Changes**:
-- [ ] Replace complex hook with simplified version
-- [ ] Update context interface
-- [ ] Simplify provider implementation
-- [ ] Remove service status tracking
-- [ ] Update error handling
+- [x] Replace complex hook with simplified version
+- [x] Update context interface
+- [x] Simplify provider implementation
+- [x] Remove service status tracking
+- [x] Update error handling
 
-### 3.2 Update Home Page Hook
+### 3.2 Update Home Page Hook ✅
 **Location**: `app/gamehub-player/src/hooks/useHomePage.ts`
 
 **Required Changes**:
-- [ ] Remove complex player creation logic
-- [ ] Use simplified hook interface
-- [ ] Remove manual player management
-- [ ] Update to reactive patterns
+- [x] Remove complex player creation logic
+- [x] Use simplified hook interface
+- [x] Remove manual player management
+- [x] Update to reactive patterns
 
-### 3.3 Update Main Application
+### 3.3 Update Main Application ✅
 **Location**: `app/gamehub-player/src/main.tsx`
 
 **Required Changes**:
-- [ ] Ensure provider integration works
-- [ ] Verify development mode detection
-- [ ] Test hook initialization
+- [x] Ensure provider integration works
+- [x] Verify development mode detection
+- [x] Test hook initialization
 
-### 3.4 Update Background Service Index
+### 3.4 Update Background Service Index ✅
 **Location**: `app/gamehub-player/src/services/background-service/index.ts`
 
 **Required Changes**:
-- [ ] Remove complex service exports
-- [ ] Export simplified configuration
-- [ ] Update type definitions
-- [ ] Remove unused interfaces
+- [x] Remove complex service exports
+- [x] Export simplified configuration
+- [x] Update type definitions
+- [x] Remove unused interfaces
 
 ## Phase 4: Testing and Validation
 

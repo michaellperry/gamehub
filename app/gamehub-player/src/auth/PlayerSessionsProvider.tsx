@@ -1,8 +1,8 @@
 import { createContext, useContext, type ReactNode } from 'react';
-import { PlayerSessionsViewModel, usePlayerSessions } from '../hooks/usePlayerSession';
+import { PlayerSessionViewModel, usePlayerSession } from '../hooks/usePlayerSession';
 import { useTenant } from './useTenant';
 
-const PlayerSessionsContext = createContext<PlayerSessionsViewModel | null>(null);
+const PlayerSessionsContext = createContext<PlayerSessionViewModel | null>(null);
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const usePlayerSessionsContext = () => {
@@ -15,7 +15,7 @@ export const usePlayerSessionsContext = () => {
 
 export function PlayerSessionsProvider({ children }: { children: ReactNode }) {
     const tenant = useTenant();
-    const playerSessions = usePlayerSessions(tenant);
+    const playerSessions = usePlayerSession(tenant);
 
     return (
         <PlayerSessionsContext.Provider value={playerSessions}>

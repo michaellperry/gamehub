@@ -1,89 +1,99 @@
-import { Tenant } from 'gamehub-model/model';
-import { useCallback, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { User } from 'jinaga';
+import { Tenant, Playground, Player, PlayerName, Join, model } from 'gamehub-model/model';
+import { simplifiedPlayerSessionConfig } from '../config/background-service';
+import { generateGamingName } from '../utils/gamingNames';
+import { j } from '../jinaga-config';
 
-export interface SimulatedPlayer {
-    id: string;
-    name: string;
-    isActive: boolean;
+export interface PlayerSessionViewModel {
+    isEnabled: boolean;
+    enableSimulation: () => void;
+    disableSimulation: () => void;
 }
 
-export interface PlayerSessionsViewModel {
-    players: SimulatedPlayer[];
-    activePlayers: SimulatedPlayer[];
-    isLoading: boolean;
-    error: string | null;
-    createPlayers: (count: number, namePrefix?: string) => Promise<SimulatedPlayer[]>;
-    togglePlayerActive: (playerId: string) => void;
-    clearError: () => void;
-    serviceStatus: {
-        isRunning: boolean;
-        totalPlayers: number;
-        activePlayers: number;
-        idlePlayers: number;
-    };
+/**
+ * Create a simulated player for a playground
+ */
+async function createSimulatedPlayer(
+    playground: Playground,
+    tenant: Tenant,
+    minDelay: number,
+    maxDelay: number
+): Promise<void> {
+    try {
+        // Generate random delay
+        const delay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+        // Wait for the delay
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        // Create a unique user for the simulated player
+        const userId = `simulated-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const user = await j.fact(new User(userId));
+
+        // Create a player associated with the tenant
+        const player = await j.fact(new Player(user, tenant));
+
+        // Generate a gaming name for the player
+        const name = generateGamingName();
+        await j.fact(new PlayerName(player, name, []));
+
+        // Join the playground
+        await j.fact(new Join(player, playground, new Date()));
+
+        console.log(`Created simulated player "${name}" for playground ${playground.code}`);
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to create simulated player';
+        console.error('Error creating simulated player:', errorMessage);
+    }
 }
 
-export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewModel {
-    const [players, setPlayers] = useState<SimulatedPlayer[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [serviceStatus, setServiceStatus] = useState({
-        isRunning: false,
-        totalPlayers: 0,
-        activePlayers: 0,
-        idlePlayers: 0,
-    });
+/**
+ * Player session hook that uses Jinaga's watch API
+ * to automatically detect new playgrounds and create simulated players.
+ */
+export function usePlayerSession(tenant: Tenant | null): PlayerSessionViewModel {
+    const [isEnabled, setIsEnabled] = useState(simplifiedPlayerSessionConfig.enabled);
 
-    const activePlayers = players.filter(p => p.isActive);
-
-    const clearError = useCallback(() => {
-        setError(null);
+    const enableSimulation = useCallback(() => {
+        setIsEnabled(true);
     }, []);
 
-    // Create multiple simulated players (placeholder for Phase 2 implementation)
-    const createPlayers = useCallback(async (count: number, namePrefix: string = 'Player'): Promise<SimulatedPlayer[]> => {
-        if (!tenant) {
-            throw new Error('Tenant not available');
-        }
-
-        if (count <= 0) {
-            return [];
-        }
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // Placeholder implementation - will be replaced in Phase 2
-            console.log(`Creating ${count} players (placeholder implementation)`);
-
-            // Return empty array for now - will be implemented in Phase 2
-            return [];
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : 'Failed to create players';
-            setError(errorMessage);
-            throw new Error(errorMessage);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [tenant]);
-
-    // Toggle a player's active state
-    const togglePlayerActive = useCallback((playerId: string) => {
-        setPlayers(prev => prev.map(player => ({
-            ...player,
-            isActive: player.id === playerId ? !player.isActive : player.isActive
-        })));
+    const disableSimulation = useCallback(() => {
+        setIsEnabled(false);
     }, []);
+
+    // Watch for playgrounds and create simulated players
+    useEffect(() => {
+        if (!tenant || !isEnabled) {
+            return;
+        }
+
+        // Create specification for playgrounds in tenant
+        const playgroundSpec = model.given(Tenant).match((tenant) => Playground.in(tenant));
+
+        // Create observer to watch for playgrounds
+        const observer = j.watch(playgroundSpec, tenant, async (playground) => {
+            console.log(`New playground detected: ${playground.code}`);
+
+            // Create a simulated player for this playground
+            await createSimulatedPlayer(
+                playground,
+                tenant,
+                simplifiedPlayerSessionConfig.minDelay,
+                simplifiedPlayerSessionConfig.maxDelay
+            );
+        });
+
+        // Cleanup function to stop the observer
+        return () => {
+            observer.stop();
+        };
+    }, [tenant, isEnabled]);
 
     return {
-        players,
-        activePlayers,
-        isLoading,
-        error,
-        createPlayers,
-        togglePlayerActive,
-        clearError,
-        serviceStatus,
+        isEnabled,
+        enableSimulation,
+        disableSimulation,
     };
 } 

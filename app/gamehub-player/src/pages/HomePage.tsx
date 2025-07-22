@@ -75,8 +75,8 @@ export default function HomePage() {
                         </Alert>
                     )}
 
-                    {/* Simulated Players Section (Dev Mode Only) */}
-                    {import.meta.env.DEV && playerSessions.players.length > 0 && (
+                    {/* Simplified Player Sessions Section (Dev Mode Only) */}
+                    {import.meta.env.DEV && (
                         <Card variant="game" size="lg" className="max-w-md mx-auto">
                             <div className="space-y-4">
                                 <div className="text-center">
@@ -85,76 +85,39 @@ export default function HomePage() {
                                         Simulated Players
                                     </Typography>
                                     <Typography variant="body-sm" className="text-gray-600">
-                                        Development mode - {playerSessions.players.length} players ({playerSessions.activePlayers.length} active)
+                                        Development mode - Automatic player simulation
                                     </Typography>
 
-                                    {/* Service Status */}
+                                    {/* Simulation Status */}
                                     <div className="mt-2 p-2 bg-gray-50 rounded-lg">
                                         <Typography variant="body-sm" className="text-gray-600">
-                                            Background Service: {playerSessions.serviceStatus.isRunning ? '🟢 Running' : '🔴 Stopped'}
+                                            Simulation: {playerSessions.isEnabled ? '🟢 Enabled' : '🔴 Disabled'}
                                         </Typography>
-                                        {playerSessions.serviceStatus.isRunning && (
-                                            <Typography variant="body-sm" className="text-gray-500">
-                                                Service Players: {playerSessions.serviceStatus.totalPlayers} |
-                                                Active: {playerSessions.serviceStatus.activePlayers} |
-                                                Idle: {playerSessions.serviceStatus.idlePlayers}
-                                            </Typography>
-                                        )}
+                                        <Typography variant="body-sm" className="text-gray-500">
+                                            Automatically creates players for new playgrounds
+                                        </Typography>
                                     </div>
                                 </div>
 
-                                {/* Player Sessions Error Display */}
-                                {playerSessions.error && (
-                                    <Alert
-                                        variant="error"
-                                        title="Player Sessions Error"
-                                        dismissible
-                                        onDismiss={playerSessions.clearError}
-                                        className="max-w-sm mx-auto"
+                                {/* Enable/Disable Controls */}
+                                <div className="flex justify-center space-x-2">
+                                    <Button
+                                        variant={playerSessions.isEnabled ? "secondary" : "primary"}
+                                        size="sm"
+                                        onClick={playerSessions.enableSimulation}
+                                        disabled={playerSessions.isEnabled}
                                     >
-                                        {playerSessions.error}
-                                    </Alert>
-                                )}
-
-                                {/* Players List */}
-                                <div className="space-y-2">
-                                    {playerSessions.players.map((player) => (
-                                        <div
-                                            key={player.id}
-                                            className={`flex items-center justify-between p-3 rounded-lg border ${player.isActive
-                                                ? 'border-primary-500 bg-primary-50'
-                                                : 'border-gray-200 bg-white'
-                                                }`}
-                                        >
-                                            <div className="flex items-center space-x-3">
-                                                <div className={`w-3 h-3 rounded-full ${player.isActive ? 'bg-primary-500' : 'bg-gray-300'
-                                                    }`} />
-                                                <Typography variant="body" className="font-medium">
-                                                    {player.name}
-                                                </Typography>
-                                            </div>
-                                            <Button
-                                                variant={player.isActive ? "primary" : "secondary"}
-                                                size="sm"
-                                                onClick={() => playerSessions.togglePlayerActive(player.id)}
-                                                disabled={playerSessions.isLoading}
-                                            >
-                                                {player.isActive ? 'Active' : 'Inactive'}
-                                            </Button>
-                                        </div>
-                                    ))}
+                                        Enable Simulation
+                                    </Button>
+                                    <Button
+                                        variant={playerSessions.isEnabled ? "primary" : "secondary"}
+                                        size="sm"
+                                        onClick={playerSessions.disableSimulation}
+                                        disabled={!playerSessions.isEnabled}
+                                    >
+                                        Disable Simulation
+                                    </Button>
                                 </div>
-
-                                {/* Create More Players Button */}
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => playerSessions.createPlayers(1, 'Simulated Player')}
-                                    disabled={playerSessions.isLoading}
-                                    loading={playerSessions.isLoading}
-                                >
-                                    Add Another Player
-                                </Button>
                             </div>
                         </Card>
                     )}
