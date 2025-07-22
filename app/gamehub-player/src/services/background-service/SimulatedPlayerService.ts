@@ -53,6 +53,7 @@ export class SimulatedPlayerService {
     private config: SimulatedPlayerServiceConfig;
     private players: SimulatedPlayer[] = [];
     private behaviors: Map<string, PlayerBehavior> = new Map();
+    private defaultBehavior?: PlayerBehavior;
     private isRunning = false;
     private tickInterval?: NodeJS.Timeout;
     private tenant: Tenant | null = null;
@@ -74,6 +75,7 @@ export class SimulatedPlayerService {
      * Set the default behavior for all players
      */
     setDefaultBehavior(behavior: PlayerBehavior): void {
+        this.defaultBehavior = behavior;
         for (const player of this.players) {
             this.behaviors.set(player.id, behavior);
         }
@@ -201,6 +203,13 @@ export class SimulatedPlayerService {
                 const player = await this.createSimulatedPlayer(startIndex + i);
                 this.players.push(player);
                 newPlayers.push(player);
+
+                // Assign default behavior to the new player
+                if (this.defaultBehavior) {
+                    this.behaviors.set(player.id, this.defaultBehavior);
+                    console.log(`Assigned default behavior to new player ${player.id}`);
+                }
+
                 console.log(`Created additional simulated player ${startIndex + i}: ${player.id}`);
             } catch (error) {
                 console.error(`Failed to create additional simulated player ${startIndex + i}:`, error);
