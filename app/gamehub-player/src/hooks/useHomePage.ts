@@ -1,7 +1,8 @@
 import { usePlayerName, PlayerNameViewModel } from './usePlayerName';
 import { usePlaygroundLobby, PlaygroundLobbyViewModel } from './usePlaygroundLobby';
 import { usePlayerPlaygrounds, PlayerPlaygroundsViewModel } from './usePlayerPlaygrounds';
-import { usePlayerSessions, PlayerSessionsViewModel } from './usePlayerSession';
+import { usePlayerSessionsContext } from '../auth/PlayerSessionsProvider';
+import { PlayerSessionsViewModel } from './usePlayerSession';
 import { useTenant } from '../auth/useTenant';
 import { useEffect, useRef } from 'react';
 
@@ -17,7 +18,7 @@ export function useHomePage(): HomePageViewModel {
     const playgroundLobby = usePlaygroundLobby();
     const playerPlaygrounds = usePlayerPlaygrounds();
     const tenant = useTenant();
-    const playerSessions = usePlayerSessions(tenant);
+    const playerSessions = usePlayerSessionsContext();
     const hasCreatedPlayers = useRef(false);
 
     // Create simulated players in dev mode (only once)
