@@ -28,7 +28,7 @@ async function createSimulatedPlayer(
         await new Promise(resolve => setTimeout(resolve, delay));
 
         // Create a unique user for the simulated player
-        const userId = `simulated-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const userId = `simulated-user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
         const user = await j.fact(new User(userId));
 
         // Create a player associated with the tenant
