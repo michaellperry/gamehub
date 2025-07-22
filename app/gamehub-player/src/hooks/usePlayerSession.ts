@@ -117,11 +117,14 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
 
             // Sync players from service to hook state
             const servicePlayers = service.getPlayers();
-            const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => ({
-                id: sp.id,
-                name: `Simulated Player ${sp.id.split('-').pop()}`, // Extract player number
-                isActive: sp.state === 'playing'
-            }));
+
+            const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => {
+                return {
+                    id: sp.id,
+                    name: sp.name, // Use the name from the service player
+                    isActive: sp.state === 'playing'
+                };
+            });
 
             setPlayers(hookPlayers);
         }, 500); // Sync more frequently for better responsiveness
@@ -158,11 +161,13 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
                 const servicePlayers = serviceRef.current.getPlayers();
                 if (servicePlayers.length > 0) {
                     // Convert service players to hook format
-                    const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => ({
-                        id: sp.id,
-                        name: `Simulated Player ${sp.id.split('-').pop()}`,
-                        isActive: sp.state === 'playing'
-                    }));
+                    const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => {
+                        return {
+                            id: sp.id,
+                            name: sp.name, // Use the name from the service player
+                            isActive: sp.state === 'playing'
+                        };
+                    });
                     return hookPlayers.slice(0, count);
                 }
 

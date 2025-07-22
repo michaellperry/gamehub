@@ -1,9 +1,11 @@
 import { Jinaga, User } from 'jinaga';
-import { Player, Playground, Join, Leave, Tenant, model } from 'gamehub-model/model';
+import { Player, Playground, Join, Leave, Tenant, PlayerName, model } from 'gamehub-model/model';
+import { generateGamingName } from '../../utils/gamingNames';
 
 export interface SimulatedPlayer {
     id: string;
     player: Player;
+    name: string; // Add name to the interface
     state: 'idle' | 'joining' | 'playing' | 'leaving';
     currentPlayground?: Playground;
     joinAttempts: number;
@@ -248,8 +250,8 @@ export class SimulatedPlayerService {
     }
 
     /**
- * Create a single simulated player
- */
+     * Create a single simulated player
+     */
     private async createSimulatedPlayer(index: number): Promise<SimulatedPlayer> {
         if (!this.tenant) {
             throw new Error('Tenant not initialized');
@@ -261,9 +263,16 @@ export class SimulatedPlayerService {
         // Create a simple player for simulation
         const player = await this.j.fact(new Player(user, this.tenant));
 
+        // Generate a unique gaming name for this player
+        const gamingName = generateGamingName();
+
+        // Create a PlayerName fact for the simulated player
+        await this.j.fact(new PlayerName(player, gamingName, []));
+
         return {
             id: `simulated-player-${index}`,
             player,
+            name: gamingName, // Store the gaming name in the simulated player
             state: 'idle',
             joinAttempts: 0,
             lastAction: new Date(),
