@@ -73,16 +73,18 @@ export function usePlayerSession(tenant: Tenant | null): PlayerSessionViewModel 
         const playgroundSpec = model.given(Tenant).match((tenant) => Playground.in(tenant));
 
         // Create observer to watch for playgrounds
-        const observer = j.watch(playgroundSpec, tenant, async (playground) => {
+        const observer = j.watch(playgroundSpec, tenant, (playground) => {
             console.log(`New playground detected: ${playground.code}`);
 
-            // Create a simulated player for this playground
-            await createSimulatedPlayer(
+            // Create a simulated player for this playground (fire and forget)
+            createSimulatedPlayer(
                 playground,
                 tenant,
                 playerSessionConfig.minDelay,
                 playerSessionConfig.maxDelay
-            );
+            ).catch(err => {
+                console.error('Error in createSimulatedPlayer:', err);
+            });
         });
 
         // Cleanup function to stop the observer
