@@ -10,6 +10,17 @@ let globalServiceTenant: string | null = null;
 let globalServiceRefCount = 0;
 let globalServiceStarting = false;
 
+// Function to reset global service state (for testing)
+export function resetGlobalServiceState(): void {
+    if (globalServiceInstance) {
+        globalServiceInstance.stop();
+    }
+    globalServiceInstance = null;
+    globalServiceTenant = null;
+    globalServiceRefCount = 0;
+    globalServiceStarting = false;
+}
+
 export interface SimulatedPlayer {
     id: string;
     name: string;
