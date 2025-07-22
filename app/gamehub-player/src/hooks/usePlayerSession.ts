@@ -208,33 +208,22 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
                 return [];
             }
 
-            console.log(`Service is running, ${count} players will be created by background service`);
+            console.log(`Creating ${count} additional players via background service`);
 
-            // Wait for service to have players and sync them to hook state
-            let attempts = 0;
-            const maxAttempts = 10;
-            while (attempts < maxAttempts) {
-                const servicePlayers = serviceRef.current.getPlayers();
-                if (servicePlayers.length > 0) {
-                    // Convert service players to hook format
-                    const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => {
-                        return {
-                            id: sp.id,
-                            name: sp.name, // Use the name from the service player
-                            isActive: sp.state === 'playing'
-                        };
-                    });
-                    return hookPlayers.slice(0, count);
-                }
+            // Create additional players via the service
+            const newServicePlayers = await serviceRef.current.createAdditionalPlayers(count);
 
-                // Wait a bit before next attempt
-                await new Promise(resolve => setTimeout(resolve, 200));
-                attempts++;
-            }
+            // Convert service players to hook format
+            const hookPlayers: SimulatedPlayer[] = newServicePlayers.map(sp => {
+                return {
+                    id: sp.id,
+                    name: sp.name,
+                    isActive: sp.state === 'playing'
+                };
+            });
 
-            // If we get here, service didn't create players in time
-            console.log('Service did not create players in time');
-            return [];
+            console.log(`Successfully created ${hookPlayers.length} additional players`);
+            return hookPlayers;
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to create players';
             setError(errorMessage);

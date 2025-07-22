@@ -180,6 +180,38 @@ export class SimulatedPlayerService {
     }
 
     /**
+     * Create additional simulated players
+     */
+    async createAdditionalPlayers(count: number): Promise<SimulatedPlayer[]> {
+        if (!this.tenant) {
+            throw new Error('Tenant not initialized');
+        }
+
+        if (count <= 0) {
+            return [];
+        }
+
+        console.log(`Creating ${count} additional simulated players`);
+
+        const newPlayers: SimulatedPlayer[] = [];
+        const startIndex = this.players.length + 1;
+
+        for (let i = 0; i < count; i++) {
+            try {
+                const player = await this.createSimulatedPlayer(startIndex + i);
+                this.players.push(player);
+                newPlayers.push(player);
+                console.log(`Created additional simulated player ${startIndex + i}: ${player.id}`);
+            } catch (error) {
+                console.error(`Failed to create additional simulated player ${startIndex + i}:`, error);
+            }
+        }
+
+        console.log(`Added ${newPlayers.length} additional simulated players`);
+        return newPlayers;
+    }
+
+    /**
      * Get available playgrounds
      */
     async getAvailablePlaygrounds(): Promise<Playground[]> {
