@@ -3,7 +3,7 @@ import { CodeInput, NameInput, PlayerPlaygroundsList } from '../components/molec
 import { useHomePage } from '../hooks/useHomePage';
 
 export default function HomePage() {
-    const { playerName, playgroundLobby, playerPlaygrounds } = useHomePage();
+    const { playerName, playgroundLobby, playerPlaygrounds, playerSessions } = useHomePage();
 
     if (playerName.showNameInput) {
         return (
@@ -73,6 +73,76 @@ export default function HomePage() {
                         >
                             {playgroundLobby.error}
                         </Alert>
+                    )}
+
+                    {/* Simulated Players Section (Dev Mode Only) */}
+                    {import.meta.env.DEV && playerSessions.players.length > 0 && (
+                        <Card variant="game" size="lg" className="max-w-md mx-auto">
+                            <div className="space-y-4">
+                                <div className="text-center">
+                                    <Icon name="friends" size="md" className="text-primary-600 mx-auto mb-2" />
+                                    <Typography variant="h2" className="text-xl font-semibold text-gray-900">
+                                        Simulated Players
+                                    </Typography>
+                                    <Typography variant="body-sm" className="text-gray-600">
+                                        Development mode - {playerSessions.players.length} players ({playerSessions.activePlayers.length} active)
+                                    </Typography>
+                                </div>
+
+                                {/* Player Sessions Error Display */}
+                                {playerSessions.error && (
+                                    <Alert
+                                        variant="error"
+                                        title="Player Sessions Error"
+                                        dismissible
+                                        onDismiss={playerSessions.clearError}
+                                        className="max-w-sm mx-auto"
+                                    >
+                                        {playerSessions.error}
+                                    </Alert>
+                                )}
+
+                                {/* Players List */}
+                                <div className="space-y-2">
+                                    {playerSessions.players.map((player) => (
+                                        <div
+                                            key={player.id}
+                                            className={`flex items-center justify-between p-3 rounded-lg border ${player.isActive
+                                                ? 'border-primary-500 bg-primary-50'
+                                                : 'border-gray-200 bg-white'
+                                                }`}
+                                        >
+                                            <div className="flex items-center space-x-3">
+                                                <div className={`w-3 h-3 rounded-full ${player.isActive ? 'bg-primary-500' : 'bg-gray-300'
+                                                    }`} />
+                                                <Typography variant="body" className="font-medium">
+                                                    {player.name}
+                                                </Typography>
+                                            </div>
+                                            <Button
+                                                variant={player.isActive ? "primary" : "secondary"}
+                                                size="sm"
+                                                onClick={() => playerSessions.togglePlayerActive(player.id)}
+                                                disabled={playerSessions.isLoading}
+                                            >
+                                                {player.isActive ? 'Active' : 'Inactive'}
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Create More Players Button */}
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => playerSessions.createPlayers(1, 'Simulated Player')}
+                                    disabled={playerSessions.isLoading}
+                                    loading={playerSessions.isLoading}
+                                >
+                                    Add Another Player
+                                </Button>
+                            </div>
+                        </Card>
                     )}
 
                     {/* Start Playground Section */}

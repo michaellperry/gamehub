@@ -11,21 +11,20 @@ export interface SimulatedPlayer {
 
 export interface PlayerSessionsViewModel {
     players: SimulatedPlayer[];
-    activePlayer: SimulatedPlayer | null;
+    activePlayers: SimulatedPlayer[];
     isLoading: boolean;
     error: string | null;
     createPlayers: (count: number, namePrefix?: string) => Promise<SimulatedPlayer[]>;
-    activatePlayer: (playerId: string) => void;
+    togglePlayerActive: (playerId: string) => void;
     clearError: () => void;
 }
 
 export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewModel {
     const [players, setPlayers] = useState<SimulatedPlayer[]>([]);
-    const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const activePlayer = players.find(p => p.id === activePlayerId) || null;
+    const activePlayers = players.filter(p => p.isActive);
 
     const clearError = useCallback(() => {
         setError(null);
@@ -57,7 +56,7 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
                 const simulatedPlayer: SimulatedPlayer = {
                     id: j.hash(player),
                     name,
-                    isActive: false,
+                    isActive: true, // All players are active by default
                 };
 
                 newPlayers.push(simulatedPlayer);
@@ -74,18 +73,21 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
         }
     }, [tenant]);
 
-    // Activate a player
-    const activatePlayer = useCallback((playerId: string) => {
-        setActivePlayerId(playerId);
+    // Toggle a player's active state
+    const togglePlayerActive = useCallback((playerId: string) => {
+        setPlayers(prev => prev.map(player => ({
+            ...player,
+            isActive: player.id === playerId ? !player.isActive : player.isActive
+        })));
     }, []);
 
     return {
         players,
-        activePlayer,
+        activePlayers,
         isLoading,
         error,
         createPlayers,
-        activatePlayer,
+        togglePlayerActive,
         clearError,
     };
 } 
