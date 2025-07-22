@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { User } from 'jinaga';
 import { Tenant, Playground, Player, PlayerName, Join, model } from 'gamehub-model/model';
-import { simplifiedPlayerSessionConfig } from '../config/background-service';
+import { playerSessionConfig } from '../config/background-service';
 import { generateGamingName } from '../utils/gamingNames';
 import { j } from '../jinaga-config';
 
@@ -53,7 +53,7 @@ async function createSimulatedPlayer(
  * to automatically detect new playgrounds and create simulated players.
  */
 export function usePlayerSession(tenant: Tenant | null): PlayerSessionViewModel {
-    const [isEnabled, setIsEnabled] = useState(simplifiedPlayerSessionConfig.enabled);
+    const [isEnabled, setIsEnabled] = useState(playerSessionConfig.enabled);
 
     const enableSimulation = useCallback(() => {
         setIsEnabled(true);
@@ -80,8 +80,8 @@ export function usePlayerSession(tenant: Tenant | null): PlayerSessionViewModel 
             await createSimulatedPlayer(
                 playground,
                 tenant,
-                simplifiedPlayerSessionConfig.minDelay,
-                simplifiedPlayerSessionConfig.maxDelay
+                playerSessionConfig.minDelay,
+                playerSessionConfig.maxDelay
             );
         });
 

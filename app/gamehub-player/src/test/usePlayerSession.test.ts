@@ -7,7 +7,7 @@ import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
 
 // Mock the configuration to control test behavior
 vi.mock('../config/background-service', () => ({
-    simplifiedPlayerSessionConfig: {
+    playerSessionConfig: {
         enabled: true,
         minDelay: 100, // Short delay for testing
         maxDelay: 200, // Short delay for testing

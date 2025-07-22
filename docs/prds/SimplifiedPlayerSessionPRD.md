@@ -43,10 +43,8 @@ A simplified version of `usePlayerSession` that uses Jinaga's `j.watch` to autom
 
 ### Hook Interface
 ```typescript
-interface SimplifiedPlayerSessionViewModel {
+interface PlayerSessionViewModel {
   isEnabled: boolean;
-  playgroundCount: number;
-  simulatedPlayersCount: number;
   enableSimulation: () => void;
   disableSimulation: () => void;
 }
@@ -59,18 +57,18 @@ interface SimplifiedPlayerSessionViewModel {
 - **Randomness**: Truly random delays and names for realistic simulation
 
 ## Success Criteria
-- [ ] Hook automatically detects new playgrounds
-- [ ] Simulated players are created with random delays
-- [ ] Player names are randomly generated
-- [ ] No duplicate state management or service instances
-- [ ] Clean integration with Jinaga's reactive model
-- [ ] Minimal memory footprint and complexity
+- [x] Hook automatically detects new playgrounds
+- [x] Simulated players are created with random delays
+- [x] Player names are randomly generated
+- [x] No duplicate state management or service instances
+- [x] Clean integration with Jinaga's reactive model
+- [x] Minimal memory footprint and complexity
 
 ## Technical Specifications
 
 ### Hook Implementation
 ```typescript
-export function useSimplifiedPlayerSession(tenant: Tenant | null): SimplifiedPlayerSessionViewModel
+export function usePlayerSession(tenant: Tenant | null): PlayerSessionViewModel
 ```
 
 ### Key Functions
@@ -80,7 +78,7 @@ export function useSimplifiedPlayerSession(tenant: Tenant | null): SimplifiedPla
 4. **Name Generation**: Uses existing `gamingNames.ts` utility for random names
 
 ### State Management
-- Only tracks basic counts (playgrounds, simulated players)
+- Only tracks enabled/disabled state for UI feedback
 - No complex service state or player tracking
 - Relies on Jinaga's reactive data model for updates
 
@@ -95,4 +93,6 @@ export function useSimplifiedPlayerSession(tenant: Tenant | null): SimplifiedPla
 - Uses existing `gamingNames.ts` utility for name generation
 - Integrates with existing Jinaga configuration and authorization rules
 - Maintains compatibility with existing playground and player models
-- **Environment Check**: Only activates simulation when `import.meta.env.DEV` is true 
+- **Environment Check**: Only activates simulation when `import.meta.env.DEV` is true
+- **Actual Implementation**: Uses `usePlayerSession` hook (not `useSimplifiedPlayerSession`)
+- **Testing**: Comprehensive test suite with 17 tests using real Jinaga instances 
