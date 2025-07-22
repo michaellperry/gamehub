@@ -122,8 +122,8 @@ export default function HomePage() {
                                         <div
                                             key={player.id}
                                             className={`flex items-center justify-between p-3 rounded-lg border ${player.isActive
-                                                    ? 'border-primary-500 bg-primary-50'
-                                                    : 'border-gray-200 bg-white'
+                                                ? 'border-primary-500 bg-primary-50'
+                                                : 'border-gray-200 bg-white'
                                                 }`}
                                         >
                                             <div className="flex items-center space-x-3">

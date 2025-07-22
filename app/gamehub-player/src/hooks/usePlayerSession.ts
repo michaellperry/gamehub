@@ -4,6 +4,12 @@ import { backgroundServiceConfig } from '../config/background-service';
 import { j } from '../jinaga-config';
 import { SimulatedPlayerService } from '../services/background-service';
 
+// Global service instance to prevent duplicates in React StrictMode
+let globalServiceInstance: SimulatedPlayerService | null = null;
+let globalServiceTenant: string | null = null;
+let globalServiceRefCount = 0;
+let globalServiceStarting = false;
+
 export interface SimulatedPlayer {
     id: string;
     name: string;
@@ -52,6 +58,39 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
         if (import.meta.env.DEV && backgroundServiceConfig.enabled && tenant && !hasStartedService.current) {
             console.log('Starting background service for simulated players');
 
+            // Check if we already have a global service for this tenant
+            const tenantHash = j.hash(tenant);
+            if (globalServiceInstance && globalServiceTenant === tenantHash) {
+                console.log('Using existing global service instance');
+                globalServiceRefCount++;
+                serviceRef.current = globalServiceInstance;
+                hasStartedService.current = true;
+
+                // Initial status update
+                const status = globalServiceInstance.getStatus();
+                setServiceStatus({
+                    isRunning: status.isRunning,
+                    totalPlayers: status.totalPlayers,
+                    activePlayers: status.activePlayers,
+                    idlePlayers: status.idlePlayers,
+                });
+                return;
+            }
+
+            // Prevent multiple service creation during async startup
+            if (globalServiceStarting) {
+                console.log('Service is already starting, skipping duplicate creation');
+                return;
+            }
+
+            // Prevent multiple service creation by checking if one is already being created
+            if (globalServiceInstance && globalServiceTenant !== tenantHash) {
+                console.log('Different tenant detected, waiting for existing service to be cleaned up');
+                return;
+            }
+
+            // Create new service instance
+            globalServiceStarting = true;
             const service = new SimulatedPlayerService(j, {
                 enabled: true,
                 playerCount: backgroundServiceConfig.playerCount,
@@ -63,6 +102,11 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
 
             service.start(tenant)
                 .then(() => {
+                    // Store as global instance
+                    globalServiceInstance = service;
+                    globalServiceTenant = tenantHash;
+                    globalServiceRefCount = 1;
+                    globalServiceStarting = false;
                     serviceRef.current = service;
                     hasStartedService.current = true;
                     console.log('Background service started successfully');
@@ -78,24 +122,36 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
                 })
                 .catch(error => {
                     console.error('Failed to start background service:', error);
+                    globalServiceStarting = false;
                     setError('Failed to start background service');
                 });
         }
 
         // Cleanup on unmount or tenant change
         return () => {
-            if (serviceRef.current) {
-                console.log('Stopping background service');
-                serviceRef.current.stop();
-                serviceRef.current = null;
-                hasStartedService.current = false;
-                setServiceStatus({
-                    isRunning: false,
-                    totalPlayers: 0,
-                    activePlayers: 0,
-                    idlePlayers: 0,
-                });
+            // Decrement reference counter
+            if (serviceRef.current && globalServiceInstance === serviceRef.current) {
+                globalServiceRefCount--;
+                console.log(`Service reference count: ${globalServiceRefCount}`);
+
+                // Only cleanup if this is the last reference
+                if (globalServiceRefCount <= 0) {
+                    console.log('Stopping background service - no more references');
+                    globalServiceInstance.stop();
+                    globalServiceInstance = null;
+                    globalServiceTenant = null;
+                    globalServiceRefCount = 0;
+                }
             }
+
+            serviceRef.current = null;
+            hasStartedService.current = false;
+            setServiceStatus({
+                isRunning: false,
+                totalPlayers: 0,
+                activePlayers: 0,
+                idlePlayers: 0,
+            });
         };
     }, [tenant]);
 

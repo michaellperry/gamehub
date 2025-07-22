@@ -393,7 +393,6 @@ export class SimulatedPlayerService {
             // Check if player is already in this playground
             const existingJoin = await this.checkExistingJoin(player.player, playground);
             if (existingJoin) {
-                console.log(`Player ${player.id} already joined playground ${playground.code}`);
                 player.state = 'playing';
                 player.currentPlayground = playground;
                 player.lastStateChange = new Date();
@@ -403,14 +402,13 @@ export class SimulatedPlayerService {
             // Create join fact
             await this.j.fact(new Join(player.player, playground, new Date()));
 
-            console.log(`Player ${player.id} joined playground ${playground.code}`);
             player.state = 'playing';
             player.currentPlayground = playground;
             player.lastStateChange = new Date();
             player.joinAttempts = 0;
 
         } catch (error) {
-            console.error(`Failed to join player ${player.id} to playground ${playground.code}:`, error);
+            console.error(`Failed to join player ${player.name} to playground ${playground.code}:`, error);
             player.state = 'idle';
             player.lastStateChange = new Date();
         }
