@@ -3,6 +3,7 @@ import { Observer } from 'jinaga/src/observer/observer';
 import { Playground, Player, Tenant, Join } from 'gamehub-model/model';
 import { PlaygroundMonitor } from './PlaygroundMonitor';
 import { PlayerPoolManager } from './PlayerPoolManager';
+import { AutoJoinCoordinator } from './AutoJoinCoordinator';
 
 export interface BackgroundServiceConfig {
     enabled: boolean;
@@ -19,6 +20,7 @@ export class BackgroundServiceManager {
     private config: BackgroundServiceConfig;
     private playgroundMonitor: PlaygroundMonitor;
     private playerPoolManager: PlayerPoolManager;
+    private autoJoinCoordinator: AutoJoinCoordinator;
     private tenant: Tenant | null = null;
 
     constructor(jinagaClient: Jinaga, config: BackgroundServiceConfig) {
@@ -26,6 +28,7 @@ export class BackgroundServiceManager {
         this.config = config;
         this.playgroundMonitor = new PlaygroundMonitor(jinagaClient, config);
         this.playerPoolManager = new PlayerPoolManager(jinagaClient, config);
+        this.autoJoinCoordinator = new AutoJoinCoordinator(jinagaClient, config);
     }
 
     async start(tenant: Tenant): Promise<void> {
@@ -40,6 +43,9 @@ export class BackgroundServiceManager {
 
             // Initialize player pool
             await this.playerPoolManager.initialize(tenant);
+
+            // Initialize auto-join coordinator
+            await this.autoJoinCoordinator.initialize(tenant);
 
             // Start playground monitoring
             const playgroundObserver = await this.playgroundMonitor.start(tenant, async (playground: Playground) => {
@@ -71,6 +77,9 @@ export class BackgroundServiceManager {
 
             // Clean up player pool
             await this.playerPoolManager.cleanup();
+
+            // Clean up auto-join coordinator
+            await this.autoJoinCoordinator.cleanup();
 
             this.isRunning = false;
             this.tenant = null;
@@ -112,25 +121,29 @@ export class BackgroundServiceManager {
                 return;
             }
 
-            // Join players to the playground with delays
-            for (let i = 0; i < Math.min(availablePlayers.length, this.config.maxConcurrentJoins); i++) {
-                const player = availablePlayers[i];
-                const delay = i * this.config.joinDelay;
-
-                setTimeout(async () => {
-                    try {
-                        await this.joinPlayerToPlayground(player, playground);
-                    } catch (error) {
-                        console.error(`Failed to join player ${player.type} to playground ${playground.code}:`, error);
-                    }
-                }, delay);
-            }
+            // Use auto-join coordinator to handle joins with proper timing and conflict resolution
+            await this.autoJoinCoordinator.coordinateJoins(
+                availablePlayers,
+                playground,
+                async (player: Player, playground: Playground) => {
+                    // Success callback
+                    console.log(`Player ${this.j.hash(player)} successfully joined playground ${playground.code}`);
+                    await this.playerPoolManager.markPlayerActive(player, playground);
+                },
+                async (player: Player, playground: Playground, error: string) => {
+                    // Failure callback
+                    console.error(`Failed to join player ${this.j.hash(player)} to playground ${playground.code}:`, error);
+                }
+            );
         } catch (error) {
             console.error('Error handling new playground:', error);
         }
     }
 
+    // This method is no longer needed as join logic is handled by AutoJoinCoordinator
+    // Keeping for backward compatibility but it's now deprecated
     private async joinPlayerToPlayground(player: Player, playground: Playground): Promise<void> {
+        console.warn('joinPlayerToPlayground is deprecated. Use AutoJoinCoordinator instead.');
         try {
             // Create join fact
             await this.j.fact(new Join(player, playground, new Date()));
