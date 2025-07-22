@@ -5,12 +5,12 @@ Implementation plan for replacing the complex `SimulatedPlayerService` with a si
 
 ## Progress Summary
 - ✅ **Phase 1: Clean Up Existing Complex Implementation** - COMPLETED
-- ❌ **Phase 2: Implement Simplified Hook** - PENDING
+- ✅ **Phase 2: Implement Simplified Hook** - COMPLETED
 - ❌ **Phase 3: Update Integration Points** - PENDING
 - ❌ **Phase 4: Testing and Validation** - PENDING
 - ❌ **Phase 5: Documentation and Cleanup** - PENDING
 
-**Current Status**: Phase 1 completed - complex SimulatedPlayerService removed, configuration simplified, and integration points updated. Ready to implement simplified hook in Phase 2.
+**Current Status**: Phase 2 completed - simplified hook implemented using Jinaga's reactive patterns with useSpecification, automatic playground detection, and simulated player creation. Ready to update integration points in Phase 3.
 
 ## Prerequisites
 - [x] Jinaga watch API understanding and examples
@@ -88,18 +88,18 @@ export const simplifiedPlayerSessionConfig: SimplifiedPlayerSessionConfig = {
 - [x] Remove complex player management
 - [x] Update to use reactive Jinaga patterns
 
-## Phase 2: Implement Simplified Hook
+## Phase 2: Implement Simplified Hook ✅
 
-### 2.1 Create Simplified Hook Implementation
+### 2.1 Create Simplified Hook Implementation ✅
 **Location**: `app/gamehub-player/src/hooks/useSimplifiedPlayerSession.ts`
 
 **Required Implementation**:
-- [ ] Create new hook file with simplified interface
-- [ ] Implement Jinaga `j.watch` for playground monitoring
-- [ ] Add random delay generation for player joins
-- [ ] Create player creation logic using existing facts
-- [ ] Implement development-only activation
-- [ ] Add basic state tracking for UI feedback
+- [x] Create new hook file with simplified interface
+- [x] Implement Jinaga `useSpecification` for playground monitoring
+- [x] Add random delay generation for player joins
+- [x] Create player creation logic using existing facts
+- [x] Implement development-only activation
+- [x] Add basic state tracking for UI feedback
 
 **Hook Interface**:
 ```typescript
@@ -109,43 +109,47 @@ export interface SimplifiedPlayerSessionViewModel {
     simulatedPlayersCount: number;
     enableSimulation: () => void;
     disableSimulation: () => void;
+    error: string | null;
+    clearError: () => void;
 }
 ```
 
-### 2.2 Implement Playground Monitoring
+### 2.2 Implement Playground Monitoring ✅
 **Location**: `app/gamehub-player/src/hooks/useSimplifiedPlayerSession.ts`
 
 **Required Implementation**:
-- [ ] Use `j.watch` with playground specification
-- [ ] Filter playgrounds by tenant
-- [ ] Handle new playground detection
-- [ ] Implement random delay logic
-- [ ] Add proper cleanup on unmount
+- [x] Use `useSpecification` with playground specification
+- [x] Filter playgrounds by tenant
+- [x] Handle new playground detection
+- [x] Implement random delay logic
+- [x] Add proper cleanup on unmount
 
 **Key Functions**:
 ```typescript
-// Watch for playgrounds in tenant
-const playgroundObserver = j.watch(playgroundsInTenant(tenant), async (playground) => {
-    const delay = randomDelay(minDelay, maxDelay);
-    setTimeout(() => createSimulatedPlayer(playground), delay);
-});
+// Monitor playgrounds in tenant using Jinaga specifications
+const { data: playgrounds, error: playgroundsError } = useSpecification(
+    j,
+    playgroundsInTenantSpec,
+    tenant
+);
 ```
 
-### 2.3 Implement Player Creation Logic
+### 2.3 Implement Player Creation Logic ✅
 **Location**: `app/gamehub-player/src/hooks/useSimplifiedPlayerSession.ts`
 
 **Required Implementation**:
-- [ ] Create User fact for simulated player
-- [ ] Create Player fact associated with user
-- [ ] Create Join fact to connect player to playground
-- [ ] Create PlayerName fact with random gaming name
-- [ ] Use existing `gamingNames.ts` utility
-- [ ] Handle fact creation errors gracefully
+- [x] Create User fact for simulated player
+- [x] Create Player fact associated with user
+- [x] Create Join fact to connect player to playground
+- [x] Create PlayerName fact with random gaming name
+- [x] Use existing `gamingNames.ts` utility
+- [x] Handle fact creation errors gracefully
 
 **Player Creation Sequence**:
 ```typescript
 async function createSimulatedPlayer(playground: Playground) {
-    const user = await j.fact(new User(`simulated-user-${Date.now()}`));
+    const userId = `simulated-user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const user = await j.fact(new User(userId));
     const player = await j.fact(new Player(user, tenant));
     const name = generateGamingName();
     await j.fact(new PlayerName(player, name, []));
@@ -153,15 +157,15 @@ async function createSimulatedPlayer(playground: Playground) {
 }
 ```
 
-### 2.4 Add State Management
+### 2.4 Add State Management ✅
 **Location**: `app/gamehub-player/src/hooks/useSimplifiedPlayerSession.ts`
 
 **Required Implementation**:
-- [ ] Track playground count using Jinaga specifications
-- [ ] Track simulated players count
-- [ ] Add enable/disable functionality
-- [ ] Implement development-only activation
-- [ ] Add basic error state handling
+- [x] Track playground count using Jinaga specifications
+- [x] Track simulated players count
+- [x] Add enable/disable functionality
+- [x] Implement development-only activation
+- [x] Add basic error state handling
 
 ## Phase 3: Update Integration Points
 
