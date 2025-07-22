@@ -14,6 +14,16 @@ This plan outlines the implementation of a background service within the browser
 
 **Current Status**: Core service implementation and comprehensive testing framework complete - BackgroundServiceManager with full test coverage, Jinaga testing utilities, and comprehensive test strategy documented
 
+## Testing Strategy
+
+**Unit Test Requirements for All Phases**:
+- Each phase MUST include comprehensive unit tests
+- Tests should avoid mocks, favoring integration testing among production components
+- Use real Jinaga instances with full model integration for testing
+- Test authorization and distribution rules with actual fact types
+- Validate real-time behavior using `j.watch` with actual observers
+- Ensure test isolation using memory stores and proper cleanup
+
 ## Prerequisites
 - [x] Jinaga watch feature documentation and examples
 - [x] Understanding of current playground join flow
@@ -32,6 +42,12 @@ This plan outlines the implementation of a background service within the browser
 - [x] Understand watch vs observe patterns
 - [x] Document watch feature capabilities and limitations
 
+**Unit Tests**:
+- [x] Test Jinaga watch API with real instances
+- [x] Validate observer lifecycle with actual `j.watch` calls
+- [x] Test async callback patterns with real fact creation
+- [x] Verify watch behavior with actual playground specifications
+
 **Key Findings**:
 - `j.watch` returns an `Observer<T>` object with `cached()`, `loaded()`, and `stop()` methods
 - Asynchronous callbacks can return promises for background processing
@@ -48,6 +64,12 @@ This plan outlines the implementation of a background service within the browser
 - [x] Auto-join coordination (async callback patterns)
 - [x] Error handling and retry logic (Jinaga built-in mechanisms)
 
+**Unit Tests**:
+- [x] Test service component interactions with real Jinaga instances
+- [x] Validate service lifecycle with actual playground monitoring
+- [x] Test error handling with real network failures and reconnections
+- [x] Verify component integration without mocking dependencies
+
 ### 1.3 Data Model Integration
 **Location**: `app/gamehub-model/model/`
 
@@ -57,6 +79,12 @@ This plan outlines the implementation of a background service within the browser
 - [x] Leverage existing authorization rules for `User` and `Player` facts
 - [x] Use existing distribution rules for `User` and `Player` facts
 - [x] Remove `PlayerPool` and `AutoJoin` fact types (not needed)
+
+**Unit Tests**:
+- [x] Test fact creation with real `User` and `Player` instances
+- [x] Validate authorization rules with actual fact relationships
+- [x] Test distribution rules with real tenant isolation
+- [x] Verify fact ordering and conflict resolution with actual data
 
 ## Phase 2: Core Service Implementation ✅
 
@@ -71,6 +99,13 @@ This plan outlines the implementation of a background service within the browser
 - [x] Service state management and configuration
 - [x] Configuration-driven behavior with `BackgroundServiceConfig`
 - [x] Service status tracking and monitoring
+
+**Unit Tests**:
+- [x] Test service initialization with real Jinaga client
+- [x] Validate observer lifecycle with actual `j.watch` calls
+- [x] Test error recovery with real network failures
+- [x] Verify service state management with actual playground monitoring
+- [x] Test configuration behavior with real service instances
 
 ```typescript
 export class BackgroundServiceManager {
@@ -123,6 +158,13 @@ export class BackgroundServiceManager {
 - [x] Concurrent join management with configurable limits
 - [x] Retry logic for failed join attempts
 
+**Unit Tests**:
+- [x] Test playground monitoring with real `j.watch` and playground facts
+- [x] Validate tenant filtering with actual tenant isolation
+- [x] Test join delays with real timing and playground creation
+- [x] Verify conflict resolution with concurrent playground joins
+- [x] Test retry logic with actual failed join scenarios
+
 ### 2.3 Player Pool Manager
 **Location**: `app/gamehub-player/src/services/background-service/PlayerPoolManager.ts`
 
@@ -134,6 +176,13 @@ export class BackgroundServiceManager {
 - [x] Player rotation and replacement logic
 - [x] Player state synchronization
 - [x] Player lifecycle management and cleanup
+
+**Unit Tests**:
+- [x] Test player pool creation with real `User` and `Player` facts
+- [x] Validate player rotation with actual fact relationships
+- [x] Test player lifecycle with real Jinaga fact creation and cleanup
+- [x] Verify player state synchronization with actual playground joins
+- [x] Test player name generation and assignment with real instances
 
 ```typescript
 export const usePlayerPool = () => {
@@ -223,6 +272,13 @@ export const usePlayerPool = () => {
 - [ ] Leave logic for player rotation
 - [ ] Join success/failure tracking
 
+**Unit Tests**:
+- [ ] Test join coordination with real playground creation and player joins
+- [ ] Validate player assignment with actual `Player` and playground facts
+- [ ] Test conflict resolution with concurrent join attempts
+- [ ] Verify leave logic with real player rotation scenarios
+- [ ] Test join success/failure tracking with actual fact creation
+
 ### 4.2 Player Session Management
 **Location**: `app/gamehub-player/src/hooks/usePlayerSession.ts`
 
@@ -233,6 +289,13 @@ export const usePlayerPool = () => {
 - [ ] Session persistence and recovery
 - [ ] Player state synchronization
 - [ ] Session cleanup and rotation
+
+**Unit Tests**:
+- [ ] Test user authentication with real `User` facts and authorization rules
+- [ ] Validate player session creation with actual `Player` facts
+- [ ] Test session persistence with real Jinaga fact storage
+- [ ] Verify session recovery with actual fact loading and state restoration
+- [ ] Test session cleanup with real fact cleanup and rotation logic
 
 ## Phase 5: Integration and Testing 🔄
 
@@ -245,6 +308,13 @@ export const usePlayerPool = () => {
 - [ ] Service status monitoring
 - [ ] Configuration options via environment variables
 - [ ] Handle service lifecycle with app lifecycle
+
+**Unit Tests**:
+- [ ] Test React hook integration with real BackgroundServiceManager
+- [ ] Validate service lifecycle with actual Jinaga client integration
+- [ ] Test service controls with real admin interface components
+- [ ] Verify service status monitoring with actual service state
+- [ ] Test configuration integration with real environment variables
 
 ```typescript
 export const useBackgroundService = (tenant: Tenant, enabled: boolean) => {
@@ -268,6 +338,13 @@ export const useBackgroundService = (tenant: Tenant, enabled: boolean) => {
 - [ ] Join delay timing settings
 - [ ] Retry and error handling settings
 - [ ] Monitoring and logging settings
+
+**Unit Tests**:
+- [ ] Test configuration loading with real environment variables
+- [ ] Validate configuration validation with actual service behavior
+- [ ] Test configuration changes with real service reconfiguration
+- [ ] Verify configuration persistence with actual settings storage
+- [ ] Test configuration defaults with real service initialization
 
 ```typescript
 export const backgroundServiceConfig = {
@@ -310,6 +387,8 @@ export const backgroundServiceConfig = {
 - [x] Jinaga testing utilities and strategy documentation
 - [ ] Background players rotate and maintain active sessions
 - [ ] Comprehensive monitoring and logging is in place
+- [ ] All phases include comprehensive unit tests with real component integration
+- [ ] Tests avoid mocks in favor of testing actual production component interactions
 
 ## Risk Mitigation
 - [ ] **Concurrency Issues**: Use Jinaga's built-in fact ordering and conflict resolution
@@ -339,4 +418,20 @@ export const backgroundServiceConfig = {
 - **Dynamic Pool Sizing**: Allow runtime configuration of player pool size
 - **Smart Join Timing**: Implement more sophisticated join timing algorithms
 - **Player Behavior Simulation**: Add realistic player behavior patterns
-- **Multi-tenant Support**: Extend to support multiple tenants simultaneously 
+- **Multi-tenant Support**: Extend to support multiple tenants simultaneously
+
+## Phase 6: Deployment and Monitoring ❌
+
+**Required Implementation**:
+- [ ] Service deployment configuration
+- [ ] Monitoring and alerting setup
+- [ ] Logging and observability integration
+- [ ] Performance metrics collection
+- [ ] Health check endpoints
+
+**Unit Tests**:
+- [ ] Test deployment configuration with real service instances
+- [ ] Validate monitoring integration with actual metrics collection
+- [ ] Test logging with real service events and error scenarios
+- [ ] Verify health check endpoints with actual service health states
+- [ ] Test performance metrics with real service load and behavior 
