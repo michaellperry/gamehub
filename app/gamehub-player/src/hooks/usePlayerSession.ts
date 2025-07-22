@@ -1,7 +1,8 @@
-import { User } from 'jinaga';
-import { Player, PlayerName, Tenant } from 'gamehub-model/model';
-import { useCallback, useState } from 'react';
+import { Tenant } from 'gamehub-model/model';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { backgroundServiceConfig } from '../config/background-service';
 import { j } from '../jinaga-config';
+import { SimulatedPlayerService } from '../services/background-service';
 
 export interface SimulatedPlayer {
     id: string;
@@ -17,12 +18,28 @@ export interface PlayerSessionsViewModel {
     createPlayers: (count: number, namePrefix?: string) => Promise<SimulatedPlayer[]>;
     togglePlayerActive: (playerId: string) => void;
     clearError: () => void;
+    serviceStatus: {
+        isRunning: boolean;
+        totalPlayers: number;
+        activePlayers: number;
+        idlePlayers: number;
+    };
 }
 
 export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewModel {
     const [players, setPlayers] = useState<SimulatedPlayer[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [serviceStatus, setServiceStatus] = useState({
+        isRunning: false,
+        totalPlayers: 0,
+        activePlayers: 0,
+        idlePlayers: 0,
+    });
+
+    // Use ref to maintain service instance across renders
+    const serviceRef = useRef<SimulatedPlayerService | null>(null);
+    const hasStartedService = useRef(false);
 
     const activePlayers = players.filter(p => p.isActive);
 
@@ -30,7 +47,89 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
         setError(null);
     }, []);
 
-    // Create multiple simulated players
+    // Initialize and start background service
+    useEffect(() => {
+        if (import.meta.env.DEV && backgroundServiceConfig.enabled && tenant && !hasStartedService.current) {
+            console.log('Starting background service for simulated players');
+
+            const service = new SimulatedPlayerService(j, {
+                enabled: true,
+                playerCount: backgroundServiceConfig.playerCount,
+                tickInterval: 500, // Faster tick for better responsiveness
+                maxJoinAttempts: backgroundServiceConfig.retryAttempts,
+                maxPlayTime: 300000, // 5 minutes
+                minIdleTime: 1000, // 1 second - faster for testing
+            });
+
+            service.start(tenant)
+                .then(() => {
+                    serviceRef.current = service;
+                    hasStartedService.current = true;
+                    console.log('Background service started successfully');
+
+                    // Initial status update
+                    const status = service.getStatus();
+                    setServiceStatus({
+                        isRunning: status.isRunning,
+                        totalPlayers: status.totalPlayers,
+                        activePlayers: status.activePlayers,
+                        idlePlayers: status.idlePlayers,
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to start background service:', error);
+                    setError('Failed to start background service');
+                });
+        }
+
+        // Cleanup on unmount or tenant change
+        return () => {
+            if (serviceRef.current) {
+                console.log('Stopping background service');
+                serviceRef.current.stop();
+                serviceRef.current = null;
+                hasStartedService.current = false;
+                setServiceStatus({
+                    isRunning: false,
+                    totalPlayers: 0,
+                    activePlayers: 0,
+                    idlePlayers: 0,
+                });
+            }
+        };
+    }, [tenant]);
+
+    // Sync hook state with service state
+    useEffect(() => {
+        if (!serviceRef.current) return;
+
+        const syncInterval = setInterval(() => {
+            const service = serviceRef.current;
+            if (!service) return;
+
+            const status = service.getStatus();
+            setServiceStatus({
+                isRunning: status.isRunning,
+                totalPlayers: status.totalPlayers,
+                activePlayers: status.activePlayers,
+                idlePlayers: status.idlePlayers,
+            });
+
+            // Sync players from service to hook state
+            const servicePlayers = service.getPlayers();
+            const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => ({
+                id: sp.id,
+                name: `Simulated Player ${sp.id.split('-').pop()}`, // Extract player number
+                isActive: sp.state === 'playing'
+            }));
+
+            setPlayers(hookPlayers);
+        }, 500); // Sync more frequently for better responsiveness
+
+        return () => clearInterval(syncInterval);
+    }, [serviceRef.current]);
+
+    // Create multiple simulated players (only when service is running)
     const createPlayers = useCallback(async (count: number, namePrefix: string = 'Player'): Promise<SimulatedPlayer[]> => {
         if (!tenant) {
             throw new Error('Tenant not available');
@@ -44,26 +143,37 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
         setError(null);
 
         try {
-            const newPlayers: SimulatedPlayer[] = [];
-            const timestamp = Date.now();
-
-            for (let i = 1; i <= count; i++) {
-                const user = await j.fact(new User(`simulated-${timestamp}-${i}`));
-                const player = await j.fact(new Player(user, tenant));
-                const name = `${namePrefix} ${i}`;
-                await j.fact(new PlayerName(player, name, []));
-
-                const simulatedPlayer: SimulatedPlayer = {
-                    id: j.hash(player),
-                    name,
-                    isActive: true, // All players are active by default
-                };
-
-                newPlayers.push(simulatedPlayer);
+            // Only create players if service is running
+            if (!serviceRef.current) {
+                console.log('Background service not running, cannot create players');
+                return [];
             }
 
-            setPlayers(prev => [...prev, ...newPlayers]);
-            return newPlayers;
+            console.log(`Service is running, ${count} players will be created by background service`);
+
+            // Wait for service to have players and sync them to hook state
+            let attempts = 0;
+            const maxAttempts = 10;
+            while (attempts < maxAttempts) {
+                const servicePlayers = serviceRef.current.getPlayers();
+                if (servicePlayers.length > 0) {
+                    // Convert service players to hook format
+                    const hookPlayers: SimulatedPlayer[] = servicePlayers.map(sp => ({
+                        id: sp.id,
+                        name: `Simulated Player ${sp.id.split('-').pop()}`,
+                        isActive: sp.state === 'playing'
+                    }));
+                    return hookPlayers.slice(0, count);
+                }
+
+                // Wait a bit before next attempt
+                await new Promise(resolve => setTimeout(resolve, 200));
+                attempts++;
+            }
+
+            // If we get here, service didn't create players in time
+            console.log('Service did not create players in time');
+            return [];
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to create players';
             setError(errorMessage);
@@ -89,5 +199,6 @@ export function usePlayerSessions(tenant: Tenant | null): PlayerSessionsViewMode
         createPlayers,
         togglePlayerActive,
         clearError,
+        serviceStatus,
     };
 } 

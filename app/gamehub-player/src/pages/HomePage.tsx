@@ -87,6 +87,20 @@ export default function HomePage() {
                                     <Typography variant="body-sm" className="text-gray-600">
                                         Development mode - {playerSessions.players.length} players ({playerSessions.activePlayers.length} active)
                                     </Typography>
+
+                                    {/* Service Status */}
+                                    <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                                        <Typography variant="body-sm" className="text-gray-600">
+                                            Background Service: {playerSessions.serviceStatus.isRunning ? '🟢 Running' : '🔴 Stopped'}
+                                        </Typography>
+                                        {playerSessions.serviceStatus.isRunning && (
+                                            <Typography variant="body-sm" className="text-gray-500">
+                                                Service Players: {playerSessions.serviceStatus.totalPlayers} |
+                                                Active: {playerSessions.serviceStatus.activePlayers} |
+                                                Idle: {playerSessions.serviceStatus.idlePlayers}
+                                            </Typography>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Player Sessions Error Display */}
@@ -108,8 +122,8 @@ export default function HomePage() {
                                         <div
                                             key={player.id}
                                             className={`flex items-center justify-between p-3 rounded-lg border ${player.isActive
-                                                ? 'border-primary-500 bg-primary-50'
-                                                : 'border-gray-200 bg-white'
+                                                    ? 'border-primary-500 bg-primary-50'
+                                                    : 'border-gray-200 bg-white'
                                                 }`}
                                         >
                                             <div className="flex items-center space-x-3">

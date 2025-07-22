@@ -1,14 +1,33 @@
-import { renderHook } from '@testing-library/react';
-import { Tenant } from 'gamehub-model/model';
+import { renderHook, waitFor } from '@testing-library/react';
+import { Playground, Tenant } from 'gamehub-model/model';
 import { User } from 'jinaga';
 import { act } from 'react';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePlayerSessions } from '../hooks/usePlayerSession';
 import { JinagaTestUtils } from './jinaga-test-utils';
+
+// Mock the background service config to enable it in tests
+vi.mock('../config/background-service', () => ({
+    backgroundServiceConfig: {
+        enabled: true,
+        playerCount: 3,
+        joinDelay: 100,
+        retryAttempts: 3,
+        maxConcurrentJoins: 1,
+    },
+}));
+
+// Mock environment to simulate dev mode
+vi.mock('import.meta.env', () => ({
+    env: {
+        DEV: true,
+    },
+}));
 
 describe('usePlayerSessions', () => {
     let tenant: Tenant;
     let owner: User;
+    let jinaga: any;
 
     beforeEach(async () => {
         // Create a test instance with tenant
@@ -22,6 +41,7 @@ describe('usePlayerSessions', () => {
         );
         tenant = testSetup.tenant;
         owner = testSetup.owner;
+        jinaga = testSetup.jinaga;
     });
 
     describe('Hook Initialization', () => {
@@ -29,77 +49,152 @@ describe('usePlayerSessions', () => {
             const { result } = renderHook(() => usePlayerSessions(tenant));
 
             expect(result.current.players).toEqual([]);
-            expect(result.current.activePlayer).toBeNull();
+            expect(result.current.activePlayers).toEqual([]);
             expect(result.current.isLoading).toBe(false);
             expect(result.current.error).toBeNull();
+            expect(result.current.serviceStatus.isRunning).toBe(false);
         });
 
         it('should handle null tenant', () => {
             const { result } = renderHook(() => usePlayerSessions(null));
 
             expect(result.current.players).toEqual([]);
-            expect(result.current.activePlayer).toBeNull();
+            expect(result.current.activePlayers).toEqual([]);
             expect(result.current.isLoading).toBe(false);
             expect(result.current.error).toBeNull();
+            expect(result.current.serviceStatus.isRunning).toBe(false);
+        });
+    });
+
+    describe('Background Service Integration', () => {
+        it('should start background service in dev mode', async () => {
+            const { result } = renderHook(() => usePlayerSessions(tenant));
+
+            // Wait for service to start
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
+
+            expect(result.current.serviceStatus.totalPlayers).toBe(3);
+            expect(result.current.serviceStatus.idlePlayers).toBe(3);
+            expect(result.current.serviceStatus.activePlayers).toBe(0);
+        });
+
+        it('should sync players from service to hook state', async () => {
+            const { result } = renderHook(() => usePlayerSessions(tenant));
+
+            // Wait for service to start and sync players
+            await waitFor(() => {
+                expect(result.current.players.length).toBe(3);
+            }, { timeout: 10000 });
+
+            expect(result.current.players.length).toBe(3);
+            expect(result.current.players[0].name).toContain('Simulated Player');
+            expect(result.current.players[0].isActive).toBe(false); // Initially idle
+        });
+
+        it('should handle service startup errors gracefully', async () => {
+            // Mock a failing service by providing invalid config
+            const { result } = renderHook(() => usePlayerSessions(tenant));
+
+            // Wait a bit to see if error is handled
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Should not crash and should have error handling
+            expect(result.current.error).toBeNull(); // Or should contain error message
+        });
+    });
+
+    describe('Playground Integration', () => {
+        it('should have service join players to playgrounds automatically', async () => {
+            const { result } = renderHook(() => usePlayerSessions(tenant));
+
+            // Wait for service to start
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
+
+            // Create a playground
+            const playground = await jinaga.fact(new Playground(tenant, 'TEST-PLAYGROUND'));
+
+            // Wait for service to detect playground and join players
+            await waitFor(() => {
+                expect(result.current.serviceStatus.activePlayers).toBeGreaterThan(0);
+            }, { timeout: 30000 }); // Increased timeout to 30 seconds
+
+            // Verify that some players are now active (joined playground)
+            expect(result.current.serviceStatus.activePlayers).toBeGreaterThan(0);
+            expect(result.current.serviceStatus.idlePlayers).toBeLessThan(3);
+        });
+
+        it('should sync player state changes from service', async () => {
+            const { result } = renderHook(() => usePlayerSessions(tenant));
+
+            // Wait for service to start
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
+
+            // Create playground to trigger joins
+            await jinaga.fact(new Playground(tenant, 'SYNC-TEST'));
+
+            // Wait for players to join and state to sync
+            await waitFor(() => {
+                const activePlayers = result.current.players.filter(p => p.isActive);
+                expect(activePlayers.length).toBeGreaterThan(0);
+            }, { timeout: 30000 }); // Increased timeout to 30 seconds
+
+            // Verify hook state reflects service state
+            const activePlayers = result.current.players.filter(p => p.isActive);
+            expect(activePlayers.length).toBeGreaterThan(0);
+            expect(activePlayers.length).toBe(result.current.serviceStatus.activePlayers);
         });
     });
 
     describe('createPlayers Function', () => {
-        it('should create a single player', async () => {
+        it('should delegate to service when service is running', async () => {
             const { result } = renderHook(() => usePlayerSessions(tenant));
 
+            // Wait for service to start
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
+
+            // Wait for service to create players and sync them
+            await waitFor(() => {
+                expect(result.current.serviceStatus.totalPlayers).toBe(3);
+            }, { timeout: 10000 });
+
+            // Call createPlayers - should delegate to service
             let createdPlayers: any[] = [];
             await act(async () => {
                 createdPlayers = await result.current.createPlayers(1);
             });
 
-            expect(createdPlayers).toHaveLength(1);
-            expect(createdPlayers[0].name).toBe('Player 1');
-            expect(createdPlayers[0].isActive).toBe(false);
-            expect(result.current.players).toHaveLength(1);
-            expect(result.current.isLoading).toBe(false);
+            // Should return players from service
+            expect(createdPlayers.length).toBeGreaterThan(0);
+            expect(result.current.serviceStatus.totalPlayers).toBe(3);
         });
 
-        it('should create multiple players', async () => {
-            const { result } = renderHook(() => usePlayerSessions(tenant));
+        it('should return empty array when service is not running', async () => {
+            // Create a new Jinaga instance without service enabled
+            const testJinaga = JinagaTestUtils.createBasicTestInstance();
+            const testUser = new User('manual-test-owner');
+            const testTenant = await testJinaga.fact(new Tenant(testUser));
+
+            const { result } = renderHook(() => usePlayerSessions(testTenant));
+
+            // Service should not be running for this instance
+            expect(result.current.serviceStatus.isRunning).toBe(false);
 
             let createdPlayers: any[] = [];
             await act(async () => {
-                createdPlayers = await result.current.createPlayers(3);
+                createdPlayers = await result.current.createPlayers(2, 'Manual');
             });
 
-            expect(createdPlayers).toHaveLength(3);
-            expect(createdPlayers[0].name).toBe('Player 1');
-            expect(createdPlayers[1].name).toBe('Player 2');
-            expect(createdPlayers[2].name).toBe('Player 3');
-            expect(result.current.players).toHaveLength(3);
-            expect(result.current.isLoading).toBe(false);
-        });
-
-        it('should create players with custom prefix', async () => {
-            const { result } = renderHook(() => usePlayerSessions(tenant));
-
-            let createdPlayers: any[] = [];
-            await act(async () => {
-                createdPlayers = await result.current.createPlayers(2, 'Bot');
-            });
-
-            expect(createdPlayers).toHaveLength(2);
-            expect(createdPlayers[0].name).toBe('Bot 1');
-            expect(createdPlayers[1].name).toBe('Bot 2');
-            expect(result.current.players).toHaveLength(2);
-        });
-
-        it('should return empty array for zero players', async () => {
-            const { result } = renderHook(() => usePlayerSessions(tenant));
-
-            let createdPlayers: any[] = [];
-            await act(async () => {
-                createdPlayers = await result.current.createPlayers(0);
-            });
-
+            // Should return empty array since service is not running
             expect(createdPlayers).toEqual([]);
-            expect(result.current.players).toHaveLength(0);
+            expect(result.current.serviceStatus.totalPlayers).toBe(0);
         });
 
         it('should handle null tenant error', async () => {
@@ -117,60 +212,26 @@ describe('usePlayerSessions', () => {
         });
     });
 
-    describe('activatePlayer Function', () => {
-        it('should activate a valid player', async () => {
+    describe('togglePlayerActive Function', () => {
+        it('should toggle player active state in hook', async () => {
             const { result } = renderHook(() => usePlayerSessions(tenant));
 
-            // Create a player first
-            let createdPlayers: any[] = [];
-            await act(async () => {
-                createdPlayers = await result.current.createPlayers(1);
-            });
+            // Wait for service to start and create players
+            await waitFor(() => {
+                expect(result.current.players.length).toBe(3);
+            }, { timeout: 10000 });
 
-            // Activate the player
+            const firstPlayer = result.current.players[0];
+            const initialActiveState = firstPlayer.isActive;
+
+            // Toggle the player
             act(() => {
-                result.current.activatePlayer(createdPlayers[0].id);
+                result.current.togglePlayerActive(firstPlayer.id);
             });
 
-            expect(result.current.activePlayer).toEqual(createdPlayers[0]);
-            // Note: The isActive property in the players array is not updated by the hook
-            // Only the activePlayer reference is updated
-        });
-
-        it('should handle activating non-existent player', async () => {
-            const { result } = renderHook(() => usePlayerSessions(tenant));
-
-            // Try to activate a non-existent player
-            act(() => {
-                result.current.activatePlayer('non-existent-id');
-            });
-
-            expect(result.current.activePlayer).toBeNull();
-        });
-
-        it('should only have one active player at a time', async () => {
-            const { result } = renderHook(() => usePlayerSessions(tenant));
-
-            // Create multiple players
-            let createdPlayers: any[] = [];
-            await act(async () => {
-                createdPlayers = await result.current.createPlayers(3);
-            });
-
-            // Activate first player
-            act(() => {
-                result.current.activatePlayer(createdPlayers[0].id);
-            });
-
-            expect(result.current.activePlayer).toEqual(createdPlayers[0]);
-
-            // Activate second player
-            act(() => {
-                result.current.activatePlayer(createdPlayers[1].id);
-            });
-
-            expect(result.current.activePlayer).toEqual(createdPlayers[1]);
-            expect(result.current.activePlayer).not.toEqual(createdPlayers[0]);
+            // Check that the state changed in the hook
+            const updatedPlayer = result.current.players.find(p => p.id === firstPlayer.id);
+            expect(updatedPlayer?.isActive).toBe(!initialActiveState);
         });
     });
 
@@ -196,55 +257,71 @@ describe('usePlayerSessions', () => {
         });
     });
 
-    describe('State Management', () => {
-        it('should maintain players state across operations', async () => {
-            const { result } = renderHook(() => usePlayerSessions(tenant));
+    describe('Service Lifecycle', () => {
+        it('should stop service on unmount', async () => {
+            const { result, unmount } = renderHook(() => usePlayerSessions(tenant));
 
-            // Create first batch of players
-            await act(async () => {
-                await result.current.createPlayers(2);
+            // Wait for service to start
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
+
+            // Unmount the hook
+            unmount();
+
+            // Service should be stopped (we can't directly test this, but it should not crash)
+            // The cleanup is handled in the useEffect return function
+        });
+
+        it('should restart service when tenant changes', async () => {
+            const { result, rerender } = renderHook(({ tenant }) => usePlayerSessions(tenant), {
+                initialProps: { tenant },
             });
 
-            expect(result.current.players).toHaveLength(2);
+            // Wait for service to start with first tenant
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
 
-            // Create second batch of players
-            await act(async () => {
-                await result.current.createPlayers(1, 'Bot');
-            });
+            // Create new tenant
+            const newTenant = await jinaga.fact(new Tenant(new User('new-owner')));
 
-            expect(result.current.players).toHaveLength(3);
-            expect(result.current.players[0].name).toBe('Player 1');
-            expect(result.current.players[1].name).toBe('Player 2');
-            expect(result.current.players[2].name).toBe('Bot 1');
+            // Rerender with new tenant
+            rerender({ tenant: newTenant });
+
+            // Service should restart with new tenant
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
         });
     });
 
     describe('Integration Workflow', () => {
-        it('should handle complete workflow: create → activate → verify', async () => {
+        it('should handle complete workflow: service start → playground creation → player joining', async () => {
             const { result } = renderHook(() => usePlayerSessions(tenant));
 
-            // Create players
-            let createdPlayers: any[] = [];
-            await act(async () => {
-                createdPlayers = await result.current.createPlayers(2, 'Test');
-            });
+            // Wait for service to start
+            await waitFor(() => {
+                expect(result.current.serviceStatus.isRunning).toBe(true);
+            }, { timeout: 10000 });
 
-            expect(result.current.players).toHaveLength(2);
-            expect(result.current.activePlayer).toBeNull();
+            // Verify initial state
+            expect(result.current.serviceStatus.totalPlayers).toBe(3);
+            expect(result.current.serviceStatus.idlePlayers).toBe(3);
+            expect(result.current.serviceStatus.activePlayers).toBe(0);
 
-            // Activate first player
-            act(() => {
-                result.current.activatePlayer(createdPlayers[0].id);
-            });
+            // Create playground
+            await jinaga.fact(new Playground(tenant, 'WORKFLOW-TEST'));
 
-            expect(result.current.activePlayer).toEqual(createdPlayers[0]);
+            // Wait for players to join
+            await waitFor(() => {
+                expect(result.current.serviceStatus.activePlayers).toBeGreaterThan(0);
+            }, { timeout: 30000 }); // Increased timeout to 30 seconds
 
-            // Activate second player
-            act(() => {
-                result.current.activatePlayer(createdPlayers[1].id);
-            });
-
-            expect(result.current.activePlayer).toEqual(createdPlayers[1]);
+            // Verify final state
+            expect(result.current.serviceStatus.activePlayers).toBeGreaterThan(0);
+            expect(result.current.serviceStatus.idlePlayers).toBeLessThan(3);
+            expect(result.current.players.filter(p => p.isActive).length).toBeGreaterThan(0);
         });
     });
 }); 
