@@ -1,9 +1,2 @@
-export { SimulatedPlayerService } from './SimulatedPlayerService';
-export type {
-    SimulatedPlayerServiceConfig,
-    SimulatedPlayerServiceStatus,
-    SimulatedPlayer,
-    GameContext,
-    PlayerAction,
-    PlayerBehavior
-} from './SimulatedPlayerService'; 
+export { simplifiedPlayerSessionConfig } from '../../config/background-service';
+export type { SimplifiedPlayerSessionConfig } from '../../config/background-service'; 

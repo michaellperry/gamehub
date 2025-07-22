@@ -1,15 +1,11 @@
-export interface BackgroundServiceConfig {
+export interface SimplifiedPlayerSessionConfig {
     enabled: boolean;
-    playerCount: number;
-    joinDelay: number;
-    retryAttempts: number;
-    maxConcurrentJoins: number;
+    minDelay: number; // Minimum delay before joining (ms)
+    maxDelay: number; // Maximum delay before joining (ms)
 }
 
-export const backgroundServiceConfig: BackgroundServiceConfig = {
-    enabled: import.meta.env.VITE_BACKGROUND_SERVICE_ENABLED === 'true' || import.meta.env.DEV,
-    playerCount: parseInt(import.meta.env.VITE_BACKGROUND_SERVICE_PLAYER_COUNT || '3'),
-    joinDelay: parseInt(import.meta.env.VITE_BACKGROUND_SERVICE_JOIN_DELAY || '2000'),
-    retryAttempts: parseInt(import.meta.env.VITE_BACKGROUND_SERVICE_RETRY_ATTEMPTS || '3'),
-    maxConcurrentJoins: parseInt(import.meta.env.VITE_BACKGROUND_SERVICE_MAX_CONCURRENT_JOINS || '1'),
+export const simplifiedPlayerSessionConfig: SimplifiedPlayerSessionConfig = {
+    enabled: import.meta.env.DEV,
+    minDelay: 1000, // 1 second
+    maxDelay: 5000, // 5 seconds
 }; 

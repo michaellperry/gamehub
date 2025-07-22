@@ -4,7 +4,6 @@ import { usePlayerPlaygrounds, PlayerPlaygroundsViewModel } from './usePlayerPla
 import { usePlayerSessionsContext } from '../auth/PlayerSessionsProvider';
 import { PlayerSessionsViewModel } from './usePlayerSession';
 import { useTenant } from '../auth/useTenant';
-import { useEffect, useRef } from 'react';
 
 export interface HomePageViewModel {
     playerName: PlayerNameViewModel;
@@ -19,19 +18,9 @@ export function useHomePage(): HomePageViewModel {
     const playerPlaygrounds = usePlayerPlaygrounds();
     const tenant = useTenant();
     const playerSessions = usePlayerSessionsContext();
-    const hasCreatedPlayers = useRef(false);
 
-    // Create simulated players in dev mode (only once)
-    useEffect(() => {
-        if (import.meta.env.DEV && tenant && !hasCreatedPlayers.current && playerSessions.players.length === 0) {
-            hasCreatedPlayers.current = true;
-            playerSessions.createPlayers(3, 'Simulated Player')
-                .catch(error => {
-                    console.error('Failed to create simulated players:', error);
-                    hasCreatedPlayers.current = false; // Reset on error to allow retry
-                });
-        }
-    }, [tenant, playerSessions.players.length, playerSessions.createPlayers]);
+    // Simplified approach - player creation will be handled by the simplified hook in Phase 2
+    // No complex player creation logic needed here
 
     return {
         playerName,
