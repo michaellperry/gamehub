@@ -44,6 +44,21 @@ authorization {
             u2 = u1->user: Jinaga.User
         ]
     } => u2
+    (p1: GameHub.Challenge) {
+        u1: Jinaga.User [
+            u1 = p1->challengerJoin: GameHub.Join->player: GameHub.Player->user: Jinaga.User
+        ]
+    } => u1
+    (p1: GameHub.Game) {
+        u1: Jinaga.User [
+            u1 = p1->challenge: GameHub.Challenge->opponentJoin: GameHub.Join->player: GameHub.Player->user: Jinaga.User
+        ]
+    } => u1
+    (p1: GameHub.Reject) {
+        u1: Jinaga.User [
+            u1 = p1->challenge: GameHub.Challenge->opponentJoin: GameHub.Join->player: GameHub.Player->user: Jinaga.User
+        ]
+    } => u1
 }
 
 distribution {

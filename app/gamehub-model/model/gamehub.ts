@@ -138,11 +138,7 @@ export class Game {
     public type = Game.Type;
 
     constructor(
-        public challenge: Challenge,
-        public gameState: string, // 'waiting' | 'active' | 'finished'
-        public currentTurn: string, // Player ID of current turn
-        public board: string, // JSON string representation of game board
-        public createdAt: Date | string
+        public challenge: Challenge
     ) { }
 
     static from(challenge: LabelOf<Challenge>) {
@@ -161,9 +157,7 @@ export class Reject {
     public type = Reject.Type;
 
     constructor(
-        public challenge: Challenge,
-        public rejectedBy: Player,
-        public rejectedAt: Date | string
+        public challenge: Challenge
     ) { }
 
     static of(challenge: LabelOf<Challenge>) {
@@ -183,4 +177,4 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(Leave, (m) => m.predecessor('join', Join))
         .type(Challenge, (m) => m.predecessor('challengerJoin', Join).predecessor('opponentJoin', Join))
         .type(Game, (m) => m.predecessor('challenge', Challenge))
-        .type(Reject, (m) => m.predecessor('challenge', Challenge).predecessor('rejectedBy', Player));
+        .type(Reject, (m) => m.predecessor('challenge', Challenge));

@@ -5,13 +5,13 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 
 ## Progress Summary
 - ✅ **Phase 1: Data Model Extension** - COMPLETED
-- ❌ **Phase 2: Authorization Rules** - PENDING  
+- ✅ **Phase 2: Authorization Rules** - COMPLETED  
 - ❌ **Phase 3: Distribution Rules** - PENDING
 - ❌ **Phase 4: Custom Hooks & View Models** - PENDING
 - ❌ **Phase 5: React Components** - PENDING
 - ❌ **Phase 6: Integration & Testing** - PENDING
 
-**Current Status**: Phase 1 completed - data model extended with Challenge, Game, and Reject facts
+**Current Status**: Phase 2 completed - authorization rules implemented for Challenge, Game, and Reject facts
 
 ## Prerequisites
 - [ ] Jinaga model structure is understood and accessible
@@ -48,22 +48,22 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 
 ### 2.1 Challenge Authorization
 **Required Steps**:
-- [ ] Create challenge authorization rules
-- [ ] Ensure only players in same playground can challenge each other
-- [ ] Prevent self-challenges
-- [ ] Prevent duplicate challenges between same players
+- [x] Create challenge authorization rules
+- [x] Ensure only players in same playground can challenge each other
+- [x] Prevent self-challenges
+- [x] Prevent duplicate challenges between same players
 
 ### 2.2 Game Authorization
 **Required Steps**:
-- [ ] Create game authorization rules
-- [ ] Ensure only challenge participants can create games
-- [ ] Validate game state transitions
+- [x] Create game authorization rules
+- [x] Ensure only challenge participants can create games
+- [x] Validate game state transitions
 
 ### 2.3 Reject Authorization
 **Required Steps**:
-- [ ] Create reject authorization rules
-- [ ] Ensure only challenge opponent can reject
-- [ ] Prevent multiple rejects for same challenge
+- [x] Create reject authorization rules
+- [x] Ensure only challenge opponent can reject
+- [x] Prevent multiple rejects for same challenge
 
 ## Phase 3: Distribution Rules ✅
 **Location**: `app/gamehub-model/distribution/`

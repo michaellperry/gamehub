@@ -17,8 +17,8 @@ digraph {
 
     Leave -> Join
 
-    Challenge -> Join [label="challenger"]
-    Challenge -> Join [label="opponent"]
+    Challenge -> Join [label="challengerJoin"]
+    Challenge -> Join [label="opponentJoin"]
     Challenge [label="Challenge\n(challengerStarts: boolean,\ncreatedAt: Date|string)"]
 
     Game -> Challenge
