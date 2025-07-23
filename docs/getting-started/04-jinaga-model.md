@@ -33,6 +33,21 @@ This guide covers the setup and configuration of the Jinaga data model, which pr
 
 ## Overview
 
+### Recommended Implementation Order
+
+When creating implementation plans for new Jinaga features, follow this order to ensure each step builds upon the decisions made in previous steps:
+
+1. **Define Facts** - Start with immutable facts that represent your domain concepts
+2. **Build the User Interface** - Create React components to identify user workflows and data requirements
+3. **Define Custom Hooks and View Models** - Encapsulate business logic and identify data access patterns
+4. **Define Specifications for Querying Facts** - Create specifications that match UI requirements
+5. **Define Authorization Rules Based on Commands** - Determine who can create each fact type
+6. **Define Distribution Rules Based on Specifications** - Enable the specifications used in custom hooks
+7. **Generate Policies** - Build and validate security policies
+8. **Write Tests of Custom Hooks** - Test with authorization and distribution rules
+
+This order ensures that your Jinaga model supports actual user workflows rather than creating a model that doesn't match user needs.
+
 ### What is Jinaga?
 
 Jinaga is a distributed data management system that uses immutable facts and historical modeling to provide:

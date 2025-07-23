@@ -3,6 +3,8 @@
 ## Overview
 This plan implements the challenge flow as described in the Playground PRD, where players can issue challenges to other players in a playground, and opponents can accept (creating a Game) or reject the challenge.
 
+**Note**: This plan was created before the recommended implementation order was established. Future plans should follow the order: Define Facts → Build UI → Define Custom Hooks → Define Specifications → Define Authorization Rules → Define Distribution Rules → Generate Policies → Write Tests.
+
 ## Progress Summary
 - ✅ **Phase 1: Data Model Extension** - COMPLETED
 - ✅ **Phase 2: Authorization Rules** - COMPLETED  

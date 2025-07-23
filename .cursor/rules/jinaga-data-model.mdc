@@ -4,6 +4,78 @@ alwaysApply: false
 ---
 # Jinaga Data Model Development
 
+## Recommended Implementation Order for Plans
+
+When creating implementation plans for new Jinaga features, follow this order to ensure each step builds upon the decisions made in previous steps:
+
+### 1. Define Facts
+Start by defining the immutable facts that represent your domain concepts. Focus on:
+- **Core entities** and their relationships
+- **Business events** as immutable facts
+- **Minimal state** - avoid storing derived data
+- **Query-ready design** - structure facts to support intended queries
+
+### 2. Build the User Interface
+Create the React components that users will interact with. This helps identify:
+- **User workflows** and interaction patterns
+- **Data requirements** for each UI component
+- **Real-time update needs** for live data synchronization
+- **Error handling** and loading state requirements
+
+### 3. Define Custom Hooks and View Models
+Create custom hooks that encapsulate business logic and provide view models to components. This reveals:
+- **Data access patterns** needed by the UI
+- **Command patterns** for user actions
+- **State management** requirements
+- **Error handling** and loading state logic
+
+### 4. Define Specifications for Querying Facts
+Based on the custom hooks, define the specifications needed to query facts:
+- **Query patterns** that match UI requirements
+- **Parameter requirements** for conditional loading
+- **Real-time update** specifications
+- **Performance considerations** for data access
+
+### 5. Define Authorization Rules Based on Commands
+Analyze the commands in custom hooks to determine who can create each fact type:
+- **User actions** that create facts
+- **Business rules** for who can perform actions
+- **Role-based permissions** for different user types
+- **Multi-tenant security** requirements
+
+### 6. Define Distribution Rules Based on Specifications
+Design distribution rules that enable the specifications used in custom hooks:
+- **Share clauses** that match query specifications
+- **With clauses** that define who can execute queries
+- **Performance optimization** through targeted distribution
+- **Privacy controls** for sensitive data
+
+### 7. Generate Policies
+Build and generate the security policies to validate the rules:
+- **Policy compilation** to catch rule errors
+- **Rule validation** against business requirements
+- **Distribution verification** for query enablement
+- **Authorization testing** for security compliance
+
+### 8. Write Tests of Custom Hooks
+Test the custom hooks using the authorization and distribution rules:
+- **Test harness setup** with proper authorization rules
+- **Distribution rule testing** for query access
+- **Integration testing** with real fact creation
+- **Error scenario testing** for edge cases
+
+### Why This Order Matters
+
+Each step relies upon decisions made in previous steps:
+- **UI design** reveals what data users need to see and modify
+- **Custom hooks** identify the exact queries and commands needed
+- **Specifications** must match the query patterns used in hooks
+- **Authorization rules** must allow the commands used in hooks
+- **Distribution rules** must enable the specifications used in hooks
+- **Tests** validate that the entire system works together
+
+This order ensures that your Jinaga model supports the actual user workflows rather than creating a model that doesn't match user needs.
+
 ## Related Rules
 
 - **jinaga-usage-patterns**: Use this rule when you need to load or create facts from React components
@@ -401,6 +473,10 @@ cat mesh/replicator/policies/gamehub.policy
 2. **Direct References**: Use direct predecessor relationships when possible
 3. **Avoid Complex Joins**: Put complex logic in distribution rules, not authorization
 4. **Test Continuously**: Build and generate policies after each change
+
+2. **Distribution**: Minimize unnecessary query complexity
+3. **Caching**: Cache frequently accessed facts on the client
+4. **Pagination**: Handle large fact sets with pagination
 
 2. **Distribution**: Minimize unnecessary query complexity
 3. **Caching**: Cache frequently accessed facts on the client
