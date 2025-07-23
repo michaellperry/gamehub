@@ -131,6 +131,18 @@ export class Challenge {
             .notExists((challenge) => challenge.successors(Reject, (reject) => reject.challenge))
             .notExists((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
+
+    // Helper for distribution rules - challenges where player is challenger
+    static whereChallenger(player: LabelOf<Player>) {
+        return Join.by(player)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin));
+    }
+
+    // Helper for distribution rules - challenges where player is opponent
+    static whereOpponent(player: LabelOf<Player>) {
+        return Join.by(player)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.opponentJoin));
+    }
 }
 
 export class Game {
@@ -150,6 +162,18 @@ export class Game {
             .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
             .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
+
+    // Helper for distribution rules - games where player is challenger
+    static whereChallenger(player: LabelOf<Player>) {
+        return Challenge.whereChallenger(player)
+            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+    }
+
+    // Helper for distribution rules - games where player is opponent
+    static whereOpponent(player: LabelOf<Player>) {
+        return Challenge.whereOpponent(player)
+            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+    }
 }
 
 export class Reject {
@@ -162,6 +186,18 @@ export class Reject {
 
     static of(challenge: LabelOf<Challenge>) {
         return challenge.successors(Reject, (reject) => reject.challenge);
+    }
+
+    // Helper for distribution rules - rejects where player is challenger
+    static whereChallenger(player: LabelOf<Player>) {
+        return Challenge.whereChallenger(player)
+            .selectMany((challenge) => challenge.successors(Reject, (reject) => reject.challenge));
+    }
+
+    // Helper for distribution rules - rejects where player is opponent
+    static whereOpponent(player: LabelOf<Player>) {
+        return Challenge.whereOpponent(player)
+            .selectMany((challenge) => challenge.successors(Reject, (reject) => reject.challenge));
     }
 }
 

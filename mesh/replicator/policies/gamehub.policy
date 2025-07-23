@@ -130,5 +130,125 @@ distribution {
             u2 = u1->user: Jinaga.User
         ]
     } => u2
+    share (p1: GameHub.Player) {
+        u1: GameHub.Join [
+            u1->player: GameHub.Player = p1
+            !E {
+                u2: GameHub.Leave [
+                    u2->join: GameHub.Join = u1
+                ]
+            }
+        ]
+        u3: GameHub.Challenge [
+            u3->challengerJoin: GameHub.Join = u1
+        ]
+    } => u3
+    with (p1: GameHub.Player) {
+        u1: GameHub.Player [
+            u1 = p1
+        ]
+    } => u1
+    share (p1: GameHub.Player) {
+        u1: GameHub.Join [
+            u1->player: GameHub.Player = p1
+            !E {
+                u2: GameHub.Leave [
+                    u2->join: GameHub.Join = u1
+                ]
+            }
+        ]
+        u3: GameHub.Challenge [
+            u3->opponentJoin: GameHub.Join = u1
+        ]
+    } => u3
+    with (p1: GameHub.Player) {
+        u1: GameHub.Player [
+            u1 = p1
+        ]
+    } => u1
+    share (p1: GameHub.Player) {
+        u1: GameHub.Join [
+            u1->player: GameHub.Player = p1
+            !E {
+                u2: GameHub.Leave [
+                    u2->join: GameHub.Join = u1
+                ]
+            }
+        ]
+        u3: GameHub.Challenge [
+            u3->challengerJoin: GameHub.Join = u1
+        ]
+        u4: GameHub.Game [
+            u4->challenge: GameHub.Challenge = u3
+        ]
+    } => u4
+    with (p1: GameHub.Player) {
+        u1: GameHub.Player [
+            u1 = p1
+        ]
+    } => u1
+    share (p1: GameHub.Player) {
+        u1: GameHub.Join [
+            u1->player: GameHub.Player = p1
+            !E {
+                u2: GameHub.Leave [
+                    u2->join: GameHub.Join = u1
+                ]
+            }
+        ]
+        u3: GameHub.Challenge [
+            u3->opponentJoin: GameHub.Join = u1
+        ]
+        u4: GameHub.Game [
+            u4->challenge: GameHub.Challenge = u3
+        ]
+    } => u4
+    with (p1: GameHub.Player) {
+        u1: GameHub.Player [
+            u1 = p1
+        ]
+    } => u1
+    share (p1: GameHub.Player) {
+        u1: GameHub.Join [
+            u1->player: GameHub.Player = p1
+            !E {
+                u2: GameHub.Leave [
+                    u2->join: GameHub.Join = u1
+                ]
+            }
+        ]
+        u3: GameHub.Challenge [
+            u3->challengerJoin: GameHub.Join = u1
+        ]
+        u4: GameHub.Reject [
+            u4->challenge: GameHub.Challenge = u3
+        ]
+    } => u4
+    with (p1: GameHub.Player) {
+        u1: GameHub.Player [
+            u1 = p1
+        ]
+    } => u1
+    share (p1: GameHub.Player) {
+        u1: GameHub.Join [
+            u1->player: GameHub.Player = p1
+            !E {
+                u2: GameHub.Leave [
+                    u2->join: GameHub.Join = u1
+                ]
+            }
+        ]
+        u3: GameHub.Challenge [
+            u3->opponentJoin: GameHub.Join = u1
+        ]
+        u4: GameHub.Reject [
+            u4->challenge: GameHub.Challenge = u3
+        ]
+    } => u4
+    with (p1: GameHub.Player) {
+        u1: GameHub.Player [
+            u1 = p1
+        ]
+    } => u1
 }
 
