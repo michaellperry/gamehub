@@ -1,4 +1,4 @@
-# Challenge Flow Implementation Plan
+# Challenge Flow Implementation Plan (Simplified)
 
 ## Overview
 This plan implements the challenge flow as described in the Playground PRD, where players can issue challenges to other players in a playground, and opponents can accept (creating a Game) or reject the challenge.
@@ -62,17 +62,12 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [ ] Show available opponents in playground
   - [ ] Include challengerStarts selection UI
   - [ ] Add challenge confirmation dialog
-  - [ ] Include playground context information
 - [ ] Create ChallengeNotification component for incoming challenges
   - [ ] Display challenger information and playground
   - [ ] Add accept/reject action buttons
-  - [ ] Include challenge expiration countdown
-  - [ ] Add challenge details on expand
 - [ ] Create ChallengeStatus component for challenge indicators
   - [ ] Show challenge status on player cards
   - [ ] Include visual indicators for pending/active challenges
-  - [ ] Add challenge count badges
-  - [ ] Include challenge type indicators (sent/received)
 
 ### 2.2 Game UI Components
 **Required Steps**:
@@ -91,12 +86,10 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [x] Add challenge action buttons
   - [ ] Include challenge status indicators
   - [ ] Show active games for player
-  - [ ] Add challenge history or statistics
 - [ ] Create GameView component for individual game display
   - [ ] Integrate GameBoard, GameStatus, and GameActions
   - [ ] Add game navigation and controls
   - [ ] Include player information and game context
-  - [ ] Add responsive design for mobile/desktop
 
 ## Phase 3: Define Custom Hooks & View Models ❌
 **Location**: `app/gamehub-player/src/hooks/`
@@ -109,9 +102,8 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [ ] Include loading states during challenge creation
   - [ ] Add validation for playground membership
 - [ ] Create useChallengeStatus hook for tracking challenge state
-  - [ ] Track pending, accepted, rejected, and expired challenges
+  - [ ] Track pending, accepted, and rejected challenges
   - [ ] Implement real-time status updates
-  - [ ] Add challenge expiration logic
 - [ ] Create usePendingChallenges hook for incoming challenges
   - [ ] Filter challenges where current player is opponent
   - [ ] Include challenge metadata (challenger name, playground, etc.)
@@ -119,7 +111,6 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 - [ ] Create useOutgoingChallenges hook for sent challenges
   - [ ] Filter challenges where current player is challenger
   - [ ] Track challenge status and opponent responses
-  - [ ] Add cancel challenge functionality
 
 ### 3.2 Game Management Hooks
 **Required Steps**:
@@ -146,13 +137,11 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 - [ ] Create game view model specifications
   - [ ] Define GameViewModel interface
   - [ ] Include game state, players, and current turn
-  - [ ] Add game history and move tracking
   - [ ] Include game completion status
 - [ ] Create playground view model specifications with challenge integration
   - [ ] Extend existing playground view models
   - [ ] Add challenge-related player status indicators
   - [ ] Include active challenges and games in playground
-  - [ ] Add challenge action buttons and notifications
 
 ## Phase 4: Define Specifications ❌
 **Location**: `app/gamehub-model/specifications/`
@@ -161,24 +150,20 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 **Required Steps**:
 - [ ] Create challenge query specifications
   - [ ] Define specifications for pending challenges
-  - [ ] Create specifications for challenge history
   - [ ] Add specifications for challenge status tracking
   - [ ] Include specifications for challenge metadata
 - [ ] Create challenge-related player specifications
   - [ ] Define specifications for challenge participants
   - [ ] Create specifications for challenge notifications
-  - [ ] Add specifications for challenge statistics
 
 ### 4.2 Game Specifications
 **Required Steps**:
 - [ ] Create game state specifications
   - [ ] Define specifications for active games
-  - [ ] Create specifications for game history
   - [ ] Add specifications for game participants
   - [ ] Include specifications for game moves
 - [ ] Create game-related playground specifications
   - [ ] Define specifications for games in playground
-  - [ ] Create specifications for game spectators
   - [ ] Add specifications for game status updates
 
 ### 4.3 Integration Specifications
@@ -186,9 +171,7 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 - [ ] Create playground challenge specifications
   - [ ] Define specifications for playground challenges
   - [ ] Create specifications for challenge notifications
-  - [ ] Add specifications for challenge statistics
 - [ ] Create player challenge specifications
-  - [ ] Define specifications for player challenge history
   - [ ] Create specifications for player challenge status
   - [ ] Add specifications for player game participation
 
@@ -321,13 +304,11 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 - [ ] Create end-to-end tests for complete challenge workflow
   - [ ] Test full challenge flow from creation to game completion
   - [ ] Test multiple concurrent challenges
-  - [ ] Test challenge expiration scenarios
   - [ ] Test error recovery and edge cases
 - [ ] Create performance and accessibility tests
   - [ ] Test challenge flow with multiple concurrent users
   - [ ] Test real-time update performance
   - [ ] Test accessibility compliance
-  - [ ] Test mobile responsiveness
 
 ## Success Criteria
 - [x] Players can issue challenges to other players in playground
