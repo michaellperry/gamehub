@@ -1,0 +1,135 @@
+---
+description: "Use this rule to determine which Jinaga guidance file to read for your specific task. Contains a decision tree and task-specific recommendations."
+alwaysApply: false
+---
+# Jinaga Rule Selection Decision Tree
+
+## Quick Decision Tree
+
+```
+Are you creating an implementation plan for a new Jinaga feature?
+→ Use jinaga-planning
+
+Are you defining new fact types or fact relationships?
+→ Use jinaga-facts
+
+Are you creating authorization rules that determine who can create facts?
+→ Use jinaga-authorization
+
+Are you creating distribution rules that control what queries users can execute?
+→ Use jinaga-distribution
+
+Are you building React components that display or modify facts?
+→ Use jinaga-react-hooks
+
+Are you testing Jinaga applications or validating rules?
+→ Use jinaga-testing
+```
+
+## Task-Specific Recommendations
+
+### Planning and Architecture
+**Use `jinaga-planning` when:**
+- Creating implementation plans for new features
+- Deciding the order of development steps
+- Planning architectural decisions
+- Understanding how different Jinaga components work together
+
+### Fact Definition
+**Use `jinaga-facts` when:**
+- Defining new fact types
+- Creating fact relationships and predecessors
+- Adding static helper methods for queries
+- Designing immutable fact structures
+- Working with multi-tenant facts
+
+### Authorization Rules
+**Use `jinaga-authorization` when:**
+- Creating security rules for fact creation
+- Implementing role-based permissions
+- Setting up user access controls
+- Defining who can create specific fact types
+- Working with service principal authorization
+
+### Distribution Rules
+**Use `jinaga-distribution` when:**
+- Creating share/with distribution patterns
+- Enabling specific user queries
+- Controlling what data users can access
+- Optimizing data distribution for performance
+- Implementing privacy controls
+
+### React Integration
+**Use `jinaga-react-hooks` when:**
+- Building React components that display facts
+- Creating custom hooks with useSpecification
+- Implementing view models for components
+- Handling loading states and error handling
+- Working with real-time data synchronization
+
+### Testing and Validation
+**Use `jinaga-testing` when:**
+- Setting up test harnesses for Jinaga applications
+- Testing authorization and distribution rules
+- Validating fact creation and queries
+- Performance testing Jinaga applications
+- Integration testing with React components
+
+## Common Scenarios
+
+### Scenario 1: Adding a New Game Feature
+1. **Planning**: Read `jinaga-planning` to understand the 8-step process
+2. **Facts**: Read `jinaga-facts` to define game-related facts
+3. **Authorization**: Read `jinaga-authorization` to create security rules
+4. **Distribution**: Read `jinaga-distribution` to enable queries
+5. **React**: Read `jinaga-react-hooks` to build the UI
+6. **Testing**: Read `jinaga-testing` to validate everything
+
+### Scenario 2: Fixing Authorization Issues
+1. **Authorization**: Read `jinaga-authorization` to understand the problem
+2. **Testing**: Read `jinaga-testing` to validate the fix
+
+### Scenario 3: Optimizing Query Performance
+1. **Distribution**: Read `jinaga-distribution` to understand current rules
+2. **Facts**: Read `jinaga-facts` to see if fact design can be improved
+3. **Testing**: Read `jinaga-testing` to measure performance improvements
+
+### Scenario 4: Building a New React Component
+1. **React**: Read `jinaga-react-hooks` for component patterns
+2. **Testing**: Read `jinaga-testing` to test the component
+
+## Integration Between Rules
+
+### When to Use Multiple Rules
+- **New Feature Development**: Use all rules in the recommended order
+- **Bug Fixes**: Start with the specific rule for the issue, then use testing rule
+- **Performance Optimization**: Use distribution and facts rules together
+- **Security Audits**: Use authorization and testing rules together
+
+### Rule Dependencies
+- **Planning** → Informs all other rules
+- **Facts** → Required for authorization and distribution
+- **Authorization** → Required for testing
+- **Distribution** → Required for React integration
+- **React** → Benefits from all previous rules
+- **Testing** → Validates all other rules
+
+## Getting Started
+
+### For New Developers
+1. Start with `jinaga-planning` to understand the overall approach
+2. Read `jinaga-facts` to understand fact design
+3. Read `jinaga-react-hooks` to see how facts are used in UI
+4. Read `jinaga-authorization` and `jinaga-distribution` for security
+5. Read `jinaga-testing` to validate your work
+
+### For Experienced Developers
+- Jump directly to the specific rule for your current task
+- Use the decision tree to find the right guidance
+- Reference related rules when working on complex features
+
+### For Debugging Issues
+1. Identify the type of issue (authorization, distribution, React, etc.)
+2. Use the decision tree to find the relevant rule
+3. Follow the troubleshooting guidance in that rule
+4. Use the testing rule to validate your fix 

@@ -1,0 +1,183 @@
+---
+description: "Use this rule when creating authorization rules that determine who can create facts. Contains security patterns and permission models."
+alwaysApply: false
+---
+# Jinaga Authorization Rules
+
+## Authorization Structure
+
+Authorization rules determine who can create facts, ensuring data security and business rule enforcement.
+
+### Basic Authorization
+```typescript
+// app/gamehub-model/authorization/tenantAuthorization.ts
+import { AuthorizationRules } from 'jinaga';
+import { Administrator, Tenant } from '../model/index.js';
+
+export const tenantAuthorization = (a: AuthorizationRules) =>
+  a
+    // Only the creator can create a tenant
+    .type(Tenant, (tenant) => tenant.creator.predecessor())
+
+    // The creator of a tenant can create administrators for that tenant
+    .type(Administrator, (admin) => admin.tenant.creator.predecessor())
+
+    // Administrators can add other administrators to their tenant
+    .type(Administrator, (admin) => Administrator.usersOf(admin.tenant));
+```
+
+## Authorization Rule Best Practices
+
+### Keep Authorization Simple
+```typescript
+// ✅ CORRECT: Direct user reference
+.type(Challenge, (challenge) => challenge.challengerJoin.player.user.predecessor())
+
+// ❌ WRONG: Complex joins that don't resolve to LabelOf<User>
+.type(Challenge, (challenge) => challenge.challengerJoin.join(...))
+```
+
+### Authorization vs Distribution
+- **Authorization**: "Who can create this fact?" → Returns `LabelOf<User>`
+- **Distribution**: "Who can run this query?" → Uses `share`/`with` pattern
+- Keep authorization rules simple and direct
+- Avoid complex joins in authorization - put complexity in distribution rules
+
+## Permission Patterns
+
+### Creator-based Authorization
+```typescript
+.type(Tenant, tenant => tenant.creator)
+```
+
+### Role-based Authorization
+```typescript
+// Authorization based on user roles
+import { AuthorizationRules } from 'jinaga';
+import { Administrator, Tenant } from '../model/index.js';
+
+export const adminAuthorization = (a: AuthorizationRules) =>
+  a
+    // Only administrators can access admin-only facts
+    .type(AdminOnlyFact, (fact) => 
+      Administrator.usersOf(fact.tenant)
+    )
+
+    // Administrators can manage their own tenant
+    .type(TenantManagement, (management) => 
+      Administrator.usersOf(management.tenant)
+    );
+```
+
+### Self-service Authorization
+```typescript
+.type(PlayerInformation, info => info.player.user.predecessor())
+```
+
+### Service Principal Authorization
+
+For backend services that need elevated permissions:
+
+```typescript
+export class ServicePrincipal {
+    static Type = "GameHub.ServicePrincipal" as const;
+    public type = ServicePrincipal.Type;
+
+    constructor(
+        public tenant: Tenant,
+        public name: string,
+        public createdAt: Date | string
+    ) { }
+}
+
+// Authorization for service operations
+.type(SystemOperation, operation =>
+    ServicePrincipal.in(operation.tenant)
+        .selectMany(sp => sp.user.predecessor())
+)
+```
+
+## Authorization Design Principles
+
+### 1. Keep it Simple
+Authorization rules should return `LabelOf<User>` directly:
+```typescript
+// ✅ CORRECT: Simple and direct
+.type(MyFact, (fact) => fact.createdBy.predecessor())
+
+// ❌ WRONG: Complex logic in authorization
+.type(MyFact, (fact) => fact.complexJoin.selectMany(...))
+```
+
+### 2. Direct References
+Use direct predecessor relationships when possible:
+```typescript
+// ✅ CORRECT: Direct predecessor
+.type(Challenge, (challenge) => challenge.challengerJoin.player.user.predecessor())
+
+// ❌ WRONG: Complex traversal
+.type(Challenge, (challenge) => challenge.complexJoin.selectMany(...))
+```
+
+### 3. Avoid Complex Joins
+Put complex logic in distribution rules, not authorization:
+```typescript
+// ✅ CORRECT: Simple authorization
+.type(AdminFact, (fact) => Administrator.usersOf(fact.tenant))
+
+// Complex logic goes in distribution rules, not here
+```
+
+### 4. Test Continuously
+Build and generate policies after each change:
+```bash
+npm run build
+npm run generate-policies
+```
+
+## Common Authorization Patterns
+
+### Multi-tenant Authorization
+```typescript
+// Only tenant administrators can create admin facts
+.type(AdminFact, (fact) => Administrator.usersOf(fact.tenant))
+```
+
+### User-specific Authorization
+```typescript
+// Only the user can create their own profile
+.type(UserProfile, (profile) => profile.user.predecessor())
+```
+
+### Participant Authorization
+```typescript
+// Only participants can create game actions
+.type(GameAction, (action) => action.session.participants.selectMany(p => p.user.predecessor()))
+```
+
+## Validation and Testing
+
+### Authorization Checklist
+- [ ] Authorization rules compile without TypeScript errors
+- [ ] Rules return `LabelOf<User>` directly
+- [ ] No complex joins in authorization rules
+- [ ] Rules match business logic requirements
+- [ ] Policy file contains expected rule entries
+
+### Common Issues
+1. **Authorization Errors**: Ensure rules return `LabelOf<User>`
+2. **Complex Logic**: Move complex logic to distribution rules
+3. **Missing Imports**: Import all referenced fact types
+4. **Policy Generation**: Verify rules appear in generated policy
+
+### Testing Authorization Rules
+```typescript
+// Test authorization with JinagaTest
+const jinaga = JinagaTest.create({
+  authorization: (a) => myAuthorizationRules(a),
+  user: new User('test-user-key')
+});
+
+// Test fact creation
+await jinaga.fact(new MyFact(data, user)); // Should succeed
+``` 
