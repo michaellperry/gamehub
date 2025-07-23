@@ -78,6 +78,32 @@ export const gameModel = (b: ModelBuilder) =>
     .type(PlayerMove, (m) => m.predecessor('session', GameSession).predecessor('madeBy', User));
 ```
 
+### Static Helper Functions for Query Patterns
+```typescript
+// Create reusable query patterns as static methods
+export class Challenge {
+  // ... existing constructor and properties ...
+
+  // Helper for distribution rules - challenges where player is challenger
+  static whereChallenger(player: LabelOf<Player>) {
+    return Join.by(player)
+      .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin));
+  }
+
+  // Helper for distribution rules - challenges where player is opponent  
+  static whereOpponent(player: LabelOf<Player>) {
+    return Join.by(player)
+      .selectMany((join) => join.successors(Challenge, (challenge) => challenge.opponentJoin));
+  }
+}
+```
+
+**Benefits:**
+- Makes distribution rules more readable and maintainable
+- Centralizes complex query logic in the model classes
+- Enables reuse across different authorization and distribution contexts
+- Follows established naming conventions: `whereX()`, `by()`, `in()`
+
 ### Multi-tenant Facts
 ```typescript
 // Facts that belong to specific organizations
@@ -122,6 +148,40 @@ export const tenantModel = (b: ModelBuilder) =>
     .type(Administrator, (m) => m.predecessor('tenant', Tenant).predecessor('user', User));
 ```
 
+## Fact Design Principles
+
+### Keep Facts Simple
+```typescript
+// ✅ CORRECT: Focus on relationships
+export class Game {
+  constructor(public challenge: Challenge) { }
+}
+
+// ❌ WRONG: Store derived state
+export class Game {
+  constructor(
+    public challenge: Challenge,
+    public gameState: string,
+    public currentTurn: string,
+    public board: string,
+    public createdAt: Date | string
+  ) { }
+}
+```
+
+### Design Principles
+1. **Immutable**: Facts never change once created
+2. **Relationship-Focused**: Use references to other facts
+3. **Minimal State**: Avoid storing derived or computed data
+4. **Query-Ready**: Design facts to support intended queries
+5. **Business Logic**: Reflect actual business processes and workflows
+
+### When to Add Fields
+- **Required for business logic**: Add fields that represent core relationships
+- **Avoid derived data**: Don't store what can be computed from predecessors
+- **Consider queries**: Add fields that support common query patterns
+- **Keep it minimal**: Start simple, add complexity only when needed
+
 ## Authorization Rules (`app/gamehub-model/authorization/`)
 
 ### Basic Authorization
@@ -142,6 +202,23 @@ export const tenantAuthorization = (a: AuthorizationRules) =>
     .type(Administrator, (admin) => Administrator.usersOf(admin.tenant));
 ```
 
+### Authorization Rule Best Practices
+
+#### Keep Authorization Simple
+```typescript
+// ✅ CORRECT: Direct user reference
+.type(Challenge, (challenge) => challenge.challengerJoin.player.user.predecessor())
+
+// ❌ WRONG: Complex joins that don't resolve to LabelOf<User>
+.type(Challenge, (challenge) => challenge.challengerJoin.join(...))
+```
+
+#### Authorization vs Distribution
+- **Authorization**: "Who can create this fact?" → Returns `LabelOf<User>`
+- **Distribution**: "Who can run this query?" → Uses `share`/`with` pattern
+- Keep authorization rules simple and direct
+- Avoid complex joins in authorization - put complexity in distribution rules
+
 ### Role-based Authorization
 ```typescript
 // Authorization based on user roles
@@ -161,24 +238,39 @@ export const adminAuthorization = (a: AuthorizationRules) =>
     );
 ```
 
-### Hierarchical Authorization
+## Query-Driven Distribution Design
+
+### Design for Actual User Queries
+Before writing distribution rules, identify the queries users will actually execute:
+
 ```typescript
-// Facts that inherit permissions from parent facts
-import { AuthorizationRules } from 'jinaga';
-import { Administrator, Tenant, Player } from '../model/index.js';
-
-export const hierarchicalAuthorization = (a: AuthorizationRules) =>
-  a
-    // Players can access facts within their tenant
-    .type(PlayerFact, (fact) => 
-      Player.in(fact.tenant)
-    )
-
-    // Administrators can access all facts in their tenant
-    .type(AnyTenantFact, (fact) => 
-      Administrator.usersOf(fact.tenant)
-    );
+// What queries will players execute?
+const myChallenges = Challenge.whereChallenger(currentPlayer);
+const incomingChallenges = Challenge.whereOpponent(currentPlayer);
+const myGames = Game.whereChallenger(currentPlayer);
 ```
+
+### Distribution Rule Design Process
+1. **Identify User Queries**: What queries do users need to execute?
+2. **Design Share Clause**: Enable those specific queries
+3. **Design With Clause**: Define who can execute those queries
+4. **Keep Share Simple**: Avoid complex joins in share clause
+
+### Example: Player-Centric Distribution
+```typescript
+// ✅ CORRECT: Enable specific user queries
+.share(model.given(Player).match((player) => Challenge.whereChallenger(player)))
+.with(model.given(Player).match((player) => player.predecessor()))
+
+// ❌ WRONG: Share everything with playground
+.share(model.given(Playground).match((playground) => Challenge.for(playground)))
+```
+
+### Benefits of Query-Driven Design
+- **Performance**: Only distribute necessary data
+- **Privacy**: Users only see what they need
+- **Simplicity**: Queries match user mental models
+- **Maintainability**: Rules reflect actual usage patterns
 
 ## Distribution Rules (`app/gamehub-model/distribution/`)
 
@@ -203,21 +295,11 @@ const facts = await jinaga.query(factsSpec, tenant);
 
 #### Common Mistakes to Avoid
 ```typescript
-// ❌ WRONG: Complex joins in share clause
-    .share(
-  model.given(Tenant, User).match((tenant, user) =>
-    SomeFact.in(tenant).join((fact) => fact.user, user)
-  )
-)
-// This forces users to write complex queries with multiple parameters
+// ❌ WRONG: Share everything with playground
+.share(model.given(Playground).match((playground) => Challenge.for(playground)))
 
-// ❌ WRONG: Trying to filter in share clause
-    .share(
-  model.given(Tenant).match((tenant) => 
-    SomeFact.in(tenant).where(fact => fact.isActive)
-  )
-)
-// This makes the query structure more complex than necessary
+// ✅ RIGHT: Share only with participants  
+.share(model.given(Player).match((player) => Challenge.whereChallenger(player)))
 ```
 
 #### Rule of Thumb
@@ -238,58 +320,25 @@ Complex share clauses force users to write complex queries, which:
 
 The goal is to enable users to write intuitive, simple queries that match their mental model of the data.
 
-### Distribution Rule Validation Checklist
-
-Before implementing a distribution rule, verify:
-
-1. **Share Clause Simplicity**
-   - [ ] Share clause only defines the query structure users should write
-   - [ ] No complex joins or filtering in share clause
-   - [ ] Uses simple traversals like `Fact.in(tenant)`
-   - [ ] Query structure is intuitive for users
-
-2. **With Clause Completeness**
-   - [ ] With clause defines who can execute the queries
-   - [ ] Properly traverses to User objects (required for distribution)
-   - [ ] Uses `selectMany` and `predecessor()` for user traversal
-
-3. **Query Usability**
-   - [ ] Users can write simple, intuitive queries
-   - [ ] Query parameters are reasonable (not requiring complex joins)
-   - [ ] Query structure matches the share clause
-   - [ ] Query complexity matches the use case
-
-4. **Pattern Consistency**
-   - [ ] Follows existing patterns in the codebase
-   - [ ] Matches the structure of other distribution rules
-   - [ ] Uses the same traversal patterns as existing rules
-
-5. **Testing**
-   - [ ] Rule compiles without TypeScript errors
-   - [ ] Rule follows the established `share`/`with` pattern
-   - [ ] Users can successfully execute the intended queries
-
 ### Common Distribution Patterns
 
-#### Enable Queries for All Players in Tenant
+#### Enable Queries for Specific Participants
 ```typescript
 .share(
-  model.given(Tenant).match((tenant) => SomeFact.in(tenant))
+  model.given(Player).match((player) => Challenge.whereChallenger(player))
 )
-.with(model.given(Tenant).match((tenant) => 
-  Player.in(tenant).selectMany((player) => player.user.predecessor())
-));
+.with(model.given(Player).match((player) => player.predecessor()));
 
 // Users can execute:
-const factsSpec = model.given(Tenant).match((tenant) => SomeFact.in(tenant));
-const facts = await jinaga.query(factsSpec, tenant);
+const challengesSpec = model.given(Player).match((player) => Challenge.whereChallenger(player));
+const challenges = await jinaga.query(challengesSpec, currentPlayer);
 ```
 
 #### Enable Queries for Administrators Only
 ```typescript
-    .share(
+.share(
   model.given(Tenant).match((tenant) => AdminFact.in(tenant))
-    )
+)
 .with(model.given(Tenant).match((tenant) => 
   Administrator.usersOf(tenant)
 ));
@@ -299,73 +348,48 @@ const adminFactsSpec = model.given(Tenant).match((tenant) => AdminFact.in(tenant
 const adminFacts = await jinaga.query(adminFactsSpec, tenant);
 ```
 
-#### Enable Queries for Specific User
-```typescript
-    .share(
-  model.given(User).match((user) => UserSpecificFact.by(user))
-    )
-    .with(model.given(User).match((user) => user.predecessor()));
+## Validation and Testing
 
-// Users can execute:
-const userFactsSpec = model.given(User).match((user) => UserSpecificFact.by(user));
-const userFacts = await jinaga.query(userFactsSpec, currentUser);
+### Build and Policy Generation
+```bash
+# Always build after changes
+npm run build
+
+# Generate policies to verify rules
+npm run generate-policies
+
+# Check policy file for correct rule generation
+cat mesh/replicator/policies/gamehub.policy
 ```
 
-### Error Prevention Guidelines
+### Validation Checklist
+- [ ] Authorization rules compile without TypeScript errors
+- [ ] Distribution rules follow `share`/`with` pattern
+- [ ] Static helpers are reusable across contexts
+- [ ] Policy file contains expected rule entries
+- [ ] Facts support intended query patterns
+- [ ] Rules match business logic requirements
 
-#### Before Writing Distribution Rules
-1. **Study Existing Rules**: Look at `tenantDistribution.ts` for patterns
-2. **Keep Share Simple**: The share clause should enable simple, intuitive user queries
-3. **Complexity in With**: Put complex logic in the `with` clause, not the `share` clause
-4. **Test Query Usability**: Verify that users can write simple queries
-5. **Follow the Pattern**: If your rule looks different from existing ones, reconsider
-
-#### Common Error Patterns
-- ❌ `model.given(Tenant, User)` for simple distributions (forces complex user queries)
-- ❌ Complex joins in share clause (makes user queries complex)
-- ❌ Missing `selectMany` and `predecessor()` in with clause
-- ❌ Share clause doesn't match intended user query structure
-- ❌ Requiring multiple parameters for simple queries
-
-### Step-by-Step Distribution Rule Creation
-
-1. **Identify the Query Structure**
-   ```typescript
-   // What query should users be able to execute?
-   model.given(Tenant).match((tenant) => Playground.in(tenant))
-   ```
-
-2. **Identify the Recipients**
-   ```typescript
-   // Who should be able to execute these queries?
-   Player.in(tenant).selectMany((player) => player.user.predecessor())
-   ```
-
-3. **Create the Share Clause**
-   ```typescript
-   .share(
-     model.given(Tenant).match((tenant) => Playground.in(tenant))
-   )
-   ```
-
-4. **Create the With Clause**
-   ```typescript
-   .with(model.given(Tenant).match((tenant) => 
-     Player.in(tenant).selectMany((player) => player.user.predecessor())
-   ))
-   ```
-
-5. **Verify the Pattern**
-   - Share clause enables simple user queries
-   - With clause properly traverses to User objects
-   - Follows existing codebase patterns
-   - Query structure is intuitive for users
-
-### Advanced Distribution Patterns
-
-For more complex distribution scenarios, refer to the existing patterns in `app/gamehub-model/distribution/tenantDistribution.ts`. The key principle remains: keep the `share` clause simple to enable simple user queries, and put complexity in the `with` clause.
+### Common Issues
+1. **Authorization Errors**: Ensure rules return `LabelOf<User>`
+2. **Distribution Complexity**: Keep share clauses simple
+3. **Missing Imports**: Import all referenced fact types
+4. **Policy Generation**: Verify rules appear in generated policy
 
 ## Best Practices
+
+### Model Design
+1. **Query-First**: Design facts around actual user queries
+2. **Static Helpers**: Create reusable query patterns
+3. **Simple Authorization**: Keep authorization rules direct and simple
+4. **Targeted Distribution**: Share only necessary data
+5. **Business Logic**: Reflect actual workflows and processes
+
+### Development Workflow
+1. **Build Continuously**: Run `npm run build` after each change
+2. **Generate Policies**: Verify rules with `npm run generate-policies`
+3. **Test Queries**: Ensure intended queries work as expected
+4. **Iterate**: Refactor based on actual usage patterns
 
 ### Fact Design
 1. **Immutable**: Facts should be immutable once created
@@ -373,19 +397,11 @@ For more complex distribution scenarios, refer to the existing patterns in `app/
 3. **Hierarchical**: Structure facts in logical hierarchies
 
 ### Authorization Design
-1. **Principle of Least Privilege**: Grant minimal necessary access
-2. **Role-based**: Use roles for complex permission scenarios
-3. **Inheritance**: Child facts inherit parent permissions
-4. **Explicit**: Make authorization rules explicit and testable
+1. **Keep it Simple**: Authorization rules should return `LabelOf<User>` directly
+2. **Direct References**: Use direct predecessor relationships when possible
+3. **Avoid Complex Joins**: Put complex logic in distribution rules, not authorization
+4. **Test Continuously**: Build and generate policies after each change
 
-### Query Design
-1. **Simple**: Enable simple, intuitive user queries
-2. **Consistent**: Use consistent patterns across similar facts
-3. **Efficient**: Avoid unnecessary complexity in query structures
-4. **Usable**: Design queries that match user mental models
-
-### Performance Considerations
-1. **Indexing**: Use appropriate fact types for efficient queries
 2. **Distribution**: Minimize unnecessary query complexity
 3. **Caching**: Cache frequently accessed facts on the client
 4. **Pagination**: Handle large fact sets with pagination
