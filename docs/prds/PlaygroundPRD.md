@@ -83,6 +83,10 @@ No login system is required; player identity is session-based and name-based.
 ### Challenge Flow
 
 * Player A clicks "Challenge" on Player B
+* Player A sees a modal asking whether they will start or allow the opponent to start
+* Player A makes a selection and dismisses the modal
+* Player A sees an indicator on Player B's card that the challenge was issued
+
 * Player B sees a modal with Accept/Decline
 * On Accept:
 
