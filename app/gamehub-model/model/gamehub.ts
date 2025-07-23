@@ -107,6 +107,70 @@ export class Leave {
     ) { }
 }
 
+export class Challenge {
+    static Type = 'GameHub.Challenge' as const;
+    public type = Challenge.Type;
+
+    constructor(
+        public challengerJoin: Join,
+        public opponentJoin: Join,
+        public challengerStarts: boolean,
+        public createdAt: Date | string
+    ) { }
+
+    static by(player: LabelOf<Player>) {
+        return player.successors(Join, (join) => join.player)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
+            .notExists((challenge) => challenge.successors(Reject, (reject) => reject.challenge))
+            .notExists((challenge) => challenge.successors(Game, (game) => game.challenge));
+    }
+
+    static for(playground: LabelOf<Playground>) {
+        return playground.successors(Join, (join) => join.playground)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
+            .notExists((challenge) => challenge.successors(Reject, (reject) => reject.challenge))
+            .notExists((challenge) => challenge.successors(Game, (game) => game.challenge));
+    }
+}
+
+export class Game {
+    static Type = 'GameHub.Game' as const;
+    public type = Game.Type;
+
+    constructor(
+        public challenge: Challenge,
+        public gameState: string, // 'waiting' | 'active' | 'finished'
+        public currentTurn: string, // Player ID of current turn
+        public board: string, // JSON string representation of game board
+        public createdAt: Date | string
+    ) { }
+
+    static from(challenge: LabelOf<Challenge>) {
+        return challenge.successors(Game, (game) => game.challenge);
+    }
+
+    static in(playground: LabelOf<Playground>) {
+        return playground.successors(Join, (join) => join.playground)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
+            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+    }
+}
+
+export class Reject {
+    static Type = 'GameHub.Reject' as const;
+    public type = Reject.Type;
+
+    constructor(
+        public challenge: Challenge,
+        public rejectedBy: Player,
+        public rejectedAt: Date | string
+    ) { }
+
+    static of(challenge: LabelOf<Challenge>) {
+        return challenge.successors(Reject, (reject) => reject.challenge);
+    }
+}
+
 export const gameHubModel = (b: ModelBuilder) =>
     b
         .type(User)
@@ -116,4 +180,7 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(PlayerName, (m) => m.predecessor('player', Player).predecessor('prior', PlayerName))
         .type(Playground, (m) => m.predecessor('tenant', Tenant))
         .type(Join, (m) => m.predecessor('player', Player).predecessor('playground', Playground))
-        .type(Leave, (m) => m.predecessor('join', Join));
+        .type(Leave, (m) => m.predecessor('join', Join))
+        .type(Challenge, (m) => m.predecessor('challengerJoin', Join).predecessor('opponentJoin', Join))
+        .type(Game, (m) => m.predecessor('challenge', Challenge))
+        .type(Reject, (m) => m.predecessor('challenge', Challenge).predecessor('rejectedBy', Player));
