@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
-import { ChallengeModal } from '../components/molecules';
+import { ChallengeModal, PlayerCard } from '../components/molecules';
 import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
-import { getFriendlyDate } from '../utils/dateUtils';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
@@ -106,62 +105,110 @@ export default function PlaygroundPage() {
     const availableOpponents = viewModel.data?.players.filter(player => !player.isCurrentPlayer) || [];
     const currentPlayer = viewModel.data?.players.find(player => player.isCurrentPlayer);
 
+    // Mock challenge status data - this would come from actual challenge hooks
+    const getChallengeStatus = (player: PlaygroundPlayer) => {
+        // TODO: Replace with actual challenge status from hooks
+        // This is mock data for demonstration
+        if (player.isCurrentPlayer) return undefined;
+
+        // Simulate different challenge statuses for demo
+        const statuses = ['pending', 'sent', 'received', 'accepted', 'rejected', 'expired'] as const;
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const hasChallenge = Math.random() > 0.7; // 30% chance of having a challenge
+
+        if (!hasChallenge) return undefined;
+
+        return {
+            type: randomStatus,
+            count: Math.floor(Math.random() * 3) + 1
+        };
+    };
+
+    const handleChallengeStatusClick = (player: PlaygroundPlayer) => {
+        // TODO: Implement challenge status click handler
+        console.log('Challenge status clicked for player:', player.name);
+    };
+
+    if (viewModel.loading) {
+        return (
+            <PageLayout variant="default">
+                <Container variant="hero">
+                    <div className="text-center space-y-4">
+                        <LoadingIndicator size="lg" />
+                        <Typography variant="body" className="text-gray-600">
+                            Loading playground...
+                        </Typography>
+                    </div>
+                </Container>
+            </PageLayout>
+        );
+    }
+
+    if (viewModel.error) {
+        return (
+            <PageLayout variant="default">
+                <Container variant="hero">
+                    <div className="text-center space-y-4">
+                        <Alert variant="error" title="Error Loading Playground">
+                            {viewModel.error}
+                        </Alert>
+                        <Button
+                            variant="primary"
+                            onClick={() => navigate('/')}
+                        >
+                            Back to Home
+                        </Button>
+                    </div>
+                </Container>
+            </PageLayout>
+        );
+    }
+
     return (
         <PageLayout variant="default">
             <Container variant="hero">
-                <div className="space-y-8">
+                <div className="space-y-6">
                     {/* Header */}
                     <div className="text-center space-y-4">
-                        <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
-                        <Typography variant="h1" className="text-3xl font-bold text-gray-900">
-                            Playground: {code}
-                        </Typography>
-                        <Typography variant="body" className="text-gray-600">
-                            Share this code with friends to join the playground
-                        </Typography>
-
-                        {/* Leave Playground Button for Current Player */}
-                        {viewModel.data?.players.some(player => player.isCurrentPlayer) && (
-                            <div className="pt-4">
+                        <div className="flex items-center justify-center space-x-4">
+                            <Typography variant="h1" className="text-3xl font-bold text-gray-900">
+                                Playground
+                            </Typography>
+                            <div className="flex items-center space-x-2">
+                                <Typography variant="body" className="text-lg font-mono bg-gray-100 px-3 py-1 rounded">
+                                    {code}
+                                </Typography>
                                 <Button
                                     variant="secondary"
-                                    size="lg"
-                                    onClick={() => setShowLeaveConfirmation(true)}
-                                    disabled={isLeaving}
-                                    className="bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+                                    size="sm"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(code);
+                                        // TODO: Show success message
+                                    }}
                                 >
-                                    <Icon name="leave" size="sm" className="mr-2" />
-                                    {isLeaving ? 'Leaving...' : 'Leave Playground'}
+                                    Copy
                                 </Button>
                             </div>
-                        )}
+                        </div>
+
+                        <div className="flex justify-center space-x-4">
+                            <Button
+                                variant="primary"
+                                onClick={() => navigate('/')}
+                            >
+                                Back to Home
+                            </Button>
+                            <Button
+                                variant="danger"
+                                onClick={() => setShowLeaveConfirmation(true)}
+                                loading={isLeaving}
+                            >
+                                Leave Playground
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* Error Display */}
-                    {viewModel.error && (
-                        <Alert
-                            variant="error"
-                            title="Playground Error"
-                            dismissible
-                            onDismiss={viewModel.clearError}
-                            className="max-w-md mx-auto"
-                        >
-                            {viewModel.error}
-                        </Alert>
-                    )}
-
-                    {/* Loading State */}
-                    {viewModel.loading && (
-                        <div className="text-center py-12">
-                            <LoadingIndicator
-                                size="lg"
-                                variant="spinner"
-                                text="Loading playground..."
-                            />
-                        </div>
-                    )}
-
-                    {/* Playground Content */}
+                    {/* Content */}
                     {!viewModel.loading && viewModel.data && (
                         <div className="space-y-6">
                             {/* Players Section */}
@@ -182,36 +229,14 @@ export default function PlaygroundPage() {
                                     ) : (
                                         <div className="space-y-2">
                                             {viewModel.data.players.map(player => (
-                                                <div
+                                                <PlayerCard
                                                     key={player.playerId}
-                                                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                                                >
-                                                    <div className="flex items-center space-x-3">
-                                                        <Icon name="profile" size="sm" className="text-gray-500" />
-                                                        <div>
-                                                            <Typography variant="body" className="font-medium">
-                                                                {player.name}
-                                                            </Typography>
-                                                            <Typography variant="body-sm" className="text-gray-500">
-                                                                Joined {getFriendlyDate(player.joinedAt)}
-                                                            </Typography>
-                                                        </div>
-                                                    </div>
-                                                    {player.isCurrentPlayer ? (
-                                                        <Typography variant="body" className="font-medium">
-                                                            (That's you!)
-                                                        </Typography>
-                                                    ) : (
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="sm"
-                                                            disabled={player.isCurrentPlayer}
-                                                            onClick={() => handleChallengeClick(player)}
-                                                        >
-                                                            Challenge
-                                                        </Button>
-                                                    )}
-                                                </div>
+                                                    player={player}
+                                                    isCurrentPlayer={player.isCurrentPlayer}
+                                                    challengeStatus={getChallengeStatus(player)}
+                                                    onChallengeClick={handleChallengeClick}
+                                                    onChallengeStatusClick={() => handleChallengeStatusClick(player)}
+                                                />
                                             ))}
                                         </div>
                                     )}
@@ -279,33 +304,30 @@ export default function PlaygroundPage() {
             {/* Leave Confirmation Modal */}
             {showLeaveConfirmation && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-                        <div className="text-center space-y-4">
-                            <Icon name="leave" size="lg" className="text-red-600 mx-auto" />
-                            <Typography variant="h3" className="text-lg font-semibold text-gray-900">
-                                Leave Playground?
-                            </Typography>
-                            <Typography variant="body" className="text-gray-600">
-                                Are you sure you want to leave this playground? You can rejoin later using the same code.
-                            </Typography>
-                            <div className="flex space-x-3 pt-4">
-                                <Button
-                                    variant="ghost"
-                                    onClick={() => setShowLeaveConfirmation(false)}
-                                    disabled={isLeaving}
-                                    className="flex-1"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    onClick={handleLeavePlayground}
-                                    disabled={isLeaving}
-                                    className="flex-1 bg-red-600 text-white hover:bg-red-700"
-                                >
-                                    {isLeaving ? 'Leaving...' : 'Leave'}
-                                </Button>
-                            </div>
+                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                        <Typography variant="h3" className="mb-4">
+                            Leave Playground?
+                        </Typography>
+                        <Typography variant="body" className="mb-6 text-gray-600">
+                            Are you sure you want to leave this playground? You can rejoin anytime using the code.
+                        </Typography>
+                        <div className="flex space-x-3">
+                            <Button
+                                variant="danger"
+                                onClick={handleLeavePlayground}
+                                loading={isLeaving}
+                                fullWidth
+                            >
+                                Leave Playground
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                onClick={() => setShowLeaveConfirmation(false)}
+                                disabled={isLeaving}
+                                fullWidth
+                            >
+                                Cancel
+                            </Button>
                         </div>
                     </div>
                 </div>

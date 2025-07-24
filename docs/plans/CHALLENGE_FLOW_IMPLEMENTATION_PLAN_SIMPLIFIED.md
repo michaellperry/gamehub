@@ -13,7 +13,7 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 - ✅ **Phase 7: Generate Policies** - COMPLETED
 - ❌ **Phase 8: Write Tests** - PENDING
 
-**Current Status**: Phase 2 partially completed - basic challenge button UI exists but challenge functionality is not implemented. Backend data layer (facts, authorization, distribution, policies) is complete.
+**Current Status**: Phase 2 mostly completed - challenge UI components are implemented including ChallengeStatus component. Backend data layer (facts, authorization, distribution, policies) is complete.
 
 ## Prerequisites
 - [x] Jinaga model structure is understood and accessible
@@ -65,9 +65,9 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 - [ ] Create ChallengeNotification component for incoming challenges
   - [ ] Display challenger information and playground
   - [ ] Add accept/reject action buttons
-- [ ] Create ChallengeStatus component for challenge indicators
-  - [ ] Show challenge status on player cards
-  - [ ] Include visual indicators for pending/active challenges
+- [x] Create ChallengeStatus component for challenge indicators
+  - [x] Show challenge status on player cards
+  - [x] Include visual indicators for pending/active challenges
 
 ### 2.2 Game UI Components
 **Required Steps**:
@@ -81,12 +81,12 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [x] Add challenge buttons to player cards
   - [x] Integrate ChallengeModal with challenge button clicks
   - [x] Add challenge modal state management
-  - [ ] Include challenge status indicators
+  - [x] Include challenge status indicators
   - [ ] Add challenge notifications area
   - [ ] Integrate with existing playground features
-- [ ] Update PlayerCard to show challenge buttons and status
+- [x] Update PlayerCard to show challenge buttons and status
   - [x] Add challenge action buttons
-  - [ ] Include challenge status indicators
+  - [x] Include challenge status indicators
   - [ ] Show active games for player
 - [ ] Create GameView component for individual game display
   - [ ] Integrate GameBoard, GameStatus, and GameActions

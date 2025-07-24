@@ -4,6 +4,9 @@ export type { GameCardProps } from './GameCard';
 export { PlayerAvatar } from './PlayerAvatar';
 export type { PlayerAvatarProps } from './PlayerAvatar';
 
+export { PlayerCard } from './PlayerCard';
+export type { PlayerCardProps } from './PlayerCard';
+
 export { GameStatus } from './GameStatus';
 export type { GameStatusProps, GameStatusType } from './GameStatus';
 
@@ -33,6 +36,9 @@ export type { ModalProps, ConfirmModalProps } from './Modal';
 
 export { ChallengeModal } from './ChallengeModal';
 export type { ChallengeModalProps } from './ChallengeModal';
+
+export { ChallengeStatus, PendingChallengeStatus, SentChallengeStatus, ReceivedChallengeStatus, AcceptedChallengeStatus, RejectedChallengeStatus, ExpiredChallengeStatus } from './ChallengeStatus';
+export type { ChallengeStatusProps, ChallengeStatusType } from './ChallengeStatus';
 
 export { OpponentSelector } from './OpponentSelector';
 export type { OpponentSelectorProps } from './OpponentSelector';
