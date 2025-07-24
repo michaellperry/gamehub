@@ -44,4 +44,7 @@ export { OpponentSelector } from './OpponentSelector';
 export type { OpponentSelectorProps } from './OpponentSelector';
 
 export { GameStarterSelector } from './GameStarterSelector';
-export type { GameStarterSelectorProps } from './GameStarterSelector'; 
+export type { GameStarterSelectorProps } from './GameStarterSelector';
+
+export { ChallengeNotification } from './ChallengeNotification';
+export type { ChallengeNotificationProps } from './ChallengeNotification'; 

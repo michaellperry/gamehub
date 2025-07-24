@@ -62,9 +62,9 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [x] Show available opponents in playground
   - [x] Include challengerStarts selection UI
   - [x] Add challenge confirmation dialog
-- [ ] Create ChallengeNotification component for incoming challenges
-  - [ ] Display challenger information and playground
-  - [ ] Add accept/reject action buttons
+- [x] Create ChallengeNotification component for incoming challenges
+  - [x] Display challenger information and playground
+  - [x] Add accept/reject action buttons
 - [x] Create ChallengeStatus component for challenge indicators
   - [x] Show challenge status on player cards
   - [x] Include visual indicators for pending/active challenges
