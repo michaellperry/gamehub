@@ -58,10 +58,10 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [x] Include player selection dropdown
   - [x] Add validation and error states
   - [x] Implement loading states during challenge creation
-- [ ] Create ChallengeModal component for challenge options
-  - [ ] Show available opponents in playground
-  - [ ] Include challengerStarts selection UI
-  - [ ] Add challenge confirmation dialog
+- [x] Create ChallengeModal component for challenge options
+  - [x] Show available opponents in playground
+  - [x] Include challengerStarts selection UI
+  - [x] Add challenge confirmation dialog
 - [ ] Create ChallengeNotification component for incoming challenges
   - [ ] Display challenger information and playground
   - [ ] Add accept/reject action buttons
@@ -79,6 +79,8 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 **Required Steps**:
 - [x] Update PlaygroundLobby to include challenge functionality
   - [x] Add challenge buttons to player cards
+  - [x] Integrate ChallengeModal with challenge button clicks
+  - [x] Add challenge modal state management
   - [ ] Include challenge status indicators
   - [ ] Add challenge notifications area
   - [ ] Integrate with existing playground features
@@ -312,7 +314,7 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 
 ## Success Criteria
 - [x] Players can issue challenges to other players in playground
-- [ ] Challenge modal allows selection of who starts the game
+- [x] Challenge modal allows selection of who starts the game
 - [ ] Opponents receive challenge notifications with accept/reject options
 - [ ] Accepting challenge creates new game and navigates to game view
 - [ ] Rejecting challenge closes notification and updates status

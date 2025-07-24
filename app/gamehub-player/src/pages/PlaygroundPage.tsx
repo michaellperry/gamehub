@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
-import { PlaygroundGame, usePlaygroundPage } from '../hooks/usePlaygroundPage';
+import { ChallengeModal } from '../components/molecules';
+import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
 import { getFriendlyDate } from '../utils/dateUtils';
-import { useState } from 'react';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
@@ -10,6 +11,11 @@ export default function PlaygroundPage() {
     const navigate = useNavigate();
     const [isLeaving, setIsLeaving] = useState(false);
     const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+
+    // Challenge modal state
+    const [showChallengeModal, setShowChallengeModal] = useState(false);
+    const [selectedOpponent, setSelectedOpponent] = useState<PlaygroundPlayer | null>(null);
+    const [challengeLoading, setChallengeLoading] = useState(false);
 
     if (!code) {
         return (
@@ -67,6 +73,38 @@ export default function PlaygroundPage() {
             setIsLeaving(false);
         }
     };
+
+    // Challenge modal handlers
+    const handleChallengeClick = (player: PlaygroundPlayer) => {
+        setSelectedOpponent(player);
+        setShowChallengeModal(true);
+    };
+
+    const handleChallengeClose = () => {
+        setShowChallengeModal(false);
+        setSelectedOpponent(null);
+    };
+
+    const handleChallengeSubmit = async (opponent: PlaygroundPlayer, challengerStarts: boolean) => {
+        setChallengeLoading(true);
+        try {
+            // TODO: Implement actual challenge creation logic
+            console.log('Creating challenge:', { opponent, challengerStarts });
+
+            // For now, just close the modal
+            setShowChallengeModal(false);
+            setSelectedOpponent(null);
+        } catch (error) {
+            console.error('Error creating challenge:', error);
+            // TODO: Show error message to user
+        } finally {
+            setChallengeLoading(false);
+        }
+    };
+
+    // Get available opponents (exclude current player)
+    const availableOpponents = viewModel.data?.players.filter(player => !player.isCurrentPlayer) || [];
+    const currentPlayer = viewModel.data?.players.find(player => player.isCurrentPlayer);
 
     return (
         <PageLayout variant="default">
@@ -168,7 +206,7 @@ export default function PlaygroundPage() {
                                                             variant="secondary"
                                                             size="sm"
                                                             disabled={player.isCurrentPlayer}
-                                                            onClick={() => viewModel.handleChallengePlayer(player)}
+                                                            onClick={() => handleChallengeClick(player)}
                                                         >
                                                             Challenge
                                                         </Button>
@@ -198,16 +236,21 @@ export default function PlaygroundPage() {
                                                 >
                                                     <div className="flex items-center space-x-3">
                                                         <Icon name="play" size="sm" className="text-gray-500" />
-                                                        <Typography variant="body" className="font-medium">
-                                                            {game.playerX.name} vs {game.playerO.name}
-                                                        </Typography>
+                                                        <div>
+                                                            <Typography variant="body" className="font-medium">
+                                                                {game.playerX.name} vs {game.playerO.name}
+                                                            </Typography>
+                                                            <Typography variant="body-sm" className="text-gray-500">
+                                                                Status: {game.status}
+                                                            </Typography>
+                                                        </div>
                                                     </div>
                                                     <Button
                                                         variant="primary"
                                                         size="sm"
                                                         onClick={() => viewModel.handleJoinGame(game)}
                                                     >
-                                                        {game.status === 'waiting' ? 'Join' : 'Watch'}
+                                                        Join
                                                     </Button>
                                                 </div>
                                             ))}
@@ -216,17 +259,18 @@ export default function PlaygroundPage() {
                                 </Card>
                             )}
 
-                            {/* Back to Home */}
-                            <div className="text-center">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => navigate('/')}
-                                    className="text-gray-500 hover:text-gray-700"
-                                >
-                                    Back to Home
-                                </Button>
-                            </div>
+                            {/* Challenge Modal */}
+                            {currentPlayer && selectedOpponent && (
+                                <ChallengeModal
+                                    isOpen={showChallengeModal}
+                                    onClose={handleChallengeClose}
+                                    onChallenge={handleChallengeSubmit}
+                                    selectedOpponent={selectedOpponent}
+                                    challengerName={currentPlayer.name}
+                                    playgroundCode={code}
+                                    loading={challengeLoading}
+                                />
+                            )}
                         </div>
                     )}
                 </div>
