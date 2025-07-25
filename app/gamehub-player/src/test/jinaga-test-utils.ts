@@ -89,7 +89,7 @@ export class JinagaTestUtils {
 
         // Create initial state if provided
         if (tenantData) {
-            await this.setupTenantData(jinaga, tenant, tenantOwner, tenantData);
+            await this.setupTenantData(jinaga, tenantData);
         }
 
         return { jinaga, tenant, owner: tenantOwner };
@@ -118,8 +118,6 @@ export class JinagaTestUtils {
      */
     private static async setupTenantData(
         jinaga: Jinaga,
-        tenant: Tenant,
-        owner: User,
         tenantData: Partial<TestTenant>
     ): Promise<void> {
         // Create administrators

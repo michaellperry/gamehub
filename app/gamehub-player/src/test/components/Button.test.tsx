@@ -85,7 +85,6 @@ describe('Button', () => {
         const icon = <span data-testid="icon">🚀</span>;
         render(<Button icon={icon} iconPosition="left">Button with Icon</Button>);
 
-        const button = screen.getByRole('button', { name: /button with icon/i });
         const iconElement = screen.getByTestId('icon');
 
         expect(iconElement).toBeInTheDocument();
@@ -96,7 +95,6 @@ describe('Button', () => {
         const icon = <span data-testid="icon">🚀</span>;
         render(<Button icon={icon} iconPosition="right">Button with Icon</Button>);
 
-        const button = screen.getByRole('button', { name: /button with icon/i });
         const iconElement = screen.getByTestId('icon');
 
         expect(iconElement).toBeInTheDocument();
