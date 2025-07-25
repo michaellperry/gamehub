@@ -163,37 +163,20 @@ export class Game {
 - **Consider queries**: Add fields that support common query patterns
 - **Keep it minimal**: Start simple, add complexity only when needed
 
-## Model Architecture (`app/gamehub-model/`)
-
-### Core Structure
-- **[index.ts](app/gamehub-model/index.ts)** - Main exports and model entry point
-- **[model/](app/gamehub-model/model/)** - Fact definitions and domain model
-- **[authorization/](app/gamehub-model/authorization/)** - Security rules and policies
-- **[distribution/](app/gamehub-model/distribution/)** - Query execution control using `share`/`with` pattern
-
-## Validation and Testing
-
-### Build and Policy Generation
-```bash
-# Always build after changes
-npm run build
-
-# Generate policies to verify rules
-npm run generate-policies
-
-# Check policy file for correct rule generation
-cat mesh/replicator/policies/gamehub.policy
-```
-
-### Validation Checklist
-- [ ] Facts compile without TypeScript errors
-- [ ] Static helpers are reusable across contexts
-- [ ] Facts support intended query patterns
-- [ ] Model registration includes all predecessors
-- [ ] Facts follow immutable design principles
-
-### Common Issues
+### Red Flags
 1. **Missing Predecessors**: Ensure all fact relationships are registered in the model
 2. **Derived Data**: Don't store computed values in facts
 3. **Complex Constructors**: Keep fact constructors simple and focused
 4. **Missing Static Helpers**: Add helper methods for common query patterns 
+
+## Fact Projection (Reference)
+For detailed projection and labeling rules, see `jinaga-specifications.mdc`.
+
+- Project properties directly: `fact.property`
+- Use `j.hash(fact)` for fact IDs
+- Label facts before projection: `.selectMany()`, `.join()`, `.predecessor()`
+
+## Related Rules
+- **jinaga-specifications**: For detailed projection patterns
+- **jinaga-react-hooks**: For React integration and useSpecification
+- **jinaga-planning**: For implementation order

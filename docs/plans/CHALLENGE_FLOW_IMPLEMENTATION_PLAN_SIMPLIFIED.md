@@ -82,7 +82,7 @@ This plan implements the challenge flow as described in the Playground PRD, wher
   - [x] Integrate ChallengeModal with challenge button clicks
   - [x] Add challenge modal state management
   - [x] Include challenge status indicators
-  - [ ] Add challenge notifications area
+  - [x] Add challenge notifications area
   - [ ] Integrate with existing playground features
 - [x] Update PlayerCard to show challenge buttons and status
   - [x] Add challenge action buttons
@@ -315,10 +315,10 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 ## Success Criteria
 - [x] Players can issue challenges to other players in playground
 - [x] Challenge modal allows selection of who starts the game
-- [ ] Opponents receive challenge notifications with accept/reject options
+- [x] Opponents receive challenge notifications with accept/reject options
 - [ ] Accepting challenge creates new game and navigates to game view
 - [ ] Rejecting challenge closes notification and updates status
-- [ ] Challenge status indicators show on player cards
+- [x] Challenge status indicators show on player cards
 - [ ] Real-time updates work across multiple browser sessions
 - [x] All authorization rules are properly enforced
 - [x] All distribution rules ensure proper data sharing

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
-import { ChallengeModal, PlayerCard } from '../components/molecules';
+import { ChallengeModal, ChallengeNotification, PlayerCard } from '../components/molecules';
 import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
+import { usePendingChallenges } from '../hooks/usePendingChallenges';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
@@ -15,6 +16,14 @@ export default function PlaygroundPage() {
     const [showChallengeModal, setShowChallengeModal] = useState(false);
     const [selectedOpponent, setSelectedOpponent] = useState<PlaygroundPlayer | null>(null);
     const [challengeLoading, setChallengeLoading] = useState(false);
+
+    // Challenge notifications state
+    const [showChallengeNotification, setShowChallengeNotification] = useState(false);
+    const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
+    const [challengeActionLoading, setChallengeActionLoading] = useState(false);
+
+    // Use the pending challenges hook
+    const pendingChallenges = usePendingChallenges(code);
 
     if (!code) {
         return (
@@ -101,8 +110,7 @@ export default function PlaygroundPage() {
         }
     };
 
-    // Get available opponents (exclude current player)
-    const availableOpponents = viewModel.data?.players.filter(player => !player.isCurrentPlayer) || [];
+    // Get current player for challenge modal
     const currentPlayer = viewModel.data?.players.find(player => player.isCurrentPlayer);
 
     // Mock challenge status data - this would come from actual challenge hooks
@@ -127,6 +135,47 @@ export default function PlaygroundPage() {
     const handleChallengeStatusClick = (player: PlaygroundPlayer) => {
         // TODO: Implement challenge status click handler
         console.log('Challenge status clicked for player:', player.name);
+    };
+
+    // Challenge notification handlers
+    const handleChallengeNotificationOpen = (challenge: any) => {
+        setSelectedChallenge(challenge);
+        setShowChallengeNotification(true);
+    };
+
+    const handleChallengeNotificationClose = () => {
+        setShowChallengeNotification(false);
+        setSelectedChallenge(null);
+    };
+
+    const handleAcceptChallenge = async () => {
+        if (!selectedChallenge) return;
+
+        setChallengeActionLoading(true);
+        try {
+            await pendingChallenges.acceptChallenge(selectedChallenge.challengeId);
+            setShowChallengeNotification(false);
+            setSelectedChallenge(null);
+        } catch (error) {
+            console.error('Error accepting challenge:', error);
+        } finally {
+            setChallengeActionLoading(false);
+        }
+    };
+
+    const handleRejectChallenge = async () => {
+        if (!selectedChallenge) return;
+
+        setChallengeActionLoading(true);
+        try {
+            await pendingChallenges.rejectChallenge(selectedChallenge.challengeId);
+            setShowChallengeNotification(false);
+            setSelectedChallenge(null);
+        } catch (error) {
+            console.error('Error rejecting challenge:', error);
+        } finally {
+            setChallengeActionLoading(false);
+        }
     };
 
     if (viewModel.loading) {
@@ -211,6 +260,49 @@ export default function PlaygroundPage() {
                     {/* Content */}
                     {!viewModel.loading && viewModel.data && (
                         <div className="space-y-6">
+                            {/* Challenge Notifications Area */}
+                            {pendingChallenges.challenges.length > 0 && (
+                                <Card variant="game" size="lg">
+                                    <div className="space-y-4">
+                                        <div className="text-center">
+                                            <Typography variant="h2" className="text-xl font-semibold text-gray-900">
+                                                Incoming Challenges ({pendingChallenges.challenges.length})
+                                            </Typography>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {pendingChallenges.challenges.map(challenge => {
+                                                return (
+                                                    <div
+                                                        key={challenge.challengeId}
+                                                        className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
+                                                        onClick={() => handleChallengeNotificationOpen(challenge)}
+                                                    >
+                                                        <div className="flex items-center space-x-3">
+                                                            <Icon name="notifications" size="sm" className="text-yellow-600" />
+                                                            <div>
+                                                                <Typography variant="body" className="font-medium">
+                                                                    Challenge from {challenge.challengerName}
+                                                                </Typography>
+                                                                <Typography variant="body-sm" className="text-gray-500">
+                                                                    Received {challenge.createdAt.toLocaleTimeString()}
+                                                                </Typography>
+                                                            </div>
+                                                        </div>
+                                                        <Button
+                                                            variant="primary"
+                                                            size="sm"
+                                                            onClick={() => handleChallengeNotificationOpen(challenge)}
+                                                        >
+                                                            Respond
+                                                        </Button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </Card>
+                            )}
+
                             {/* Players Section */}
                             <Card variant="game" size="lg">
                                 <div className="space-y-4">
@@ -294,6 +386,24 @@ export default function PlaygroundPage() {
                                     challengerName={currentPlayer.name}
                                     playgroundCode={code}
                                     loading={challengeLoading}
+                                />
+                            )}
+
+                            {/* Challenge Notification Modal */}
+                            {selectedChallenge && (
+                                <ChallengeNotification
+                                    isOpen={showChallengeNotification}
+                                    onClose={handleChallengeNotificationClose}
+                                    onAccept={handleAcceptChallenge}
+                                    onReject={handleRejectChallenge}
+                                    challenger={{
+                                        playerId: 'challenger-' + selectedChallenge.challengeId,
+                                        name: selectedChallenge.challengerName,
+                                        joinedAt: selectedChallenge.createdAt,
+                                        isCurrentPlayer: false
+                                    }}
+                                    playgroundCode={code}
+                                    loading={challengeActionLoading}
                                 />
                             )}
                         </div>

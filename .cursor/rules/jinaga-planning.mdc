@@ -4,103 +4,71 @@ alwaysApply: false
 ---
 # Jinaga Planning and Architecture
 
-## Recommended Implementation Order for Plans
+## Implementation Order
 
-When creating implementation plans for new Jinaga features, follow this order to ensure each step builds upon the decisions made in previous steps:
+### Phase 1: Define Facts
+1. **Create fact classes** with proper TypeScript types
+2. **Define predecessor relationships** in model builder
+3. **Add static helper methods** for common query patterns
+4. **Test fact creation** with simple examples
+5. **Generate policies** to verify model compilation
 
-### 1. Define Facts
-Start by defining the immutable facts that represent your domain concepts. Focus on:
-- **Core entities** and their relationships
-- **Business events** as immutable facts
-- **Minimal state** - avoid storing derived data
-- **Query-ready design** - structure facts to support intended queries
+### Phase 2: Build User Interface
+1. **Create React components** for the feature
+2. **Design component interfaces** based on expected data
+3. **Implement basic UI** without data integration
+4. **Test component rendering** with mock data
+5. **Add styling and interactions**
 
-### 2. Build the User Interface
-Create the React components that users will interact with. This helps identify:
-- **User workflows** and interaction patterns
-- **Data requirements** for each UI component
-- **Real-time update needs** for live data synchronization
-- **Error handling** and loading state requirements
+### Phase 3: Define Custom Hooks & View Models
+1. **Create specifications** for data queries
+2. **Implement custom hooks** using useSpecification
+3. **Design view models** that match projected data
+4. **Test hooks** with real data
+5. **Add error handling** and loading states
 
-### 3. Define Custom Hooks and View Models
-Create custom hooks that encapsulate business logic and provide view models to components. This reveals:
-- **Data access patterns** needed by the UI
-- **Command patterns** for user actions
-- **State management** requirements
-- **Error handling** and loading state logic
+### Phase 4: Define Specifications
+1. **Create query specifications** for complex data needs
+2. **Test specifications** incrementally
+3. **Verify projections** work correctly
+4. **Optimize queries** for performance
+5. **Add real-time updates** where needed
 
-### 4. Define Specifications for Querying Facts
-Based on the custom hooks, define the specifications needed to query facts:
-- **Query patterns** that match UI requirements
-- **Parameter requirements** for conditional loading
-- **Real-time update** specifications
-- **Performance considerations** for data access
+### Phase 5: Define Authorization Rules
+1. **Create authorization rules** for fact creation
+2. **Test authorization** with different user contexts
+3. **Verify security** requirements are met
+4. **Generate authorization policies**
+5. **Test policy compilation**
 
-### 5. Define Authorization Rules Based on Commands
-Analyze the commands in custom hooks to determine who can create each fact type:
-- **User actions** that create facts
-- **Business rules** for who can perform actions
-- **Role-based permissions** for different user types
-- **Multi-tenant security** requirements
+### Phase 6: Define Distribution Rules
+1. **Create distribution rules** for data sharing
+2. **Test distribution** across different contexts
+3. **Verify data access** patterns
+4. **Generate distribution policies**
+5. **Test policy compilation**
 
-### 6. Define Distribution Rules Based on Specifications
-Design distribution rules that enable the specifications used in custom hooks:
-- **Share clauses** that match query specifications
-- **With clauses** that define who can execute queries
-- **Performance optimization** through targeted distribution
-- **Privacy controls** for sensitive data
+### Phase 7: Generate Policies
+1. **Compile authorization policies**
+2. **Compile distribution policies**
+3. **Test policy generation**
+4. **Verify policy files** are correct
+5. **Deploy policies** to replicator
 
-### 7. Generate Policies
-Build and generate the security policies to validate the rules:
-- **Policy compilation** to catch rule errors
-- **Rule validation** against business requirements
-- **Distribution verification** for query enablement
-- **Authorization testing** for security compliance
+### Phase 8: Write Tests
+1. **Create unit tests** for hooks and components
+2. **Create integration tests** for complete workflows
+3. **Test real-time updates**
+4. **Test error scenarios**
+5. **Test performance** with realistic data
 
-### 8. Write Tests of Custom Hooks
-Test the custom hooks using the authorization and distribution rules:
-- **Test harness setup** with proper authorization rules
-- **Distribution rule testing** for query access
-- **Integration testing** with real fact creation
-- **Error scenario testing** for edge cases
+## Specification Development
+- Start with basic queries (no projections)
+- Add projections incrementally
+- Test TypeScript compilation after each change
+- See `jinaga-specifications.mdc` for detailed patterns
 
-### Why This Order Matters
-
-Each step relies upon decisions made in previous steps:
-- **UI design** reveals what data users need to see and modify
-- **Custom hooks** identify the exact queries and commands needed
-- **Specifications** must match the query patterns used in hooks
-- **Authorization rules** must allow the commands used in hooks
-- **Distribution rules** must enable the specifications used in hooks
-- **Tests** validate that the entire system works together
-
-This order ensures that your Jinaga model supports the actual user workflows rather than creating a model that doesn't match user needs.
-
-## Planning Considerations
-
-### Common Planning Mistakes
-
-1. **Starting with Authorization/Distribution**: Don't define security rules before understanding what users need to do
-2. **Ignoring UI Requirements**: Don't design facts without considering how they'll be used in the interface
-3. **Over-engineering Facts**: Don't add complexity to facts before understanding the actual query patterns
-4. **Skipping Custom Hooks**: Don't jump directly from UI to specifications without the intermediate step
-5. **Testing Last**: Don't leave testing until the end - it should validate each step
-
-### Integration with Other Rules
-
-- **jinaga-facts**: Use after defining facts to implement them
-- **jinaga-authorization**: Use after custom hooks to create security rules
-- **jinaga-distribution**: Use after specifications to enable queries
-- **jinaga-react-hooks**: Use after planning to implement the UI
-- **jinaga-testing**: Use throughout to validate each step
-
-### Planning Checklist
-
-- [ ] Facts support intended user workflows
-- [ ] UI components have clear data requirements
-- [ ] Custom hooks encapsulate business logic
-- [ ] Specifications match hook requirements
-- [ ] Authorization rules allow hook commands
-- [ ] Distribution rules enable hook specifications
-- [ ] Policies validate all rules
-- [ ] Tests verify entire system works 
+## Related Rules
+- **jinaga-specifications**: For detailed projection patterns
+- **jinaga-facts**: For fact design principles
+- **jinaga-react-hooks**: For React integration and useSpecification 

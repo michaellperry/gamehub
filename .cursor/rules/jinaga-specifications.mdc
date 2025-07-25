@@ -1,0 +1,103 @@
+---
+description: "Apply this rule whenever you are writing Jinaga specifications, especially when projecting data from facts for use in view models, React hooks, or API responses. If your task involves transforming Jinaga facts into data structures for the frontend or for transmission, consult this rule."
+globs:
+alwaysApply: false
+---
+# Jinaga Specifications and Projections
+
+
+## The "Label It First" Rule
+Facts must be labeled in the query context before projection. This prevents the error: "You cannot project the fact X directly. You must label it first."
+
+### Static Helper Methods vs Direct Fact Properties
+**Important**: Static helper methods (like `PlayerName.current()`) return Jinaga specifications, not facts. These can be used directly in projections without labeling.
+
+```typescript
+// ✅ CORRECT - Static helper returns a specification
+.selectMany(player => PlayerName.current(player).select(name => name.name))
+
+// ❌ INCORRECT - Direct fact property access
+.select(challenge => ({
+    challengerJoin: challenge.challengerJoin  // Direct fact property - needs labeling
+}))
+```
+
+**Rule of thumb**: If you're calling a static method on a fact class (e.g., `PlayerName.current()`, `Join.by()`, `Challenge.whereOpponent()`), it returns a specification and can be used directly. If you're accessing a property of a fact (e.g., `challenge.challengerJoin`), it needs labeling first.
+
+### Labeling Methods
+```typescript
+// ✅ Label facts through selectMany
+.selectMany(challenge => challenge.challengerJoin.predecessor()
+    .select(challengerJoin => ({
+        challengerJoin: challengerJoin,  // Now labeled
+        challengerStarts: challenge.challengerStarts
+    }))
+)
+
+// ✅ Label facts through join
+.join(challenge => challenge.challengerJoin, someOtherSpec)
+.select(challenge => ({
+    challengerJoin: challenge.challengerJoin,  // Now labeled
+    challengerStarts: challenge.challengerStarts
+}))
+```
+
+### Common Patterns
+```typescript
+// Property-only projections (always safe)
+.select(challenge => ({
+    challengeId: j.hash(challenge),
+    challengerStarts: challenge.challengerStarts,
+    createdAt: challenge.createdAt
+}))
+
+// Labeled fact projections
+.selectMany(challenge => challenge.challengerJoin.predecessor()
+    .select(challengerJoin => ({
+        challengerJoin: challengerJoin,  // Labeled
+        challengeId: j.hash(challenge)
+    }))
+)
+```
+
+### Anti-Patterns
+```typescript
+// ❌ Don't project unlabeled facts
+.select(challenge => ({
+    challengerJoin: challenge.challengerJoin  // Not labeled!
+}))
+
+// ❌ Don't mix labeled and unlabeled facts
+.select(challenge => ({
+    challengeId: j.hash(challenge),           // ✅ OK
+    challengerJoin: challenge.challengerJoin  // ❌ Not labeled!
+}))
+```
+
+### Error: "You must label it first"
+**Solution**: Use `.selectMany()`, `.join()`, or `.predecessor()` to label facts before projection.
+
+### Interface Design for Projections
+Design your interfaces to match what you can actually project:
+```typescript
+// ✅ CORRECT
+interface PendingChallenge {
+    challengeId: string;
+    challengerStarts: boolean;
+    createdAt: Date;
+    challengerName: string;
+}
+```
+
+### Troubleshooting
+- **Start simple**: Begin with basic queries (no projections)
+- **Add projections incrementally**: One at a time
+- **Test TypeScript compilation**: After each change
+- **Verify data structure**: Ensure projected data matches interface
+- **Use j.hash() for IDs**: For fact identification
+- **Label facts properly**: Use `.selectMany()`, `.join()`, or `.predecessor()`
+
+## Related Rules
+- **jinaga-facts**: For fact design principles
+- **jinaga-react-hooks**: For React integration and useSpecification
+- **jinaga-planning**: For implementation order and planning
