@@ -5,15 +5,15 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 
 ## Progress Summary
 - ✅ **Phase 1: Define Facts** - COMPLETED
-- 🔄 **Phase 2: Build User Interface** - PARTIALLY COMPLETED
-- ❌ **Phase 3: Define Custom Hooks & View Models** - PENDING
+- ✅ **Phase 2: Build User Interface** - COMPLETED
+- 🔄 **Phase 3: Define Custom Hooks & View Models** - PARTIALLY COMPLETED
 - ❌ **Phase 4: Define Specifications** - PENDING
 - ✅ **Phase 5: Define Authorization Rules** - COMPLETED
 - ✅ **Phase 6: Define Distribution Rules** - COMPLETED
 - ✅ **Phase 7: Generate Policies** - COMPLETED
 - ❌ **Phase 8: Write Tests** - PENDING
 
-**Current Status**: Phase 2 mostly completed - challenge UI components are implemented including ChallengeStatus component. Backend data layer (facts, authorization, distribution, policies) is complete.
+**Current Status**: Phase 3 partially completed - challenge creation and acceptance/rejection hooks are implemented. Players can now create challenges and accept/reject them, which creates the appropriate Game or Reject facts. Backend data layer (facts, authorization, distribution, policies) is complete.
 
 ## Prerequisites
 - [x] Jinaga model structure is understood and accessible
@@ -98,18 +98,18 @@ This plan implements the challenge flow as described in the Playground PRD, wher
 
 ### 3.1 Challenge Management Hooks
 **Required Steps**:
-- [ ] Create useChallenge hook for issuing challenges
-  - [ ] Implement challenge creation with challengerStarts selection
-  - [ ] Add error handling for invalid challenge attempts
-  - [ ] Include loading states during challenge creation
-  - [ ] Add validation for playground membership
+- [x] Create useChallenge hook for issuing challenges
+  - [x] Implement challenge creation with challengerStarts selection
+  - [x] Add error handling for invalid challenge attempts
+  - [x] Include loading states during challenge creation
+  - [x] Add validation for playground membership
 - [ ] Create useChallengeStatus hook for tracking challenge state
   - [ ] Track pending, accepted, and rejected challenges
   - [ ] Implement real-time status updates
-- [ ] Create usePendingChallenges hook for incoming challenges
-  - [ ] Filter challenges where current player is opponent
-  - [ ] Include challenge metadata (challenger name, playground, etc.)
-  - [ ] Add accept/reject action handlers
+- [x] Create usePendingChallenges hook for incoming challenges
+  - [x] Filter challenges where current player is opponent
+  - [x] Include challenge metadata (challenger name, playground, etc.)
+  - [x] Add accept/reject action handlers
 - [ ] Create useOutgoingChallenges hook for sent challenges
   - [ ] Filter challenges where current player is challenger
   - [ ] Track challenge status and opponent responses

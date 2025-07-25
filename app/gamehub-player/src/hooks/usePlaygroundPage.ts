@@ -9,6 +9,7 @@ export interface PlaygroundPlayer {
     name: string;
     joinedAt: Date;
     isCurrentPlayer: boolean;
+    join: Join;
 }
 
 export interface PlaygroundGame {
@@ -29,13 +30,14 @@ export interface PlaygroundPageViewModel {
     error: string | null;
     loading: boolean;
     isValidCode: boolean;
+    currentPlayerJoin: Join | null;
     clearError: () => void;
     handleChallengePlayer: (player: PlaygroundPlayer) => void;
     handleJoinGame: (game: PlaygroundGame) => void;
     handleLeavePlayground: () => Promise<void>;
 }
 
-// Create specification to find all players in a playground with their names
+// Create specification to find all players in a playground with their names and joins
 const playgroundPlayersSpec = model.given(Playground).match((playground) =>
     Join.in(playground)
         .selectMany(join => join.player.predecessor()
@@ -43,7 +45,8 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
                 playerId: j.hash(player),
                 sessionId: j.hash(join),
                 joinedAt: join.joinedAt,
-                names: PlayerName.current(player).select(name => name.name)
+                names: PlayerName.current(player).select(name => name.name),
+                join: join
             }))
         )
 );
@@ -77,8 +80,13 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         playerId: session.playerId,
         name: session.names[0],
         joinedAt: new Date(session.joinedAt),
-        isCurrentPlayer: session.playerId === playerId
+        isCurrentPlayer: session.playerId === playerId,
+        join: session.join
     })) : undefined;
+
+    // Extract the current player's join from the sessions data
+    const currentPlayerJoin: Join | null = sessionsByPlayerId && playerId ?
+        (sessionsByPlayerId[playerId]?.join || null) : null;
 
     const clearError = () => {
         clearPlaygroundError();
@@ -129,6 +137,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         error: combinedError,
         loading: isLoading,
         isValidCode,
+        currentPlayerJoin,
         clearError,
         handleChallengePlayer,
         handleJoinGame,

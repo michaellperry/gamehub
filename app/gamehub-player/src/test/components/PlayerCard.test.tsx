@@ -3,11 +3,19 @@ import { describe, it, expect, vi } from 'vitest';
 import { PlayerCard } from '../../components/molecules/PlayerCard';
 
 describe('PlayerCard', () => {
+    const mockJoin = {
+        type: 'GameHub.Join',
+        playground: { type: 'GameHub.Playground', code: 'TEST' },
+        player: { type: 'GameHub.Player', user: { type: 'GameHub.User', username: 'test' }, tenant: { type: 'GameHub.Tenant', name: 'test' } },
+        joinedAt: new Date('2024-01-01T00:00:00Z')
+    } as any;
+
     const mockPlayer = {
         playerId: 'player-1',
         name: 'Test Player',
         joinedAt: new Date('2024-01-01T00:00:00Z'),
         isCurrentPlayer: false,
+        join: mockJoin,
     };
 
     const mockCurrentPlayer = {

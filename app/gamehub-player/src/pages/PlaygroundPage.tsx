@@ -4,6 +4,7 @@ import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typ
 import { ChallengeModal, ChallengeNotification, PlayerCard } from '../components/molecules';
 import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
 import { usePendingChallenges } from '../hooks/usePendingChallenges';
+import { useChallenge } from '../hooks/useChallenge';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
@@ -23,7 +24,10 @@ export default function PlaygroundPage() {
     const [challengeActionLoading, setChallengeActionLoading] = useState(false);
 
     // Use the pending challenges hook
-    const pendingChallenges = usePendingChallenges(code);
+    const pendingChallenges = usePendingChallenges(viewModel.playground, viewModel.currentPlayerJoin);
+
+    // Use the challenge creation hook
+    const challengeViewModel = useChallenge(viewModel.playground, viewModel.currentPlayerJoin);
 
     if (!code) {
         return (
@@ -96,15 +100,15 @@ export default function PlaygroundPage() {
     const handleChallengeSubmit = async (opponent: PlaygroundPlayer, challengerStarts: boolean) => {
         setChallengeLoading(true);
         try {
-            // TODO: Implement actual challenge creation logic
-            console.log('Creating challenge:', { opponent, challengerStarts });
+            // Use the challenge hook to create the challenge
+            await challengeViewModel.createChallenge(opponent.join, challengerStarts);
 
-            // For now, just close the modal
+            // Close the modal on success
             setShowChallengeModal(false);
             setSelectedOpponent(null);
         } catch (error) {
             console.error('Error creating challenge:', error);
-            // TODO: Show error message to user
+            // Error is already handled by the hook
         } finally {
             setChallengeLoading(false);
         }
@@ -400,7 +404,8 @@ export default function PlaygroundPage() {
                                         playerId: 'challenger-' + selectedChallenge.challengeId,
                                         name: selectedChallenge.challengerName,
                                         joinedAt: selectedChallenge.createdAt,
-                                        isCurrentPlayer: false
+                                        isCurrentPlayer: false,
+                                        join: selectedChallenge.challengerJoin
                                     }}
                                     playgroundCode={code}
                                     loading={challengeActionLoading}
