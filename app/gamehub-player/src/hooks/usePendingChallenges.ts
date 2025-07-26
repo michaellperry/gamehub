@@ -16,8 +16,8 @@ export interface PendingChallengesViewModel {
     challenges: PendingChallenge[];
     loading: boolean;
     error: string | null;
-    acceptChallenge: (challengeId: string) => Promise<void>;
-    rejectChallenge: (challengeId: string) => Promise<void>;
+    acceptChallenge: (challenge: Challenge) => Promise<void>;
+    rejectChallenge: (challenge: Challenge) => Promise<void>;
     clearError: () => void;
 }
 
@@ -65,7 +65,7 @@ export function usePendingChallenges(currentPlayerJoin: Join | null): PendingCha
         setActionError(null);
     };
 
-    const acceptChallenge = async (challengeId: string) => {
+    const acceptChallenge = async (challenge: Challenge) => {
         try {
             setActionError(null);
 
@@ -73,14 +73,8 @@ export function usePendingChallenges(currentPlayerJoin: Join | null): PendingCha
                 throw new Error('Current player not available');
             }
 
-            // Find the challenge by ID
-            const challenge = challenges.find(c => c.challengeId === challengeId);
-            if (!challenge) {
-                throw new Error('Challenge not found');
-            }
-
-            // Create the Game fact
-            await j.fact(new Game(challenge.challenge));
+            // Create the Game fact directly from the Challenge
+            await j.fact(new Game(challenge));
 
         } catch (error) {
             console.error('Error accepting challenge:', error);
@@ -88,7 +82,7 @@ export function usePendingChallenges(currentPlayerJoin: Join | null): PendingCha
         }
     };
 
-    const rejectChallenge = async (challengeId: string) => {
+    const rejectChallenge = async (challenge: Challenge) => {
         try {
             setActionError(null);
 
@@ -96,14 +90,8 @@ export function usePendingChallenges(currentPlayerJoin: Join | null): PendingCha
                 throw new Error('Current player not available');
             }
 
-            // Find the challenge by ID
-            const challenge = challenges.find(c => c.challengeId === challengeId);
-            if (!challenge) {
-                throw new Error('Challenge not found');
-            }
-
-            // Create the Reject fact
-            await j.fact(new Reject(challenge.challenge));
+            // Create the Reject fact directly from the Challenge
+            await j.fact(new Reject(challenge));
 
         } catch (error) {
             console.error('Error rejecting challenge:', error);

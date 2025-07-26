@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
-import { ChallengeModal, ChallengeNotification, PlayerCard } from '../components/molecules';
-import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
-import { usePendingChallenges } from '../hooks/usePendingChallenges';
+import { ChallengeModal } from '../components/molecules';
+import { IncomingChallengesCard, PlaygroundPlayersList } from '../components/organisms';
 import { useChallenge } from '../hooks/useChallenge';
+import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
@@ -18,13 +18,9 @@ export default function PlaygroundPage() {
     const [selectedOpponent, setSelectedOpponent] = useState<PlaygroundPlayer | null>(null);
     const [challengeLoading, setChallengeLoading] = useState(false);
 
-    // Challenge notifications state
-    const [showChallengeNotification, setShowChallengeNotification] = useState(false);
-    const [selectedChallenge, setSelectedChallenge] = useState<any>(null);
-    const [challengeActionLoading, setChallengeActionLoading] = useState(false);
 
-    // Use the pending challenges hook
-    const pendingChallenges = usePendingChallenges(viewModel.currentPlayerJoin);
+
+
 
     // Use the challenge creation hook
     const challengeViewModel = useChallenge(viewModel.currentPlayerJoin);
@@ -141,46 +137,7 @@ export default function PlaygroundPage() {
         console.log('Challenge status clicked for player:', player.name);
     };
 
-    // Challenge notification handlers
-    const handleChallengeNotificationOpen = (challenge: any) => {
-        setSelectedChallenge(challenge);
-        setShowChallengeNotification(true);
-    };
 
-    const handleChallengeNotificationClose = () => {
-        setShowChallengeNotification(false);
-        setSelectedChallenge(null);
-    };
-
-    const handleAcceptChallenge = async () => {
-        if (!selectedChallenge) return;
-
-        setChallengeActionLoading(true);
-        try {
-            await pendingChallenges.acceptChallenge(selectedChallenge.challengeId);
-            setShowChallengeNotification(false);
-            setSelectedChallenge(null);
-        } catch (error) {
-            console.error('Error accepting challenge:', error);
-        } finally {
-            setChallengeActionLoading(false);
-        }
-    };
-
-    const handleRejectChallenge = async () => {
-        if (!selectedChallenge) return;
-
-        setChallengeActionLoading(true);
-        try {
-            await pendingChallenges.rejectChallenge(selectedChallenge.challengeId);
-            setShowChallengeNotification(false);
-            setSelectedChallenge(null);
-        } catch (error) {
-            console.error('Error rejecting challenge:', error);
-        } finally {
-            setChallengeActionLoading(false);
-        }
-    };
 
     if (viewModel.loading) {
         return (
@@ -265,79 +222,18 @@ export default function PlaygroundPage() {
                     {!viewModel.loading && viewModel.data && (
                         <div className="space-y-6">
                             {/* Challenge Notifications Area */}
-                            {pendingChallenges.challenges.length > 0 && (
-                                <Card variant="game" size="lg">
-                                    <div className="space-y-4">
-                                        <div className="text-center">
-                                            <Typography variant="h2" className="text-xl font-semibold text-gray-900">
-                                                Incoming Challenges ({pendingChallenges.challenges.length})
-                                            </Typography>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {pendingChallenges.challenges.map(challenge => {
-                                                return (
-                                                    <div
-                                                        key={challenge.challengeId}
-                                                        className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg cursor-pointer hover:bg-yellow-100 transition-colors"
-                                                        onClick={() => handleChallengeNotificationOpen(challenge)}
-                                                    >
-                                                        <div className="flex items-center space-x-3">
-                                                            <Icon name="notifications" size="sm" className="text-yellow-600" />
-                                                            <div>
-                                                                <Typography variant="body" className="font-medium">
-                                                                    Challenge from {challenge.challengerName}
-                                                                </Typography>
-                                                                <Typography variant="body-sm" className="text-gray-500">
-                                                                    Received {challenge.createdAt.toLocaleTimeString()}
-                                                                </Typography>
-                                                            </div>
-                                                        </div>
-                                                        <Button
-                                                            variant="primary"
-                                                            size="sm"
-                                                            onClick={() => handleChallengeNotificationOpen(challenge)}
-                                                        >
-                                                            Respond
-                                                        </Button>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                </Card>
-                            )}
+                            <IncomingChallengesCard
+                                currentPlayerJoin={viewModel.currentPlayerJoin}
+                                playgroundCode={code}
+                            />
 
                             {/* Players Section */}
-                            <Card variant="game" size="lg">
-                                <div className="space-y-4">
-                                    <div className="text-center">
-                                        <Typography variant="h2" className="text-xl font-semibold text-gray-900">
-                                            Players ({viewModel.data.players.length})
-                                        </Typography>
-                                    </div>
-
-                                    {viewModel.data.players.length === 0 ? (
-                                        <div className="text-center py-8">
-                                            <Typography variant="body" className="text-gray-600">
-                                                No players have joined yet. Share the code to invite friends!
-                                            </Typography>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {viewModel.data.players.map(player => (
-                                                <PlayerCard
-                                                    key={player.playerId}
-                                                    player={player}
-                                                    isCurrentPlayer={player.isCurrentPlayer}
-                                                    challengeStatus={getChallengeStatus(player)}
-                                                    onChallengeClick={handleChallengeClick}
-                                                    onChallengeStatusClick={() => handleChallengeStatusClick(player)}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </Card>
+                            <PlaygroundPlayersList
+                                players={viewModel.data.players}
+                                onChallengeClick={handleChallengeClick}
+                                onChallengeStatusClick={handleChallengeStatusClick}
+                                getChallengeStatus={getChallengeStatus}
+                            />
 
                             {/* Active Games Section */}
                             {viewModel.data.games.length > 0 && (
@@ -393,24 +289,7 @@ export default function PlaygroundPage() {
                                 />
                             )}
 
-                            {/* Challenge Notification Modal */}
-                            {selectedChallenge && (
-                                <ChallengeNotification
-                                    isOpen={showChallengeNotification}
-                                    onClose={handleChallengeNotificationClose}
-                                    onAccept={handleAcceptChallenge}
-                                    onReject={handleRejectChallenge}
-                                    challenger={{
-                                        playerId: 'challenger-' + selectedChallenge.challengeId,
-                                        name: selectedChallenge.challengerName,
-                                        joinedAt: selectedChallenge.createdAt,
-                                        isCurrentPlayer: false,
-                                        join: selectedChallenge.challengerJoin
-                                    }}
-                                    playgroundCode={code}
-                                    loading={challengeActionLoading}
-                                />
-                            )}
+
                         </div>
                     )}
                 </div>
