@@ -1,3 +1,5 @@
+export { ActiveGames } from './ActiveGames';
+export type { ActiveGamesProps } from './ActiveGames';
 export { GameSession } from './GameSession';
 export type { GameSessionProps, Player } from './GameSession';
 export { IncomingChallengesCard } from './IncomingChallengesCard';

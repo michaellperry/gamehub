@@ -1,6 +1,10 @@
 import { Challenge, Join, Leave, Player, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { j } from '../jinaga-config';
+import { ActiveGamesViewModel } from './useActiveGames';
+import { ChallengeViewModel } from './useChallenge';
+import { ChallengeModalViewModel } from './useChallengeModal';
+import { LeavePlaygroundViewModel } from './useLeavePlayground';
 import { usePlayer } from './usePlayer';
 import { usePlayground } from './usePlayground';
 
@@ -20,9 +24,30 @@ export interface PlaygroundGame {
     status: 'waiting' | 'active' | 'finished';
 }
 
+export interface PlaygroundNavigationViewModel {
+    goHome: () => void;
+}
+
+export interface PlaygroundUIViewModel {
+    copyCode: () => void;
+}
+
 export interface PlaygroundPageData {
     players: PlaygroundPlayer[];
     games: PlaygroundGame[];
+    // Navigation
+    navigate: PlaygroundNavigationViewModel;
+    // Challenge functionality
+    challenge: {
+        modal: ChallengeModalViewModel;
+        challengeViewModel: ChallengeViewModel;
+    };
+    // Leave playground functionality
+    leave: LeavePlaygroundViewModel;
+    // Active games functionality
+    activeGames: ActiveGamesViewModel;
+    // UI state
+    ui: PlaygroundUIViewModel;
 }
 
 export interface PlaygroundPageViewModel {
@@ -77,15 +102,6 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         return acc;
     }, {} as Record<string, typeof playerSessions[number]>);
 
-    const players: PlaygroundPlayer[] | undefined = sessionsByPlayerId ? Object.values(sessionsByPlayerId).map(session => ({
-        playerId: session.playerId,
-        name: session.names[0],
-        joinedAt: new Date(session.joinedAt),
-        isCurrentPlayer: session.playerId === playerId,
-        join: session.join,
-        isChallengePending: session.pendingChallengePlayerIds.some(id => id === playerId)
-    })) : undefined;
-
     // Extract the current player's join from the sessions data
     const currentPlayerJoin: Join | null = sessionsByPlayerId && playerId ?
         (sessionsByPlayerId[playerId]?.join || null) : null;
@@ -124,10 +140,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
 
     return {
         playground,
-        data: players ? {
-            players,
-            games: [], // Placeholder for now
-        } : null,
+        data: null, // Data will be composed by the composed hook
         error: combinedError,
         loading: isLoading,
         isValidCode,
