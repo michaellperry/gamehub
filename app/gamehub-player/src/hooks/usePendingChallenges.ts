@@ -1,14 +1,14 @@
-import { Challenge, Game, Join, PlayerName, Playground, Reject, model } from '@model/model';
+import { Challenge, Game, Join, Player, PlayerName, Reject, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { useState } from 'react';
 import { j } from '../jinaga-config';
 
 export interface PendingChallenge {
+    challenge: Challenge;
     challengeId: string;
     challengerStarts: boolean;
     createdAt: Date;
     challengerName: string;
-    playgroundCode: string;
     challengerJoin: Join;
 }
 
@@ -22,40 +22,42 @@ export interface PendingChallengesViewModel {
 }
 
 // Specification to find challenges where the current player is the opponent
-const pendingChallengesSpec = model.given(Join, Playground).match((opponentJoin, playground) =>
-    Challenge.whereOpponent(opponentJoin.player)
-        .join(challenge => challenge.opponentJoin, opponentJoin)
-        .select(challenge => ({
-            challengeId: j.hash(challenge),
-            challengerStarts: challenge.challengerStarts,
-            createdAt: challenge.createdAt,
-            challengerName: challenge.challengerJoin.player.predecessor()
-                .selectMany(player => PlayerName.current(player).select(name => name.name)),
-            playgroundCode: playground.code,
-            challengerJoin: challenge.challengerJoin
-        }))
+const pendingChallengesSpec = model.given(Player).match((player) =>
+    Challenge.whereOpponent(player)
+        .selectMany(challenge => challenge.challengerJoin.predecessor()
+            .select(challengerJoin => ({
+                challenge,
+                challengeId: j.hash(challenge),
+                challengerStarts: challenge.challengerStarts,
+                createdAt: challenge.createdAt,
+                challengerName: challengerJoin.player.predecessor()
+                    .selectMany(player => PlayerName.current(player).select(name => name.name)),
+                challengerJoin: challengerJoin
+            })))
 );
 
-export function usePendingChallenges(playground: Playground | null, currentPlayerJoin: Join | null): PendingChallengesViewModel {
+export function usePendingChallenges(currentPlayerJoin: Join | null): PendingChallengesViewModel {
     const [actionError, setActionError] = useState<string | null>(null);
 
-    // Query for pending challenges only if we have the current player's join and playground
+    // Extract the current player from the join
+    const currentPlayer = currentPlayerJoin?.player || null;
+
+    // Query for pending challenges only if we have the current player
     const { data: challengeData, error: specificationError, loading } = useSpecification(
         j,
         pendingChallengesSpec,
-        currentPlayerJoin,
-        playground
+        currentPlayer
     );
 
     // Transform the data into a more usable format
     const challenges: PendingChallenge[] = challengeData?.map(challenge => ({
+        challenge: challenge.challenge,
         challengeId: challenge.challengeId,
         challengerStarts: challenge.challengerStarts,
         createdAt: new Date(challenge.createdAt),
         challengerName: Array.isArray(challenge.challengerName) && challenge.challengerName.length > 0
             ? challenge.challengerName[0]
             : 'Unknown Player',
-        playgroundCode: challenge.playgroundCode,
         challengerJoin: challenge.challengerJoin
     })) || [];
 
@@ -67,8 +69,8 @@ export function usePendingChallenges(playground: Playground | null, currentPlaye
         try {
             setActionError(null);
 
-            if (!currentPlayerJoin || !playground) {
-                throw new Error('Current player join or playground not available');
+            if (!currentPlayer) {
+                throw new Error('Current player not available');
             }
 
             // Find the challenge by ID
@@ -77,29 +79,8 @@ export function usePendingChallenges(playground: Playground | null, currentPlaye
                 throw new Error('Challenge not found');
             }
 
-            // We need to find the actual Challenge fact to create the Game
-            // Query for the challenge using the challengeId (which is the hash)
-            const challengeFacts = await j.query(
-                model.given(Join, Playground).match((opponentJoin, _playground) =>
-                    Challenge.whereOpponent(opponentJoin.player)
-                        .join(challenge => challenge.opponentJoin, opponentJoin)
-                        .select(challenge => ({
-                            challenge,
-                            challengeId: j.hash(challenge)
-                        }))
-                ),
-                currentPlayerJoin,
-                playground
-            );
-
-            // Find the specific challenge by ID
-            const challengeFact = challengeFacts.find(c => c.challengeId === challengeId);
-            if (!challengeFact) {
-                throw new Error('Challenge fact not found');
-            }
-
             // Create the Game fact
-            await j.fact(new Game(challengeFact.challenge));
+            await j.fact(new Game(challenge.challenge));
 
         } catch (error) {
             console.error('Error accepting challenge:', error);
@@ -111,8 +92,8 @@ export function usePendingChallenges(playground: Playground | null, currentPlaye
         try {
             setActionError(null);
 
-            if (!currentPlayerJoin || !playground) {
-                throw new Error('Current player join or playground not available');
+            if (!currentPlayer) {
+                throw new Error('Current player not available');
             }
 
             // Find the challenge by ID
@@ -121,29 +102,8 @@ export function usePendingChallenges(playground: Playground | null, currentPlaye
                 throw new Error('Challenge not found');
             }
 
-            // We need to find the actual Challenge fact to create the Reject
-            // Query for the challenge using the challengeId (which is the hash)
-            const challengeFacts = await j.query(
-                model.given(Join, Playground).match((opponentJoin, _playground) =>
-                    Challenge.whereOpponent(opponentJoin.player)
-                        .join(challenge => challenge.opponentJoin, opponentJoin)
-                        .select(challenge => ({
-                            challenge,
-                            challengeId: j.hash(challenge)
-                        }))
-                ),
-                currentPlayerJoin,
-                playground
-            );
-
-            // Find the specific challenge by ID
-            const challengeFact = challengeFacts.find(c => c.challengeId === challengeId);
-            if (!challengeFact) {
-                throw new Error('Challenge fact not found');
-            }
-
             // Create the Reject fact
-            await j.fact(new Reject(challengeFact.challenge));
+            await j.fact(new Reject(challenge.challenge));
 
         } catch (error) {
             console.error('Error rejecting challenge:', error);

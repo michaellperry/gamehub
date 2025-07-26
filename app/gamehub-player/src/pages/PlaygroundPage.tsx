@@ -24,10 +24,10 @@ export default function PlaygroundPage() {
     const [challengeActionLoading, setChallengeActionLoading] = useState(false);
 
     // Use the pending challenges hook
-    const pendingChallenges = usePendingChallenges(viewModel.playground, viewModel.currentPlayerJoin);
+    const pendingChallenges = usePendingChallenges(viewModel.currentPlayerJoin);
 
     // Use the challenge creation hook
-    const challengeViewModel = useChallenge(viewModel.playground, viewModel.currentPlayerJoin);
+    const challengeViewModel = useChallenge(viewModel.currentPlayerJoin);
 
     if (!code) {
         return (

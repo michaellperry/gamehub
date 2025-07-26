@@ -1,6 +1,6 @@
-import { Challenge, Join, Playground } from '@model/model';
-import { j } from '../jinaga-config';
+import { Challenge, Join } from '@model/model';
 import { useState } from 'react';
+import { j } from '../jinaga-config';
 
 export interface ChallengeViewModel {
     loading: boolean;
@@ -9,7 +9,7 @@ export interface ChallengeViewModel {
     clearError: () => void;
 }
 
-export function useChallenge(playground: Playground | null, currentPlayerJoin: Join | null): ChallengeViewModel {
+export function useChallenge(currentPlayerJoin: Join | null): ChallengeViewModel {
     const [actionError, setActionError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -18,8 +18,8 @@ export function useChallenge(playground: Playground | null, currentPlayerJoin: J
     };
 
     const createChallenge = async (opponentJoin: Join, challengerStarts: boolean) => {
-        if (!currentPlayerJoin || !playground) {
-            throw new Error('Current player join or playground not available');
+        if (!currentPlayerJoin) {
+            throw new Error('Current player join not available');
         }
 
         setLoading(true);
