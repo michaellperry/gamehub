@@ -1,0 +1,196 @@
+---
+description: "Use this rule when creating distribution rules that control what queries users can execute. Contains share/with patterns and query-driven design."
+alwaysApply: false
+---
+# Jinaga Distribution Rules
+
+## Distribution Rules Structure
+
+Distribution rules use the `share`/`with` pattern to control what queries users can execute. The `share` clause defines the query structure that users are allowed to run, and the `with` clause defines who can execute those queries.
+
+### Basic Share/With Pattern
+```typescript
+// CORRECT: Simple share/with pattern
+.share(
+  model.given(Tenant).match((tenant) => SomeFact.in(tenant))
+)
+.with(model.given(Tenant).match((tenant) => 
+  Player.in(tenant).selectMany((player) => player.user.predecessor())
+));
+
+// This enables users to execute queries like:
+const factsSpec = model.given(Tenant).match((tenant) => SomeFact.in(tenant));
+const facts = await jinaga.query(factsSpec, tenant);
+```
+
+## Query-Driven Distribution Design
+
+### Design for Actual User Queries
+Before writing distribution rules, identify the queries users will actually execute:
+
+```typescript
+// What queries will players execute?
+const myChallenges = Challenge.whereChallenger(currentPlayer);
+const incomingChallenges = Challenge.whereOpponent(currentPlayer);
+const myGames = Game.whereChallenger(currentPlayer);
+```
+
+### Distribution Rule Design Process
+1. **Identify User Queries**: What queries do users need to execute?
+2. **Design Share Clause**: Enable those specific queries
+3. **Design With Clause**: Define who can execute those queries
+4. **Keep Share Simple**: Avoid complex joins in share clause
+
+### Example: Player-Centric Distribution
+```typescript
+// ✅ CORRECT: Enable specific user queries
+.share(model.given(Player).match((player) => Challenge.whereChallenger(player)))
+.with(model.given(Player).match((player) => player.predecessor()))
+
+// ❌ WRONG: Share everything with playground
+.share(model.given(Playground).match((playground) => Challenge.for(playground)))
+```
+
+### Benefits of Query-Driven Design
+- **Performance**: Only distribute necessary data
+- **Privacy**: Users only see what they need
+- **Simplicity**: Queries match user mental models
+- **Maintainability**: Rules reflect actual usage patterns
+
+## Distribution Rule Patterns (`share`/`with`)
+
+### Common Mistakes to Avoid
+```typescript
+// ❌ WRONG: Share everything with playground
+.share(model.given(Playground).match((playground) => Challenge.for(playground)))
+
+// ✅ RIGHT: Share only with participants  
+.share(model.given(Player).match((player) => Challenge.whereChallenger(player)))
+```
+
+### Rule of Thumb
+- `share` clause: Define WHAT queries users can execute (keep simple)
+- `with` clause: Define WHO can execute those queries (can be complex)
+- The share clause should match the structure of queries you want users to write
+- Avoid complex joins in the `share` clause as they force complex user queries
+- Use `selectMany` and `predecessor()` in the `with` clause for user traversal
+
+### Why Simple Share Clauses Matter
+
+Complex share clauses force users to write complex queries, which:
+- Reduces usability for simple use cases
+- Increases complexity for frontend developers
+- Makes the API harder to understand and debug
+- Can cause performance issues with unnecessary joins
+- Creates barriers to adoption
+
+The goal is to enable users to write intuitive, simple queries that match their mental model of the data.
+
+## Common Distribution Patterns
+
+### Enable Queries for Specific Participants
+```typescript
+.share(
+  model.given(Player).match((player) => Challenge.whereChallenger(player))
+)
+.with(model.given(Player).match((player) => player.predecessor()));
+
+// Users can execute:
+const challengesSpec = model.given(Player).match((player) => Challenge.whereChallenger(player));
+const challenges = await jinaga.query(challengesSpec, currentPlayer);
+```
+
+### Enable Queries for Administrators Only
+```typescript
+.share(
+  model.given(Tenant).match((tenant) => AdminFact.in(tenant))
+)
+.with(model.given(Tenant).match((tenant) => 
+  Administrator.usersOf(tenant)
+));
+
+// Administrators can execute:
+const adminFactsSpec = model.given(Tenant).match((tenant) => AdminFact.in(tenant));
+const adminFacts = await jinaga.query(adminFactsSpec, tenant);
+```
+
+### Enable Queries for Multi-tenant Data
+```typescript
+.share(
+  model.given(Tenant).match((tenant) => TenantData.in(tenant))
+)
+.with(model.given(Tenant).match((tenant) => 
+  Administrator.usersOf(tenant)
+));
+```
+
+## Distribution Design Principles
+
+### 1. Query-First Design
+Design distribution rules around actual user queries:
+```typescript
+// ✅ CORRECT: Match user query patterns
+.share(model.given(Player).match((player) => MyGame.of(player)))
+
+// ❌ WRONG: Don't match user mental model
+.share(model.given(ComplexJoin).match((join) => MyGame.complexQuery(join)))
+```
+
+### 2. Keep Share Simple
+Avoid complex joins in the share clause:
+```typescript
+// ✅ CORRECT: Simple share clause
+.share(model.given(User).match((user) => UserData.of(user)))
+
+// ❌ WRONG: Complex share clause
+.share(model.given(User, Tenant, Role).match((user, tenant, role) => 
+  UserData.complexJoin(user, tenant, role)
+))
+```
+
+### 3. Use With for Complexity
+Put complex logic in the with clause:
+```typescript
+// ✅ CORRECT: Simple share, complex with
+.share(model.given(Player).match((player) => Game.of(player)))
+.with(model.given(Player).match((player) => 
+  player.tenant.administrators.selectMany(admin => admin.user.predecessor())
+))
+```
+
+### 4. Performance Optimization
+Only distribute necessary data:
+```typescript
+// ✅ CORRECT: Targeted distribution
+.share(model.given(Player).match((player) => player.activeGames))
+
+// ❌ WRONG: Over-distribution
+.share(model.given(Playground).match((playground) => playground.allGames))
+```
+
+## Validation and Testing
+
+### Distribution Checklist
+- [ ] Distribution rules follow `share`/`with` pattern
+- [ ] Share clauses match intended user queries
+- [ ] With clauses define appropriate user access
+- [ ] Rules enable necessary queries for UI
+- [ ] Performance considerations addressed
+
+### Common Issues
+1. **Distribution Complexity**: Keep share clauses simple
+2. **Missing Queries**: Ensure all UI queries are enabled
+3. **Over-distribution**: Only share necessary data
+4. **Complex With Clauses**: Test complex with clauses thoroughly
+
+### Testing Distribution Rules
+```typescript
+// Test distribution with JinagaTest
+const jinaga = JinagaTest.create({
+  distribution: (d) => myDistributionRules(d),
+  user: new User('test-user-key')
+});
+
+// Test query execution
+const data = await jinaga.query(mySpec, parameters); // Should work if distributed
+``` 

@@ -1,0 +1,60 @@
+digraph TicTacToeGame {
+    rankdir=BT;
+
+    // PlayerMichael [shape=box, label="Player\nname: Michael"];
+    // PlayerJohn [shape=box, label="Player\nname: John"];
+    // PlayerSteven [shape=box, label="Player\nname: Steven"];
+
+    // GameA [shape=box, label="Game\nid: A"];
+    // GameA -> PlayerMichael [label="X"];
+    // GameA -> PlayerJohn [label="O"];
+
+    // MoveA0 [shape=box, label="Move\nindex: 0\nposition: 4"];
+    // MoveA0 -> GameA;
+    // MoveA1 [shape=box, label="Move\nindex: 1\nposition: 0"];
+    // MoveA1 -> GameA;
+    // MoveA2 [shape=box, label="Move\nindex: 2\nposition: 8"];
+    // MoveA2 -> GameA;
+    // MoveA3 [shape=box, label="Move\nindex: 3\nposition: 2"];
+    // MoveA3 -> GameA;
+    // MoveA4 [shape=box, label="Move\nindex: 4\nposition: 6"];
+    // MoveA4 -> GameA;
+    // MoveA5 [shape=box, label="Move\nindex: 5\nposition: 1"];
+    // MoveA5 -> GameA;
+    // MoveA6 [shape=box, label="Move\nindex: 6\nposition: 3"];
+    // MoveA6 -> GameA;
+    // MoveA7 [shape=box, label="Move\nindex: 7\nposition: 5"];
+    // MoveA7 -> GameA;
+    // MoveA8 [shape=box, label="Move\nindex: 8\nposition: 7"];
+    // MoveA8 -> GameA;
+
+    // OutcomeA [shape=box, label="Outcome\nwin: true"];
+    // OutcomeA -> GameA;
+    // OutcomeA -> PlayerMichael [label="winner"];
+
+    // GameB [shape=box, label="Game\nid: B"];
+    // GameB -> PlayerJohn [label="X"];
+    // GameB -> PlayerSteven [label="O"];
+
+    // MoveB0 [shape=box, label="Move\nindex: 0\nposition: 4"];
+    // MoveB0 -> GameB;
+    // MoveB1 [shape=box, label="Move\nindex: 1\nposition: 0"];
+    // MoveB1 -> GameB;
+    // MoveB2 [shape=box, label="Move\nindex: 2\nposition: 8"];
+    // MoveB2 -> GameB;
+    // MoveB3 [shape=box, label="Move\nindex: 3\nposition: 2"];
+    // MoveB3 -> GameB;
+    // MoveB4 [shape=box, label="Move\nindex: 4\nposition: 6"];
+    // MoveB4 -> GameB;
+    // MoveB5 [shape=box, label="Move\nindex: 5\nposition: 1"];
+    // MoveB5 -> GameB;
+    // MoveB6 [shape=box, label="Move\nindex: 6\nposition: 3"];
+    // MoveB6 -> GameB;
+    // MoveB7 [shape=box, label="Move\nindex: 7\nposition: 5"];
+    // MoveB7 -> GameB;
+    // MoveB8 [shape=box, label="Move\nindex: 8\nposition: 7"];
+    // MoveB8 -> GameB;
+
+    // OutcomeB [shape=box, label="Outcome\nwin: false"];
+    // OutcomeB -> GameB;
+} 

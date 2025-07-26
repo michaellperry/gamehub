@@ -1,0 +1,182 @@
+---
+description: "Use this rule when defining new fact types, designing fact relationships, and creating static helper methods. Focuses on immutable fact design principles."
+alwaysApply: false
+---
+# Jinaga Fact Definition and Design
+
+## Fact Definition Patterns
+
+### Basic Fact Structure
+```typescript
+// app/gamehub-model/model/my-fact.ts
+import { LabelOf, ModelBuilder, User } from 'jinaga';
+
+export class MyFact {
+  static Type = 'MyFact' as const;
+  public type = MyFact.Type;
+  
+  constructor(
+    public readonly property: string,
+    public readonly createdBy: User
+  ) {}
+}
+
+// Model registration
+export const myFactModel = (b: ModelBuilder) =>
+  b.type(MyFact, (m) => m.predecessor('createdBy', User));
+```
+
+### Fact Relationships
+```typescript
+// Facts with references to other facts
+import { LabelOf, ModelBuilder, User } from 'jinaga';
+
+export class GameSession {
+  static Type = 'GameSession' as const;
+  public type = GameSession.Type;
+  
+  constructor(
+    public readonly game: Game,
+    public readonly createdBy: User
+  ) {}
+}
+
+export class PlayerMove {
+  static Type = 'PlayerMove' as const;
+  public type = PlayerMove.Type;
+  
+  constructor(
+    public readonly session: GameSession,
+    public readonly move: string,
+    public readonly madeBy: User
+  ) {}
+}
+
+// Model registration with relationships
+export const gameModel = (b: ModelBuilder) =>
+  b
+    .type(GameSession, (m) => m.predecessor('game', Game).predecessor('createdBy', User))
+    .type(PlayerMove, (m) => m.predecessor('session', GameSession).predecessor('madeBy', User));
+```
+
+### Static Helper Functions for Query Patterns
+```typescript
+// Create reusable query patterns as static methods
+export class Challenge {
+  // ... existing constructor and properties ...
+
+  // Helper for distribution rules - challenges where player is challenger
+  static whereChallenger(player: LabelOf<Player>) {
+    return Join.by(player)
+      .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin));
+  }
+
+  // Helper for distribution rules - challenges where player is opponent  
+  static whereOpponent(player: LabelOf<Player>) {
+    return Join.by(player)
+      .selectMany((join) => join.successors(Challenge, (challenge) => challenge.opponentJoin));
+  }
+}
+```
+
+**Benefits:**
+- Makes distribution rules more readable and maintainable
+- Centralizes complex query logic in the model classes
+- Enables reuse across different authorization and distribution contexts
+- Follows established naming conventions: `whereX()`, `by()`, `in()`
+
+### Multi-tenant Facts
+```typescript
+// Facts that belong to specific organizations
+import { LabelOf, ModelBuilder, User } from 'jinaga';
+
+export class Tenant {
+  static Type = 'GameHub.Tenant' as const;
+  public type = Tenant.Type;
+
+  constructor(public creator: User) {}
+}
+
+export class Administrator {
+  static Type = 'GameHub.Tenant.Administrator' as const;
+  public type = Administrator.Type;
+
+  constructor(
+    public tenant: Tenant,
+    public user: User,
+    public createdAt: Date | string
+  ) {}
+
+  static of(tenant: LabelOf<Tenant>) {
+    return tenant.successors(Administrator, (admin) => admin.tenant);
+  }
+
+  static by(user: LabelOf<User>) {
+    return user.successors(Administrator, (admin) => admin.user);
+  }
+
+  static usersOf(tenant: LabelOf<Tenant>) {
+    return tenant
+      .successors(Administrator, (admin) => admin.tenant)
+      .selectMany((admin) => admin.user.predecessor());
+  }
+}
+
+// Model registration
+export const tenantModel = (b: ModelBuilder) =>
+  b
+    .type(Tenant, (m) => m.predecessor('creator', User))
+    .type(Administrator, (m) => m.predecessor('tenant', Tenant).predecessor('user', User));
+```
+
+## Fact Design Principles
+
+### Keep Facts Simple
+```typescript
+// ✅ CORRECT: Focus on relationships
+export class Game {
+  constructor(public challenge: Challenge) { }
+}
+
+// ❌ WRONG: Store derived state
+export class Game {
+  constructor(
+    public challenge: Challenge,
+    public gameState: string,
+    public currentTurn: string,
+    public board: string,
+    public createdAt: Date | string
+  ) { }
+}
+```
+
+### Design Principles
+1. **Immutable**: Facts never change once created
+2. **Relationship-Focused**: Use references to other facts
+3. **Minimal State**: Avoid storing derived or computed data
+4. **Query-Ready**: Design facts to support intended queries
+5. **Business Logic**: Reflect actual business processes and workflows
+
+### When to Add Fields
+- **Required for business logic**: Add fields that represent core relationships
+- **Avoid derived data**: Don't store what can be computed from predecessors
+- **Consider queries**: Add fields that support common query patterns
+- **Keep it minimal**: Start simple, add complexity only when needed
+
+### Red Flags
+1. **Missing Predecessors**: Ensure all fact relationships are registered in the model
+2. **Derived Data**: Don't store computed values in facts
+3. **Complex Constructors**: Keep fact constructors simple and focused
+4. **Missing Static Helpers**: Add helper methods for common query patterns 
+
+## Fact Projection (Reference)
+For detailed projection and labeling rules, see `jinaga-specifications.mdc`.
+
+- Project properties directly: `fact.property`
+- Use `j.hash(fact)` for fact IDs
+- Label facts before projection: `.selectMany()`, `.join()`, `.predecessor()`
+
+## Related Rules
+- **jinaga-specifications**: For detailed projection patterns
+- **jinaga-react-hooks**: For React integration and useSpecification
+- **jinaga-planning**: For implementation order

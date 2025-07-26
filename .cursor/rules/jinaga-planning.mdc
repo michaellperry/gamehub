@@ -1,0 +1,74 @@
+---
+description: "Use this rule when creating implementation plans for new Jinaga features. Contains the recommended order of steps, architectural decisions, and planning guidance."
+alwaysApply: false
+---
+# Jinaga Planning and Architecture
+
+## Implementation Order
+
+### Phase 1: Define Facts
+1. **Create fact classes** with proper TypeScript types
+2. **Define predecessor relationships** in model builder
+3. **Add static helper methods** for common query patterns
+4. **Test fact creation** with simple examples
+5. **Generate policies** to verify model compilation
+
+### Phase 2: Build User Interface
+1. **Create React components** for the feature
+2. **Design component interfaces** based on expected data
+3. **Implement basic UI** without data integration
+4. **Test component rendering** with mock data
+5. **Add styling and interactions**
+
+### Phase 3: Define Custom Hooks & View Models
+1. **Create specifications** for data queries
+2. **Implement custom hooks** using useSpecification
+3. **Design view models** that match projected data
+4. **Test hooks** with real data
+5. **Add error handling** and loading states
+
+### Phase 4: Define Specifications
+1. **Create query specifications** for complex data needs
+2. **Test specifications** incrementally
+3. **Verify projections** work correctly
+4. **Optimize queries** for performance
+5. **Add real-time updates** where needed
+
+### Phase 5: Define Authorization Rules
+1. **Create authorization rules** for fact creation
+2. **Test authorization** with different user contexts
+3. **Verify security** requirements are met
+4. **Generate authorization policies**
+5. **Test policy compilation**
+
+### Phase 6: Define Distribution Rules
+1. **Create distribution rules** for data sharing
+2. **Test distribution** across different contexts
+3. **Verify data access** patterns
+4. **Generate distribution policies**
+5. **Test policy compilation**
+
+### Phase 7: Generate Policies
+1. **Compile authorization policies**
+2. **Compile distribution policies**
+3. **Test policy generation**
+4. **Verify policy files** are correct
+5. **Deploy policies** to replicator
+
+### Phase 8: Write Tests
+1. **Create unit tests** for hooks and components
+2. **Create integration tests** for complete workflows
+3. **Test real-time updates**
+4. **Test error scenarios**
+5. **Test performance** with realistic data
+
+## Specification Development
+- Start with basic queries (no projections)
+- Add projections incrementally
+- Test TypeScript compilation after each change
+- See `jinaga-specifications.mdc` for detailed patterns
+
+## Related Rules
+- **jinaga-specifications**: For detailed projection patterns
+- **jinaga-facts**: For fact design principles
+- **jinaga-react-hooks**: For React integration and useSpecification 

@@ -1,0 +1,344 @@
+---
+description: "Use this rule when testing Jinaga applications, validating rules, and setting up test harnesses. Contains testing strategies and validation approaches."
+alwaysApply: false
+---
+# Jinaga Testing and Validation
+
+## JinagaTest Configuration Options
+
+The `JinagaTest.create()` method accepts a configuration object with these options:
+
+### Core Configuration
+
+```typescript
+interface JinagaTestConfig {
+  model?: Model,                           // Jinaga model specification
+  authorization?: (a: AuthorizationRules) => AuthorizationRules,  // Auth rules
+  distribution?: (d: DistributionRules) => DistributionRules,    // Distribution rules
+  user?: {},                              // Simulated logged-in user
+  device?: {},                            // Simulated device
+  initialState?: {}[],                    // Pre-initialized facts
+  purgeConditions?: (p: PurgeConditions) => PurgeConditions,  // Purge rules
+  feedRefreshIntervalSeconds?: number     // Feed refresh interval
+}
+```
+
+### 1. Authorization Rules
+
+Test with specific authorization policies:
+
+```typescript
+import { tenantAuthorization } from 'gamehub-model/authorization/tenantAuthorization';
+
+const jinaga = JinagaTest.create({
+  authorization: (a) => tenantAuthorization(a)
+});
+```
+
+**Available Authorization Options:**
+- `tenantAuthorization` - GameHub tenant-based authorization
+- `userAuthorization` - User-based authorization  
+- `bookkeepingAuthorization` - Bookkeeping authorization
+- Custom authorization rules for specific test scenarios
+
+### 2. Distribution Rules
+
+Test with distribution and sharing policies:
+
+```typescript
+import { tenantDistribution } from 'gamehub-model/distribution/tenantDistribution';
+
+const jinaga = JinagaTest.create({
+  distribution: (d) => tenantDistribution(d)
+});
+```
+
+**Available Distribution Options:**
+- `tenantDistribution` - GameHub tenant-based distribution
+- `bookkeepingDistribution` - Bookkeeping distribution
+- Custom distribution rules for specific test scenarios
+
+### 3. Simulated Users
+
+Test as specific logged-in users:
+
+```typescript
+const jinaga = JinagaTest.create({
+  user: new User('test-user-key')
+});
+```
+
+### 4. Pre-initialized State
+
+Start tests with existing facts:
+
+```typescript
+const user = new User('test-user-key');
+const tenant = new Tenant(user);
+
+const jinaga = JinagaTest.create({
+  initialState: [user, tenant],
+  user: user
+});
+```
+
+**Initial State Options:**
+- Array of fact objects to pre-populate the test store
+- Facts are created before the test runs
+- Useful for complex test scenarios
+
+## Testing Utilities
+
+### JinagaTestUtils Class
+
+Provides convenient methods for common testing scenarios:
+
+#### Basic Test Instance
+```typescript
+const jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
+```
+
+#### Test Instance with Authorization
+```typescript
+const jinaga = JinagaTestUtils.createTestInstanceWithAuth(
+  new User('test-user-key'),
+  authorizationRules
+);
+```
+
+#### Test Instance with Distribution
+```typescript
+const jinaga = JinagaTestUtils.createTestInstanceWithDistribution(
+  new User('test-user-key'),
+  distributionRules
+);
+```
+
+#### Test Instance with Pre-initialized State
+```typescript
+const jinaga = JinagaTestUtils.createTestInstanceWithState(
+  [user, tenant, player],
+  new User('test-user-key')
+);
+```
+
+#### Complex Test Instance
+```typescript
+const jinaga = JinagaTestUtils.createComplexTestInstance({
+  user: new User('test-user-key'),
+  authorization: (a) => myAuthorizationRules(a),
+  distribution: (d) => myDistributionRules(d),
+  initialState: [user, tenant, player]
+});
+```
+
+## Testing Strategies
+
+### 1. Authorization Testing
+
+Test that authorization rules work correctly:
+
+```typescript
+describe('Authorization Rules', () => {
+  it('should allow authorized users to create facts', async () => {
+    const jinaga = JinagaTest.create({
+      authorization: (a) => myAuthorizationRules(a),
+      user: authorizedUser
+    });
+
+    // Should succeed
+    await jinaga.fact(new MyFact(data, authorizedUser));
+  });
+
+  it('should prevent unauthorized users from creating facts', async () => {
+    const jinaga = JinagaTest.create({
+      authorization: (a) => myAuthorizationRules(a),
+      user: unauthorizedUser
+    });
+
+    // Should fail
+    await expect(
+      jinaga.fact(new MyFact(data, unauthorizedUser))
+    ).rejects.toThrow();
+  });
+});
+```
+
+### 2. Distribution Testing
+
+Test that distribution rules enable the right queries:
+
+```typescript
+describe('Distribution Rules', () => {
+  it('should allow users to query their own data', async () => {
+    const jinaga = JinagaTest.create({
+      distribution: (d) => myDistributionRules(d),
+      user: testUser,
+      initialState: [testUser, testData]
+    });
+
+    const data = await jinaga.query(mySpec, testUser);
+    expect(data).toBeDefined();
+  });
+
+  it('should prevent users from querying unauthorized data', async () => {
+    const jinaga = JinagaTest.create({
+      distribution: (d) => myDistributionRules(d),
+      user: testUser
+    });
+
+    // Should return empty or throw
+    const data = await jinaga.query(unauthorizedSpec, testUser);
+    expect(data).toEqual([]);
+  });
+});
+```
+
+### 3. Integration Testing
+
+Test the entire system working together:
+
+```typescript
+describe('Integration Tests', () => {
+  it('should create and query facts correctly', async () => {
+    const jinaga = JinagaTest.create({
+      authorization: (a) => myAuthorizationRules(a),
+      distribution: (d) => myDistributionRules(d),
+      user: testUser
+    });
+
+    // Create facts
+    const fact = await jinaga.fact(new MyFact(data, testUser));
+
+    // Query facts
+    const results = await jinaga.query(mySpec, testUser);
+    expect(results).toContain(fact);
+  });
+});
+```
+
+## Validation and Testing
+
+### Build and Policy Generation
+```bash
+# Always build after changes
+npm run build
+
+# Generate policies to verify rules
+npm run generate-policies
+
+# Check policy file for correct rule generation
+cat mesh/replicator/policies/gamehub.policy
+```
+
+### Validation Checklist
+- [ ] Authorization rules compile without TypeScript errors
+- [ ] Distribution rules follow `share`/`with` pattern
+- [ ] Static helpers are reusable across contexts
+- [ ] Policy file contains expected rule entries
+- [ ] Facts support intended query patterns
+- [ ] Rules match business logic requirements
+
+### Common Issues
+1. **Authorization Errors**: Ensure rules return `LabelOf<User>`
+2. **Distribution Complexity**: Keep share clauses simple
+3. **Missing Imports**: Import all referenced fact types
+4. **Policy Generation**: Verify rules appear in generated policy
+
+## Testing Custom Hooks
+
+### Testing useSpecification Hooks
+
+```typescript
+describe('useMyHook', () => {
+  it('should load data when parameters are available', async () => {
+    const jinaga = JinagaTest.create({
+      authorization: (a) => myAuthorizationRules(a),
+      distribution: (d) => myDistributionRules(d),
+      user: testUser,
+      initialState: [testUser, testData]
+    });
+
+    // Test the hook
+    const { result } = renderHook(() => useMyHook(), {
+      wrapper: ({ children }) => (
+        <JinagaProvider jinaga={jinaga}>
+          {children}
+        </JinagaProvider>
+      )
+    });
+
+    // Wait for data to load
+    await waitFor(() => {
+      expect(result.current.data).toBeDefined();
+    });
+  });
+});
+```
+
+### Testing Fact Creation
+
+```typescript
+describe('Fact Creation', () => {
+  it('should create facts with proper authorization', async () => {
+    const jinaga = JinagaTest.create({
+      authorization: (a) => myAuthorizationRules(a),
+      user: testUser
+    });
+
+    const fact = await jinaga.fact(new MyFact(data, testUser));
+    expect(fact).toBeDefined();
+  });
+});
+```
+
+## Performance Testing
+
+### Load Testing
+
+```typescript
+describe('Performance Tests', () => {
+  it('should handle large fact sets efficiently', async () => {
+    const jinaga = JinagaTest.create({
+      authorization: (a) => myAuthorizationRules(a),
+      distribution: (d) => myDistributionRules(d),
+      user: testUser,
+      initialState: generateLargeFactSet()
+    });
+
+    const startTime = Date.now();
+    const results = await jinaga.query(mySpec, testUser);
+    const endTime = Date.now();
+
+    expect(endTime - startTime).toBeLessThan(1000); // Should complete within 1 second
+    expect(results.length).toBeGreaterThan(0);
+  });
+});
+```
+
+## Best Practices
+
+### 1. Test Setup
+- Use consistent test data across tests
+- Set up authorization and distribution rules for each test
+- Pre-populate test state when needed
+
+### 2. Test Isolation
+- Each test should be independent
+- Clean up test data between tests
+- Use unique identifiers for test facts
+
+### 3. Error Testing
+- Test both success and failure scenarios
+- Verify error messages are meaningful
+- Test edge cases and boundary conditions
+
+### 4. Performance Testing
+- Test with realistic data volumes
+- Measure query performance
+- Test distribution rule efficiency
+
+### 5. Integration Testing
+- Test the entire system working together
+- Verify authorization and distribution work together
+- Test real-world scenarios 

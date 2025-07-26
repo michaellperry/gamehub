@@ -3,7 +3,7 @@ import { CodeInput, NameInput, PlayerPlaygroundsList } from '../components/molec
 import { useHomePage } from '../hooks/useHomePage';
 
 export default function HomePage() {
-    const { playerName, playgroundLobby, playerPlaygrounds } = useHomePage();
+    const { playerName, playgroundLobby, playerPlaygrounds, playerSessions } = useHomePage();
 
     if (playerName.showNameInput) {
         return (
@@ -73,6 +73,53 @@ export default function HomePage() {
                         >
                             {playgroundLobby.error}
                         </Alert>
+                    )}
+
+                    {/* Simplified Player Sessions Section (Dev Mode Only) */}
+                    {import.meta.env.DEV && (
+                        <Card variant="game" size="lg" className="max-w-md mx-auto">
+                            <div className="space-y-4">
+                                <div className="text-center">
+                                    <Icon name="friends" size="md" className="text-primary-600 mx-auto mb-2" />
+                                    <Typography variant="h2" className="text-xl font-semibold text-gray-900">
+                                        Simulated Players
+                                    </Typography>
+                                    <Typography variant="body-sm" className="text-gray-600">
+                                        Development mode - Automatic player simulation
+                                    </Typography>
+
+                                    {/* Simulation Status */}
+                                    <div className="mt-2 p-2 bg-gray-50 rounded-lg">
+                                        <Typography variant="body-sm" className="text-gray-600">
+                                            Simulation: {playerSessions.isEnabled ? '🟢 Enabled' : '🔴 Disabled'}
+                                        </Typography>
+                                        <Typography variant="body-sm" className="text-gray-500">
+                                            Automatically creates players for new playgrounds
+                                        </Typography>
+                                    </div>
+                                </div>
+
+                                {/* Enable/Disable Controls */}
+                                <div className="flex justify-center space-x-2">
+                                    <Button
+                                        variant={playerSessions.isEnabled ? "secondary" : "primary"}
+                                        size="sm"
+                                        onClick={playerSessions.enableSimulation}
+                                        disabled={playerSessions.isEnabled}
+                                    >
+                                        Enable Simulation
+                                    </Button>
+                                    <Button
+                                        variant={playerSessions.isEnabled ? "primary" : "secondary"}
+                                        size="sm"
+                                        onClick={playerSessions.disableSimulation}
+                                        disabled={!playerSessions.isEnabled}
+                                    >
+                                        Disable Simulation
+                                    </Button>
+                                </div>
+                            </div>
+                        </Card>
                     )}
 
                     {/* Start Playground Section */}

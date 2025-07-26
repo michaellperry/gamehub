@@ -14,4 +14,13 @@ digraph {
 
     Join [label="Join\n(joinedAt: Date|string)"]
     Join -> Player, Playground
+
+    Leave -> Join
+
+    Challenge -> Join [label="challengerJoin"]
+    Challenge -> Join [label="opponentJoin"]
+    Challenge [label="Challenge\n(challengerStarts: boolean,\ncreatedAt: Date|string)"]
+
+    Game -> Challenge
+    Reject -> Challenge
 }

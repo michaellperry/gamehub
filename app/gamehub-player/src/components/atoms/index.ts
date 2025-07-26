@@ -27,3 +27,9 @@ export type { TypographyProps } from './Typography';
 
 export { LoadingIndicator } from './LoadingIndicator';
 export type { LoadingIndicatorProps } from './LoadingIndicator';
+
+export { SelectableCard } from './SelectableCard';
+export type { SelectableCardProps } from './SelectableCard';
+
+export { IconButton } from './IconButton';
+export type { IconButtonProps } from './IconButton';

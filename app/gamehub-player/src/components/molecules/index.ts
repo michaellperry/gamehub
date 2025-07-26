@@ -4,6 +4,9 @@ export type { GameCardProps } from './GameCard';
 export { PlayerAvatar } from './PlayerAvatar';
 export type { PlayerAvatarProps } from './PlayerAvatar';
 
+export { PlayerCard } from './PlayerCard';
+export type { PlayerCardProps } from './PlayerCard';
+
 export { GameStatus } from './GameStatus';
 export type { GameStatusProps, GameStatusType } from './GameStatus';
 
@@ -22,8 +25,26 @@ export type { CodeInputProps } from './CodeInput';
 export { NameInput } from './NameInput';
 export type { NameInputProps } from './NameInput';
 
+export { DateFormattingExample } from './DateFormattingExample';
+export type { DateFormattingExampleProps } from './DateFormattingExample';
+
 export { PlayerPlaygroundsList } from './PlayerPlaygroundsList';
 export type { PlayerPlaygroundsListProps } from './PlayerPlaygroundsList';
 
-export { DateFormattingExample } from './DateFormattingExample';
-export type { DateFormattingExampleProps } from './DateFormattingExample'; 
+export { default as Modal, ConfirmModal } from './Modal';
+export type { ModalProps, ConfirmModalProps } from './Modal';
+
+export { ChallengeModal } from './ChallengeModal';
+export type { ChallengeModalProps } from './ChallengeModal';
+
+export { ChallengeStatus, PendingChallengeStatus, SentChallengeStatus, ReceivedChallengeStatus, AcceptedChallengeStatus, RejectedChallengeStatus, ExpiredChallengeStatus } from './ChallengeStatus';
+export type { ChallengeStatusProps, ChallengeStatusType } from './ChallengeStatus';
+
+export { OpponentSelector } from './OpponentSelector';
+export type { OpponentSelectorProps } from './OpponentSelector';
+
+export { GameStarterSelector } from './GameStarterSelector';
+export type { GameStarterSelectorProps } from './GameStarterSelector';
+
+export { ChallengeNotification } from './ChallengeNotification';
+export type { ChallengeNotificationProps } from './ChallengeNotification'; 

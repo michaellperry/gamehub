@@ -1,0 +1,44 @@
+---
+description: "Use this rule when building React components that display or modify facts. Contains useSpecification patterns, custom hooks, and view models."
+alwaysApply: false
+---
+# Jinaga React Integration
+
+## useSpecification Best Practices
+
+### Parameter Handling
+1. **Never create fallback objects**: Don't create dummy User/Tenant objects when parameters are null
+2. **Let useSpecification handle nulls**: The hook automatically waits for all parameters to be non-null
+3. **Define specifications unconditionally**: Always define the full specification, don't conditionally create it
+4. **Trust the loading state**: The `loading` flag properly indicates when data is being fetched
+
+### Specification Stability (Critical for Performance)
+1. **Never recreate specifications inside hooks**: This causes infinite loops and performance issues
+2. **Define specifications outside hooks**: Move specification definitions to module level
+
+### Loading State Management
+1. **Automatic loading detection**: `useSpecification` automatically sets `loading: true` when parameters are null
+2. **No manual loading logic**: Don't manually track loading states for parameter availability
+3. **Real-time updates**: The hook automatically re-runs when parameters change from null to non-null
+4. **Loading flag vs Data availability**: 
+   - `loading: true` → Show loading indicator in UI
+   - `data !== null` → Data has been loaded (may be empty array)
+   - `data === null` → Still loading or error occurred
+5. **Check data, not loading**: Use `data !== null` to determine if data is available, not the loading flag
+
+## Fact Projection (Reference)
+For detailed projection and labeling rules, see `jinaga-specifications.mdc`.
+
+### Quick Reference
+- Use `j.hash(fact)` for fact IDs
+- Project properties directly: `fact.property`
+- Label facts before projection: `.selectMany()`, `.join()`, `.predecessor()`
+
+## Related Rules
+- **jinaga-specifications**: For detailed projection patterns
+- **jinaga-facts**: For fact design principles
+- **jinaga-planning**: For implementation order 
+        challengeId: j.hash(challenge)
+    }))
+)
+``` 
