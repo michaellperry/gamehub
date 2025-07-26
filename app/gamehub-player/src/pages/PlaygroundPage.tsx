@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
+import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography, CenteredContent } from '../components/atoms';
 import { ChallengeModal } from '../components/molecules';
 import { IncomingChallengesCard, PlaygroundPlayersList } from '../components/organisms';
 import { PlaygroundGame } from '../hooks/usePlaygroundPage';
@@ -13,11 +13,11 @@ export default function PlaygroundPage() {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
-                    <div className="text-center space-y-4">
+                    <CenteredContent className="space-y-4">
                         <Alert variant="error" title="Invalid Playground">
                             No playground code provided.
                         </Alert>
-                    </div>
+                    </CenteredContent>
                 </Container>
             </PageLayout>
         );
@@ -27,7 +27,7 @@ export default function PlaygroundPage() {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
-                    <div className="text-center space-y-4">
+                    <CenteredContent className="space-y-4">
                         <Alert variant="error" title="Invalid Playground Code">
                             Playground code must be exactly 6 uppercase letters (e.g., ABCDEF).
                         </Alert>
@@ -37,7 +37,7 @@ export default function PlaygroundPage() {
                         >
                             Back to Home
                         </Button>
-                    </div>
+                    </CenteredContent>
                 </Container>
             </PageLayout>
         );
@@ -50,12 +50,12 @@ export default function PlaygroundPage() {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
-                    <div className="text-center space-y-4">
+                    <CenteredContent className="space-y-4">
                         <LoadingIndicator size="lg" />
                         <Typography variant="body" className="text-gray-600">
                             Loading playground...
                         </Typography>
-                    </div>
+                    </CenteredContent>
                 </Container>
             </PageLayout>
         );
@@ -65,7 +65,7 @@ export default function PlaygroundPage() {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
-                    <div className="text-center space-y-4">
+                    <CenteredContent className="space-y-4">
                         <Alert variant="error" title="Error Loading Playground">
                             {viewModel.error}
                         </Alert>
@@ -75,7 +75,7 @@ export default function PlaygroundPage() {
                         >
                             Back to Home
                         </Button>
-                    </div>
+                    </CenteredContent>
                 </Container>
             </PageLayout>
         );
@@ -86,7 +86,7 @@ export default function PlaygroundPage() {
             <Container variant="hero">
                 <div className="space-y-6">
                     {/* Header */}
-                    <div className="text-center space-y-4">
+                    <CenteredContent className="space-y-4">
                         <div className="flex items-center justify-center space-x-4">
                             <Typography variant="h1" className="text-3xl font-bold text-gray-900">
                                 Playground
@@ -120,7 +120,7 @@ export default function PlaygroundPage() {
                                 Leave Playground
                             </Button>
                         </div>
-                    </div>
+                    </CenteredContent>
 
                     {/* Content */}
                     {!viewModel.loading && viewModel.data && (
@@ -141,11 +141,11 @@ export default function PlaygroundPage() {
                             {viewModel.data.games.length > 0 && (
                                 <Card variant="game" size="lg">
                                     <div className="space-y-4">
-                                        <div className="text-center">
+                                        <CenteredContent>
                                             <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                                                 Active Games ({viewModel.data.games.length})
                                             </Typography>
-                                        </div>
+                                        </CenteredContent>
 
                                         <div className="space-y-2">
                                             {viewModel.data.games.map((game: PlaygroundGame) => (

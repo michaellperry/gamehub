@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Container, Icon, PageLayout, Typography } from '../components/atoms';
+import { Alert, Button, Card, Container, Icon, PageLayout, Typography, CenteredContent } from '../components/atoms';
 import { CodeInput, NameInput, PlayerPlaygroundsList } from '../components/molecules';
 import { useHomePage } from '../hooks/useHomePage';
 
@@ -9,7 +9,7 @@ export default function HomePage() {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
-                    <div className="text-center space-y-8">
+                    <CenteredContent className="space-y-8">
                         <div className="space-y-4">
                             <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
                             <Typography variant="h1" className="text-3xl font-bold text-gray-900">
@@ -41,7 +41,7 @@ export default function HomePage() {
                             loading={playerName.loading}
                             disabled={playerName.loading}
                         />
-                    </div>
+                    </CenteredContent>
                 </Container>
             </PageLayout>
         );
@@ -50,7 +50,7 @@ export default function HomePage() {
     return (
         <PageLayout variant="default">
             <Container variant="hero">
-                <div className="text-center space-y-8">
+                <CenteredContent className="space-y-8">
                     {/* Header */}
                     <div className="space-y-4">
                         <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
@@ -79,7 +79,7 @@ export default function HomePage() {
                     {import.meta.env.DEV && (
                         <Card variant="game" size="lg" className="max-w-md mx-auto">
                             <div className="space-y-4">
-                                <div className="text-center">
+                                <CenteredContent>
                                     <Icon name="friends" size="md" className="text-primary-600 mx-auto mb-2" />
                                     <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                                         Simulated Players
@@ -97,7 +97,7 @@ export default function HomePage() {
                                             Automatically creates players for new playgrounds
                                         </Typography>
                                     </div>
-                                </div>
+                                </CenteredContent>
 
                                 {/* Enable/Disable Controls */}
                                 <div className="flex justify-center space-x-2">
@@ -125,7 +125,7 @@ export default function HomePage() {
                     {/* Start Playground Section */}
                     <Card variant="game" size="lg" className="max-w-md mx-auto">
                         <div className="space-y-4">
-                            <div className="text-center">
+                            <CenteredContent>
                                 <Icon name="play" size="md" className="text-primary-600 mx-auto mb-2" />
                                 <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                                     Start a New Playground
@@ -133,7 +133,7 @@ export default function HomePage() {
                                 <Typography variant="body-sm" className="text-gray-600">
                                     Create a new game session and invite friends
                                 </Typography>
-                            </div>
+                            </CenteredContent>
 
                             <Button
                                 variant="primary"
@@ -152,7 +152,7 @@ export default function HomePage() {
                     {/* Join Playground Section */}
                     <Card variant="game" size="lg" className="max-w-md mx-auto">
                         <div className="space-y-4">
-                            <div className="text-center">
+                            <CenteredContent>
                                 <Icon name="door" size="md" className="text-primary-600 mx-auto mb-2" />
                                 <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                                     Join a Playground
@@ -160,7 +160,7 @@ export default function HomePage() {
                                 <Typography variant="body-sm" className="text-gray-600">
                                     Enter the 6-letter code to join an existing game
                                 </Typography>
-                            </div>
+                            </CenteredContent>
 
                             <CodeInput
                                 value={playgroundLobby.playgroundCode}
@@ -191,7 +191,7 @@ export default function HomePage() {
                     />
 
                     {/* Change Name Option */}
-                    <div className="text-center">
+                    <CenteredContent>
                         <Button
                             variant="ghost"
                             size="sm"
@@ -200,8 +200,8 @@ export default function HomePage() {
                         >
                             Change Name
                         </Button>
-                    </div>
-                </div>
+                    </CenteredContent>
+                </CenteredContent>
             </Container>
         </PageLayout>
     );

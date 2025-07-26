@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChallengeModalViewModel } from '../../hooks/useChallengeModal';
-import { Button, Typography } from '../atoms';
+import { Button, Typography, CenteredContent } from '../atoms';
 import { GameStarterSelector, Modal } from './index';
 
 export interface ChallengeModalProps {
@@ -52,21 +52,21 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         >
             <div className="space-y-6">
                 {/* Playground Info */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="body" className="text-gray-600">
                         Playground: {playgroundCode}
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Selected Opponent Info */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="h3" className="text-sm font-medium mb-2">
                         Challenging:
                     </Typography>
                     <Typography variant="body" className="text-lg font-semibold">
                         {viewModel.selectedOpponent?.name}
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Who Starts Selection */}
                 <div>

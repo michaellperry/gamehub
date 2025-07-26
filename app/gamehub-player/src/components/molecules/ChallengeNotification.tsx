@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Typography } from '../atoms';
+import { Button, Typography, CenteredContent } from '../atoms';
 import { Modal } from './index';
 import { PlaygroundPlayer } from '../../hooks/usePlaygroundPage';
 
@@ -66,35 +66,35 @@ export const ChallengeNotification: React.FC<ChallengeNotificationProps> = ({
         >
             <div className="space-y-6">
                 {/* Playground Info */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="body" className="text-gray-600">
                         Playground: {playgroundCode}
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Challenger Info */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="h3" className="text-sm font-medium mb-2">
                         Challenge from:
                     </Typography>
                     <Typography variant="body" className="text-lg font-semibold">
                         {challenger.name}
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Challenge Message */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="body" className="text-gray-600">
                         {challenger.name} wants to play a game with you!
                     </Typography>
                     <Typography variant="body" className="text-sm text-gray-500 mt-2">
                         Accept to start playing, or reject to decline the challenge.
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Challenge Details */}
                 <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-center">
+                    <CenteredContent>
                         <Typography variant="h4" className="text-sm font-medium mb-2">
                             Challenge Details
                         </Typography>
@@ -103,7 +103,7 @@ export const ChallengeNotification: React.FC<ChallengeNotificationProps> = ({
                             <div>Playground: {playgroundCode}</div>
                             <div>Received: {challenger.joinedAt.toLocaleTimeString()}</div>
                         </div>
-                    </div>
+                    </CenteredContent>
                 </div>
             </div>
         </Modal>
