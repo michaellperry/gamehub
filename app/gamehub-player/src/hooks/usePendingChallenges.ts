@@ -23,7 +23,7 @@ export interface PendingChallengesViewModel {
 
 // Specification to find challenges where the current player is the opponent
 const pendingChallengesSpec = model.given(Player).match((player) =>
-    Challenge.whereOpponent(player)
+    Challenge.for(player)
         .selectMany(challenge => challenge.challengerJoin.predecessor()
             .select(challengerJoin => ({
                 challenge,

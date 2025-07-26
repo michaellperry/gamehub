@@ -7,17 +7,12 @@ export interface PlaygroundPlayersListProps {
     players: PlaygroundPlayer[];
     onChallengeClick: (player: PlaygroundPlayer) => void;
     onChallengeStatusClick: (player: PlaygroundPlayer) => void;
-    getChallengeStatus: (player: PlaygroundPlayer) => {
-        type: 'pending' | 'sent' | 'received' | 'accepted' | 'rejected' | 'expired';
-        count?: number;
-    } | undefined;
 }
 
 export const PlaygroundPlayersList: React.FC<PlaygroundPlayersListProps> = ({
     players,
     onChallengeClick,
     onChallengeStatusClick,
-    getChallengeStatus,
 }) => {
     return (
         <Card variant="game" size="lg">
@@ -41,7 +36,6 @@ export const PlaygroundPlayersList: React.FC<PlaygroundPlayersListProps> = ({
                                 key={player.playerId}
                                 player={player}
                                 isCurrentPlayer={player.isCurrentPlayer}
-                                challengeStatus={getChallengeStatus(player)}
                                 onChallengeClick={onChallengeClick}
                                 onChallengeStatusClick={() => onChallengeStatusClick(player)}
                             />

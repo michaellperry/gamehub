@@ -125,23 +125,18 @@ export class Challenge {
             .notExists((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
 
-    static for(playground: LabelOf<Playground>) {
-        return playground.successors(Join, (join) => join.playground)
-            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
+    static for(player: LabelOf<Player>) {
+        return Join.by(player)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.opponentJoin))
             .notExists((challenge) => challenge.successors(Reject, (reject) => reject.challenge))
             .notExists((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
 
-    // Helper for distribution rules - challenges where player is challenger
-    static whereChallenger(player: LabelOf<Player>) {
-        return Join.by(player)
-            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin));
-    }
-
-    // Helper for distribution rules - challenges where player is opponent
-    static whereOpponent(player: LabelOf<Player>) {
-        return Join.by(player)
-            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.opponentJoin));
+    static in(playground: LabelOf<Playground>) {
+        return playground.successors(Join, (join) => join.playground)
+            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
+            .notExists((challenge) => challenge.successors(Reject, (reject) => reject.challenge))
+            .notExists((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
 }
 
@@ -165,13 +160,13 @@ export class Game {
 
     // Helper for distribution rules - games where player is challenger
     static whereChallenger(player: LabelOf<Player>) {
-        return Challenge.whereChallenger(player)
+        return Challenge.by(player)
             .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
 
     // Helper for distribution rules - games where player is opponent
     static whereOpponent(player: LabelOf<Player>) {
-        return Challenge.whereOpponent(player)
+        return Challenge.for(player)
             .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
     }
 }
@@ -190,13 +185,13 @@ export class Reject {
 
     // Helper for distribution rules - rejects where player is challenger
     static whereChallenger(player: LabelOf<Player>) {
-        return Challenge.whereChallenger(player)
+        return Challenge.by(player)
             .selectMany((challenge) => challenge.successors(Reject, (reject) => reject.challenge));
     }
 
     // Helper for distribution rules - rejects where player is opponent
     static whereOpponent(player: LabelOf<Player>) {
-        return Challenge.whereOpponent(player)
+        return Challenge.for(player)
             .selectMany((challenge) => challenge.successors(Reject, (reject) => reject.challenge));
     }
 }

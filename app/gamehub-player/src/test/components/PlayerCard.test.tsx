@@ -16,11 +16,17 @@ describe('PlayerCard', () => {
         joinedAt: new Date('2024-01-01T00:00:00Z'),
         isCurrentPlayer: false,
         join: mockJoin,
+        isChallengePending: false,
     };
 
     const mockCurrentPlayer = {
         ...mockPlayer,
         isCurrentPlayer: true,
+    };
+
+    const mockPlayerWithPendingChallenge = {
+        ...mockPlayer,
+        isChallengePending: true,
     };
 
     it('renders player information correctly', () => {
@@ -38,18 +44,15 @@ describe('PlayerCard', () => {
         expect(screen.queryByText('Challenge')).not.toBeInTheDocument();
     });
 
-    it('displays challenge status when provided', () => {
-        const challengeStatus = { type: 'pending' as const, count: 2 };
-
+    it('displays challenge status when player has pending challenge', () => {
         render(
             <PlayerCard
-                player={mockPlayer}
+                player={mockPlayerWithPendingChallenge}
                 isCurrentPlayer={false}
-                challengeStatus={challengeStatus}
             />
         );
 
-        expect(screen.getByText('Pending (2)')).toBeInTheDocument();
+        expect(screen.getByText('Pending')).toBeInTheDocument();
     });
 
     it('calls onChallengeClick when challenge button is clicked', () => {
@@ -69,44 +72,24 @@ describe('PlayerCard', () => {
 
     it('calls onChallengeStatusClick when challenge status is clicked', () => {
         const handleChallengeStatusClick = vi.fn();
-        const challengeStatus = { type: 'received' as const };
 
         render(
             <PlayerCard
-                player={mockPlayer}
+                player={mockPlayerWithPendingChallenge}
                 isCurrentPlayer={false}
-                challengeStatus={challengeStatus}
                 onChallengeStatusClick={handleChallengeStatusClick}
             />
         );
 
-        fireEvent.click(screen.getByText('Received'));
+        fireEvent.click(screen.getByText('Pending'));
         expect(handleChallengeStatusClick).toHaveBeenCalled();
     });
 
     it('disables challenge button when challenge is pending', () => {
-        const challengeStatus = { type: 'pending' as const };
-
         render(
             <PlayerCard
-                player={mockPlayer}
+                player={mockPlayerWithPendingChallenge}
                 isCurrentPlayer={false}
-                challengeStatus={challengeStatus}
-            />
-        );
-
-        const challengeButton = screen.getByText('Challenge');
-        expect(challengeButton).toBeDisabled();
-    });
-
-    it('disables challenge button when challenge is sent', () => {
-        const challengeStatus = { type: 'sent' as const };
-
-        render(
-            <PlayerCard
-                player={mockPlayer}
-                isCurrentPlayer={false}
-                challengeStatus={challengeStatus}
             />
         );
 

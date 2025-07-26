@@ -1,4 +1,4 @@
-import { Join, Leave, Player, PlayerName, Playground, model } from '@model/model';
+import { Challenge, Join, Leave, Player, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { j } from '../jinaga-config';
 import { usePlayer } from './usePlayer';
@@ -10,6 +10,7 @@ export interface PlaygroundPlayer {
     joinedAt: Date;
     isCurrentPlayer: boolean;
     join: Join;
+    isChallengePending: boolean;
 }
 
 export interface PlaygroundGame {
@@ -46,7 +47,10 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
                 sessionId: j.hash(join),
                 joinedAt: join.joinedAt,
                 names: PlayerName.current(player).select(name => name.name),
-                join: join
+                join: join,
+                pendingChallengePlayerIds: Challenge.for(player)
+                    .selectMany(challenge => challenge.challengerJoin.player.predecessor()
+                        .select(challenger => j.hash(challenger)))
             }))
         )
 );
@@ -81,7 +85,8 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         name: session.names[0],
         joinedAt: new Date(session.joinedAt),
         isCurrentPlayer: session.playerId === playerId,
-        join: session.join
+        join: session.join,
+        isChallengePending: session.pendingChallengePlayerIds.some(id => id === playerId)
     })) : undefined;
 
     // Extract the current player's join from the sessions data

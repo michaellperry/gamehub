@@ -6,10 +6,6 @@ import { PlaygroundPlayer } from '../../hooks/usePlaygroundPage';
 export interface PlayerCardProps {
     player: PlaygroundPlayer;
     isCurrentPlayer: boolean;
-    challengeStatus?: {
-        type: 'pending' | 'sent' | 'received' | 'accepted' | 'rejected' | 'expired';
-        count?: number;
-    };
     onChallengeClick?: (player: PlaygroundPlayer) => void;
     onChallengeStatusClick?: () => void;
     className?: string;
@@ -18,7 +14,6 @@ export interface PlayerCardProps {
 export const PlayerCard: React.FC<PlayerCardProps> = ({
     player,
     isCurrentPlayer,
-    challengeStatus,
     onChallengeClick,
     onChallengeStatusClick,
     className = '',
@@ -30,7 +25,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     };
 
     const handleChallengeStatusClick = () => {
-        if (onChallengeStatusClick && challengeStatus) {
+        if (onChallengeStatusClick && player.isChallengePending) {
             onChallengeStatusClick();
         }
     };
@@ -58,13 +53,12 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
 
             <div className="flex items-center space-x-2">
                 {/* Challenge Status Indicator */}
-                {challengeStatus && (
+                {player.isChallengePending && (
                     <ChallengeStatus
-                        type={challengeStatus.type}
-                        count={challengeStatus.count}
+                        type="pending"
                         size="sm"
                         onClick={handleChallengeStatusClick}
-                        pulse={challengeStatus.type === 'received'}
+                        pulse={true}
                     />
                 )}
 
@@ -74,7 +68,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                         variant="secondary"
                         size="sm"
                         onClick={handleChallengeClick}
-                        disabled={challengeStatus?.type === 'pending' || challengeStatus?.type === 'sent'}
+                        disabled={player.isChallengePending}
                     >
                         Challenge
                     </Button>

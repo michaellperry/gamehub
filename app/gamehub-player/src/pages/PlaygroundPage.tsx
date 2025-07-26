@@ -113,25 +113,6 @@ export default function PlaygroundPage() {
     // Get current player for challenge modal
     const currentPlayer = viewModel.data?.players.find(player => player.isCurrentPlayer);
 
-    // Mock challenge status data - this would come from actual challenge hooks
-    const getChallengeStatus = (player: PlaygroundPlayer) => {
-        // TODO: Replace with actual challenge status from hooks
-        // This is mock data for demonstration
-        if (player.isCurrentPlayer) return undefined;
-
-        // Simulate different challenge statuses for demo
-        const statuses = ['pending', 'sent', 'received', 'accepted', 'rejected', 'expired'] as const;
-        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-        const hasChallenge = Math.random() > 0.7; // 30% chance of having a challenge
-
-        if (!hasChallenge) return undefined;
-
-        return {
-            type: randomStatus,
-            count: Math.floor(Math.random() * 3) + 1
-        };
-    };
-
     const handleChallengeStatusClick = (player: PlaygroundPlayer) => {
         // TODO: Implement challenge status click handler
         console.log('Challenge status clicked for player:', player.name);
@@ -232,7 +213,6 @@ export default function PlaygroundPage() {
                                 players={viewModel.data.players}
                                 onChallengeClick={handleChallengeClick}
                                 onChallengeStatusClick={handleChallengeStatusClick}
-                                getChallengeStatus={getChallengeStatus}
                             />
 
                             {/* Active Games Section */}

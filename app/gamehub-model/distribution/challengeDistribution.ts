@@ -5,12 +5,12 @@ export const challengeDistribution = (r: DistributionRules) =>
     r
         // Share challenges with the challenger and opponent only
         .share(
-            model.given(Player).match((player) => Challenge.whereChallenger(player))
+            model.given(Player).match((player) => Challenge.by(player))
         )
         .with(model.given(Player).match((player) => player.predecessor()))
 
         .share(
-            model.given(Player).match((player) => Challenge.whereOpponent(player))
+            model.given(Player).match((player) => Challenge.for(player))
         )
         .with(model.given(Player).match((player) => player.predecessor()))
 

@@ -73,7 +73,8 @@ export const IncomingChallengesCard: React.FC<IncomingChallengesCardProps> = ({
                         name: viewModel.selectedChallenge.challengerName,
                         joinedAt: viewModel.selectedChallenge.createdAt,
                         isCurrentPlayer: false,
-                        join: viewModel.selectedChallenge.challengerJoin
+                        join: viewModel.selectedChallenge.challengerJoin,
+                        isChallengePending: false
                     }}
                     playgroundCode={playgroundCode}
                     loading={viewModel.loading}
