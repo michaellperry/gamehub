@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
 import { ChallengeModal } from '../components/molecules';
 import { IncomingChallengesCard, PlaygroundPlayersList } from '../components/organisms';
-import { PlaygroundGame, PlaygroundPlayer } from '../hooks/usePlaygroundPage';
+import { PlaygroundGame } from '../hooks/usePlaygroundPage';
 import { usePlaygroundPageComposed } from '../hooks/usePlaygroundPageComposed';
 
 export default function PlaygroundPage() {
@@ -45,13 +45,6 @@ export default function PlaygroundPage() {
 
     // Get current player for challenge modal
     const currentPlayer = viewModel.data?.players.find(player => player.isCurrentPlayer);
-
-    const handleChallengeStatusClick = (player: PlaygroundPlayer) => {
-        // TODO: Implement challenge status click handler
-        console.log('Challenge status clicked for player:', player.name);
-    };
-
-
 
     if (viewModel.loading) {
         return (
@@ -142,7 +135,6 @@ export default function PlaygroundPage() {
                             <PlaygroundPlayersList
                                 players={viewModel.data.players}
                                 onChallengeClick={viewModel.challenge.modal.handleChallengeClick}
-                                onChallengeStatusClick={handleChallengeStatusClick}
                             />
 
                             {/* Active Games Section */}

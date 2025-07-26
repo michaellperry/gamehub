@@ -6,13 +6,11 @@ import { PlayerCard } from '../molecules';
 export interface PlaygroundPlayersListProps {
     players: PlaygroundPlayer[];
     onChallengeClick: (player: PlaygroundPlayer) => void;
-    onChallengeStatusClick: (player: PlaygroundPlayer) => void;
 }
 
 export const PlaygroundPlayersList: React.FC<PlaygroundPlayersListProps> = ({
     players,
     onChallengeClick,
-    onChallengeStatusClick,
 }) => {
     return (
         <Card variant="game" size="lg">
@@ -37,7 +35,6 @@ export const PlaygroundPlayersList: React.FC<PlaygroundPlayersListProps> = ({
                                 player={player}
                                 isCurrentPlayer={player.isCurrentPlayer}
                                 onChallengeClick={onChallengeClick}
-                                onChallengeStatusClick={() => onChallengeStatusClick(player)}
                             />
                         ))}
                     </div>
