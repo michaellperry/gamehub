@@ -1,29 +1,13 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Alert, Button, Card, Container, Icon, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
 import { ChallengeModal } from '../components/molecules';
 import { IncomingChallengesCard, PlaygroundPlayersList } from '../components/organisms';
-import { useChallenge } from '../hooks/useChallenge';
-import { PlaygroundGame, PlaygroundPlayer, usePlaygroundPage } from '../hooks/usePlaygroundPage';
+import { PlaygroundGame, PlaygroundPlayer } from '../hooks/usePlaygroundPage';
+import { usePlaygroundPageComposed } from '../hooks/usePlaygroundPageComposed';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
-    const viewModel = usePlaygroundPage(code);
-    const navigate = useNavigate();
-    const [isLeaving, setIsLeaving] = useState(false);
-    const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
-
-    // Challenge modal state
-    const [showChallengeModal, setShowChallengeModal] = useState(false);
-    const [selectedOpponent, setSelectedOpponent] = useState<PlaygroundPlayer | null>(null);
-    const [challengeLoading, setChallengeLoading] = useState(false);
-
-
-
-
-
-    // Use the challenge creation hook
-    const challengeViewModel = useChallenge(viewModel.currentPlayerJoin);
+    const viewModel = usePlaygroundPageComposed(code);
 
     if (!code) {
         return (
@@ -49,7 +33,7 @@ export default function PlaygroundPage() {
                         </Alert>
                         <Button
                             variant="primary"
-                            onClick={() => navigate('/')}
+                            onClick={viewModel.navigate.goHome}
                         >
                             Back to Home
                         </Button>
@@ -58,57 +42,6 @@ export default function PlaygroundPage() {
             </PageLayout>
         );
     }
-
-    const handleLeavePlayground = async () => {
-        if (!viewModel.handleLeavePlayground) return;
-
-        setIsLeaving(true);
-        try {
-            await viewModel.handleLeavePlayground();
-            setShowLeaveConfirmation(false);
-            // Navigate to home page after successful leave
-            navigate('/', {
-                state: {
-                    message: 'Successfully left playground',
-                    type: 'success'
-                }
-            });
-        } catch (error) {
-            console.error('Error leaving playground:', error);
-            // Show error message
-            alert('Failed to leave playground. Please try again.');
-        } finally {
-            setIsLeaving(false);
-        }
-    };
-
-    // Challenge modal handlers
-    const handleChallengeClick = (player: PlaygroundPlayer) => {
-        setSelectedOpponent(player);
-        setShowChallengeModal(true);
-    };
-
-    const handleChallengeClose = () => {
-        setShowChallengeModal(false);
-        setSelectedOpponent(null);
-    };
-
-    const handleChallengeSubmit = async (opponent: PlaygroundPlayer, challengerStarts: boolean) => {
-        setChallengeLoading(true);
-        try {
-            // Use the challenge hook to create the challenge
-            await challengeViewModel.createChallenge(opponent.join, challengerStarts);
-
-            // Close the modal on success
-            setShowChallengeModal(false);
-            setSelectedOpponent(null);
-        } catch (error) {
-            console.error('Error creating challenge:', error);
-            // Error is already handled by the hook
-        } finally {
-            setChallengeLoading(false);
-        }
-    };
 
     // Get current player for challenge modal
     const currentPlayer = viewModel.data?.players.find(player => player.isCurrentPlayer);
@@ -145,7 +78,7 @@ export default function PlaygroundPage() {
                         </Alert>
                         <Button
                             variant="primary"
-                            onClick={() => navigate('/')}
+                            onClick={viewModel.navigate.goHome}
                         >
                             Back to Home
                         </Button>
@@ -172,10 +105,7 @@ export default function PlaygroundPage() {
                                 <Button
                                     variant="secondary"
                                     size="sm"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(code);
-                                        // TODO: Show success message
-                                    }}
+                                    onClick={viewModel.ui.copyCode}
                                 >
                                     Copy
                                 </Button>
@@ -185,14 +115,14 @@ export default function PlaygroundPage() {
                         <div className="flex justify-center space-x-4">
                             <Button
                                 variant="primary"
-                                onClick={() => navigate('/')}
+                                onClick={viewModel.navigate.goHome}
                             >
                                 Back to Home
                             </Button>
                             <Button
                                 variant="danger"
-                                onClick={() => setShowLeaveConfirmation(true)}
-                                loading={isLeaving}
+                                onClick={viewModel.leave.handleLeaveClick}
+                                loading={viewModel.leave.isLeaving}
                             >
                                 Leave Playground
                             </Button>
@@ -211,7 +141,7 @@ export default function PlaygroundPage() {
                             {/* Players Section */}
                             <PlaygroundPlayersList
                                 players={viewModel.data.players}
-                                onChallengeClick={handleChallengeClick}
+                                onChallengeClick={viewModel.challenge.modal.handleChallengeClick}
                                 onChallengeStatusClick={handleChallengeStatusClick}
                             />
 
@@ -257,15 +187,11 @@ export default function PlaygroundPage() {
                             )}
 
                             {/* Challenge Modal */}
-                            {currentPlayer && selectedOpponent && (
+                            {currentPlayer && viewModel.challenge.modal.selectedOpponent && (
                                 <ChallengeModal
-                                    isOpen={showChallengeModal}
-                                    onClose={handleChallengeClose}
-                                    onChallenge={handleChallengeSubmit}
-                                    selectedOpponent={selectedOpponent}
+                                    viewModel={viewModel.challenge.modal}
                                     challengerName={currentPlayer.name}
                                     playgroundCode={code}
-                                    loading={challengeLoading}
                                 />
                             )}
 
@@ -276,7 +202,7 @@ export default function PlaygroundPage() {
             </Container>
 
             {/* Leave Confirmation Modal */}
-            {showLeaveConfirmation && (
+            {viewModel.leave.showLeaveConfirmation && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <Typography variant="h3" className="mb-4">
@@ -288,16 +214,16 @@ export default function PlaygroundPage() {
                         <div className="flex space-x-3">
                             <Button
                                 variant="danger"
-                                onClick={handleLeavePlayground}
-                                loading={isLeaving}
+                                onClick={viewModel.leave.handleLeaveConfirm}
+                                loading={viewModel.leave.isLeaving}
                                 fullWidth
                             >
                                 Leave Playground
                             </Button>
                             <Button
                                 variant="secondary"
-                                onClick={() => setShowLeaveConfirmation(false)}
-                                disabled={isLeaving}
+                                onClick={viewModel.leave.handleLeaveCancel}
+                                disabled={viewModel.leave.isLeaving}
                                 fullWidth
                             >
                                 Cancel
