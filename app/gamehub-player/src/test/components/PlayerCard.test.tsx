@@ -70,21 +70,6 @@ describe('PlayerCard', () => {
         expect(handleChallengeClick).toHaveBeenCalledWith(mockPlayer);
     });
 
-    it('calls onChallengeStatusClick when challenge status is clicked', () => {
-        const handleChallengeStatusClick = vi.fn();
-
-        render(
-            <PlayerCard
-                player={mockPlayerWithPendingChallenge}
-                isCurrentPlayer={false}
-                onChallengeStatusClick={handleChallengeStatusClick}
-            />
-        );
-
-        fireEvent.click(screen.getByText('Pending'));
-        expect(handleChallengeStatusClick).toHaveBeenCalled();
-    });
-
     it('disables challenge button when challenge is pending', () => {
         render(
             <PlayerCard

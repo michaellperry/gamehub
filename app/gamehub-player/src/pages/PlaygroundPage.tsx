@@ -164,13 +164,7 @@ export default function PlaygroundPage() {
                                                             </Typography>
                                                         </div>
                                                     </div>
-                                                    <Button
-                                                        variant="primary"
-                                                        size="sm"
-                                                        onClick={() => viewModel.handleJoinGame(game)}
-                                                    >
-                                                        Join
-                                                    </Button>
+
                                                 </div>
                                             ))}
                                         </div>

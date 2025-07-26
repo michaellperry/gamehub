@@ -33,8 +33,6 @@ export interface PlaygroundPageViewModel {
     isValidCode: boolean;
     currentPlayerJoin: Join | null;
     clearError: () => void;
-    handleChallengePlayer: (player: PlaygroundPlayer) => void;
-    handleJoinGame: (game: PlaygroundGame) => void;
     handleLeavePlayground: () => Promise<void>;
 }
 
@@ -44,7 +42,6 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
         .selectMany(join => join.player.predecessor()
             .select(player => ({
                 playerId: j.hash(player),
-                sessionId: j.hash(join),
                 joinedAt: join.joinedAt,
                 names: PlayerName.current(player).select(name => name.name),
                 join: join,
@@ -98,15 +95,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         clearPlayerError();
     };
 
-    const handleChallengePlayer = (player: PlaygroundPlayer) => {
-        // TODO: Implement challenge logic
-        console.log('Challenge player:', player);
-    };
 
-    const handleJoinGame = (game: PlaygroundGame) => {
-        // TODO: Implement join game logic
-        console.log('Join game:', game);
-    };
 
     const handleLeavePlayground = async (): Promise<void> => {
         if (!playground || !player) {
@@ -144,8 +133,6 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         isValidCode,
         currentPlayerJoin,
         clearError,
-        handleChallengePlayer,
-        handleJoinGame,
         handleLeavePlayground,
     };
 } 

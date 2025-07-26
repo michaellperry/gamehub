@@ -1,4 +1,3 @@
-import { Join } from '@model/model';
 import { useState } from 'react';
 import { ChallengeViewModel } from './useChallenge';
 import { PlaygroundPlayer } from './usePlaygroundPage';
