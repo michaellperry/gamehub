@@ -1,4 +1,4 @@
-import { Challenge, Game, Join, Player, PlayerName, Playground, Reject, Tenant, model } from '@model/model';
+import { Challenge, Game, Join, Move, Player, PlayerName, Playground, Reject, Tenant, model } from '@model/model';
 import { User } from 'jinaga';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playerSessionConfig } from '../config/background-service';
@@ -157,7 +157,10 @@ async function acceptSimulatedChallenge(
         console.log(`Challenge detected to simulated player ${player.user.publicKey}`);
 
         // Accept the challenge by creating a Game fact
-        await j.fact(new Game(challenge));
+        const game = await j.fact(new Game(challenge));
+
+        // Play the game
+        playGame(game, playerJoin);
 
         console.log(`Automatically accepted challenge to simulated player ${player.user.publicKey}`);
     } catch (err) {
@@ -204,7 +207,7 @@ async function createSimulatedChallenge(
         const challengerStarts = Math.random() < 0.5;
 
         // Create the challenge
-        await j.fact(new Challenge(
+        const challenge = await j.fact(new Challenge(
             challengerJoin,
             opponentJoin,
             challengerStarts,
@@ -212,8 +215,59 @@ async function createSimulatedChallenge(
         ));
 
         console.log(`Created simulated challenge from player ${j.hash(challengerJoin)} to player ${j.hash(opponentJoin)} in playground ${playground.code}`);
+
+        // Watch for a Game response to this challenge
+        watchForGameResponse(challenge, challengerJoin);
+
     } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to create simulated challenge';
         console.error('Error creating simulated challenge:', errorMessage);
     }
+}
+
+/**
+ * Watch for a Game response to a challenge and start playing the game
+ */
+function watchForGameResponse(challenge: Challenge, challengerJoin: Join): () => void {
+    // Create specification for games that respond to this challenge
+    const gameSpec = model.given(Challenge).match((challenge) =>
+        challenge.successors(Game, (game) => game.challenge)
+    );
+
+    // Create observer to watch for new games responding to this challenge
+    const observer = j.watch(gameSpec, challenge, (game) => {
+        console.log(`Game response detected for challenge ${j.hash(challenge)}`);
+
+        // Start playing the game (fire and forget)
+        playGame(game, challengerJoin);
+    });
+
+    // Return cleanup function
+    return () => observer.stop();
+}
+
+/**
+ * Play a game by watching for moves and making simulated moves
+ */
+function playGame(game: Game, playerJoin: Join): () => void {
+    console.log(`Starting to play game ${j.hash(game)} for player ${j.hash(playerJoin)}`);
+
+    // Create specification for moves in this game
+    const moveSpec = model.given(Game).match((game) =>
+        Move.in(game)
+    );
+
+    // Create observer to watch for new moves in this game
+    const observer = j.watch(moveSpec, game, (move) => {
+        console.log(`Move detected in game ${j.hash(game)}: index ${move.index}, position ${move.position}`);
+
+        // TODO: Add logic to make simulated moves in response
+        // This could include:
+        // - Checking if it's this player's turn
+        // - Making a move after a random delay
+        // - Checking game state to determine valid moves
+    });
+
+    // Return cleanup function
+    return () => observer.stop();
 } 
