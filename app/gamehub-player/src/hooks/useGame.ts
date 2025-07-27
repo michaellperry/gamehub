@@ -4,6 +4,7 @@ import { useSpecification } from 'jinaga-react';
 import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
 
 export type PlayerRole = 'X' | 'O' | 'observer';
+export type GameResult = 'won' | 'lost' | 'drawn' | 'ongoing';
 
 export interface GameViewModel {
     game: Game | null;
@@ -13,6 +14,7 @@ export interface GameViewModel {
     challengerStarts: boolean | null;
     currentPlayerRole: PlayerRole;
     isCurrentPlayerTurn: boolean;
+    gameResult: GameResult;
     createdAt: Date | null;
     moves: Move[];
     ticTacToeState: TicTacToeState;
@@ -66,6 +68,7 @@ function createDefaultGameState(error: string | null = null): GameViewModel {
         challengerStarts: null,
         currentPlayerRole: 'observer',
         isCurrentPlayerTurn: false,
+        gameResult: 'ongoing',
         createdAt: null,
         moves: [],
         ticTacToeState: defaultTicTacToeState,
@@ -73,6 +76,32 @@ function createDefaultGameState(error: string | null = null): GameViewModel {
         error,
         makeMove: async () => ({ success: false, error: error || 'Game not available' }),
     };
+}
+
+// Helper function to compute game result from current player's perspective
+function computeGameResult(
+    currentPlayerRole: PlayerRole,
+    ticTacToeState: TicTacToeState
+): GameResult {
+    if (!ticTacToeState.isGameOver) {
+        return 'ongoing';
+    }
+
+    if (ticTacToeState.winner === 'draw') {
+        return 'drawn';
+    }
+
+    if (currentPlayerRole === 'observer') {
+        return 'ongoing'; // Observers don't have a result
+    }
+
+    // Check if current player won
+    if (ticTacToeState.winner === currentPlayerRole) {
+        return 'won';
+    }
+
+    // Current player lost
+    return 'lost';
 }
 
 // Helper function to compute player role
@@ -234,6 +263,7 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
         challengerStarts: gameProjection.challengerStarts,
         currentPlayerRole,
         isCurrentPlayerTurn,
+        gameResult: computeGameResult(currentPlayerRole, ticTacToeState),
         createdAt: typeof gameProjection.game.challenge.createdAt === 'string'
             ? new Date(gameProjection.game.challenge.createdAt)
             : gameProjection.game.challenge.createdAt,
