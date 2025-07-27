@@ -22,6 +22,7 @@ export interface PlaygroundGame {
     id: string;
     playerX: string;
     playerO: string;
+    isActivePlayer: boolean;
 }
 
 export interface PlaygroundNavigationViewModel {
@@ -147,8 +148,8 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         isChallengePending: session.pendingChallengePlayerIds.some(id => id === playerId)
     })) : undefined;
 
-    // Create active games hook (placeholder for now)
-    const activeGames = useActiveGames(currentPlayerJoin);
+    // Create active games hook
+    const activeGames = useActiveGames(playground, playerId);
 
     // Navigation functions
     const goHome = () => navigate('/');

@@ -1,5 +1,5 @@
 import { ActiveGamesViewModel } from '../../hooks/useActiveGames';
-import { Card, CenteredContent, Icon, Typography } from '../atoms';
+import { Badge, Card, CenteredContent, Icon, Typography } from '../atoms';
 
 export interface ActiveGamesProps {
     viewModel: ActiveGamesViewModel;
@@ -33,6 +33,11 @@ export function ActiveGames({ viewModel }: ActiveGamesProps) {
                                     </Typography>
                                 </div>
                             </div>
+                            {game.isActivePlayer && (
+                                <Badge variant="primary" size="sm" icon="user">
+                                    You
+                                </Badge>
+                            )}
                         </div>
                     ))}
                 </div>
