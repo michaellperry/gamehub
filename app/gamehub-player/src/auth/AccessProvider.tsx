@@ -21,7 +21,7 @@ const isPrivateBrowsingMode = (): boolean => {
     }
 };
 
-export function AccessProvider({ children }: PropsWithChildren<Record<string, never>>) {
+export function AccessProvider({ children }: PropsWithChildren) {
     // Check for private browsing mode
     useEffect(() => {
         if (isPrivateBrowsingMode()) {
