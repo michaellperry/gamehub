@@ -29,10 +29,7 @@ export function ActiveGames({ viewModel }: ActiveGamesProps) {
                                 <Icon name="play" size="sm" className="text-gray-500" />
                                 <div>
                                     <Typography variant="body" className="font-medium">
-                                        {game.playerX.name} vs {game.playerO.name}
-                                    </Typography>
-                                    <Typography variant="body-sm" className="text-gray-500">
-                                        Status: {game.status}
+                                        {game.playerX} vs {game.playerO}
                                     </Typography>
                                 </div>
                             </div>

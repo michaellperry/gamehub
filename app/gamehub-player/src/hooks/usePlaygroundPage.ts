@@ -20,9 +20,8 @@ export interface PlaygroundPlayer {
 
 export interface PlaygroundGame {
     id: string;
-    playerX: PlaygroundPlayer;
-    playerO: PlaygroundPlayer;
-    status: 'waiting' | 'active' | 'finished';
+    playerX: string;
+    playerO: string;
 }
 
 export interface PlaygroundNavigationViewModel {
@@ -35,7 +34,6 @@ export interface PlaygroundUIViewModel {
 
 export interface PlaygroundPageData {
     players: PlaygroundPlayer[];
-    games: PlaygroundGame[];
     // Navigation
     navigate: PlaygroundNavigationViewModel;
     // Challenge functionality
@@ -150,7 +148,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     })) : undefined;
 
     // Create active games hook (placeholder for now)
-    const activeGames = useActiveGames([]);
+    const activeGames = useActiveGames(currentPlayerJoin);
 
     // Navigation functions
     const goHome = () => navigate('/');
@@ -172,9 +170,8 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     };
 
     // Create the complete data structure
-    const composedData = players ? {
+    const composedData = players && activeGames ? {
         players,
-        games: [], // Placeholder for now
         navigate: navigationViewModel,
         challenge: {
             modal: challengeModal,
