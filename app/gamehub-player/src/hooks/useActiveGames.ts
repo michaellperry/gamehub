@@ -1,7 +1,7 @@
-import { Game, Join, model, PlayerName, Playground } from '@model/model';
-import { PlaygroundGame } from './usePlaygroundPage';
-import { useSpecification } from 'jinaga-react';
 import { j } from '@/jinaga-config';
+import { Game, model, PlayerName, Playground } from '@model/model';
+import { useSpecification } from 'jinaga-react';
+import { PlaygroundGame } from './usePlaygroundPage';
 
 export interface ActiveGamesViewModel {
     games: PlaygroundGame[];
