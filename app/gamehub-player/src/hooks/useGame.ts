@@ -1,5 +1,5 @@
 import { j } from '@/jinaga-config';
-import { Game, model, PlayerName, Playground } from '@model/model';
+import { Game, Move, model, PlayerName, Playground } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 
 export interface GameViewModel {
@@ -9,6 +9,7 @@ export interface GameViewModel {
     opponentName: string | null;
     challengerStarts: boolean | null;
     createdAt: Date | null;
+    moves: Move[];
     isLoading: boolean;
     error: string | null;
 }
@@ -27,6 +28,15 @@ const gameSpec = model.given(Playground).match((playground) => Game.in(playgroun
         ))
 );
 
+const movesSpec = model.given(Game).match((game) => Move.in(game)
+    .select(move => ({
+        moveId: j.hash(move),
+        index: move.index,
+        position: move.position,
+        move,
+    }))
+);
+
 /**
  * Hook for retrieving a specific game by ID within a playground
  * @param playground - The playground fact
@@ -34,10 +44,13 @@ const gameSpec = model.given(Playground).match((playground) => Game.in(playgroun
  * @returns GameViewModel with game details and loading state
  */
 export function useGame(playground: Playground | null, gameId: string | null): GameViewModel {
-    const { data: gameProjections, loading, error } = useSpecification(j, gameSpec, playground);
+    const { data: gameProjections, loading: gameLoading, error: gameError } = useSpecification(j, gameSpec, playground);
 
     // Find the specific game by ID
     const gameProjection = gameProjections?.find(projection => projection.gameId === gameId);
+
+    // Get moves for the specific game if found
+    const { data: movesProjections, loading: movesLoading, error: movesError } = useSpecification(j, movesSpec, gameProjection?.game || null);
 
     if (!playground || !gameId) {
         return {
@@ -47,12 +60,16 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             opponentName: null,
             challengerStarts: null,
             createdAt: null,
+            moves: [],
             isLoading: false,
             error: null,
         };
     }
 
-    if (loading) {
+    const isLoading = gameLoading || movesLoading;
+    const error = gameError || movesError;
+
+    if (isLoading) {
         return {
             game: null,
             gameId: null,
@@ -60,6 +77,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             opponentName: null,
             challengerStarts: null,
             createdAt: null,
+            moves: [],
             isLoading: true,
             error: null,
         };
@@ -73,6 +91,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             opponentName: null,
             challengerStarts: null,
             createdAt: null,
+            moves: [],
             isLoading: false,
             error: error.message,
         };
@@ -86,10 +105,14 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             opponentName: null,
             challengerStarts: null,
             createdAt: null,
+            moves: [],
             isLoading: false,
             error: `Game with ID ${gameId} not found in playground ${playground.code}`,
         };
     }
+
+    // Extract moves from the moves projections
+    const moves = movesProjections?.map(projection => projection.move) || [];
 
     return {
         game: gameProjection.game,
@@ -98,6 +121,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
         opponentName: gameProjection.opponentNames[0] || null,
         challengerStarts: gameProjection.game.challenge.challengerStarts,
         createdAt: typeof gameProjection.game.challenge.createdAt === 'string' ? new Date(gameProjection.game.challenge.createdAt) : gameProjection.game.challenge.createdAt,
+        moves,
         isLoading: false,
         error: null,
     };

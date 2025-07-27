@@ -171,6 +171,21 @@ export class Game {
     }
 }
 
+export class Move {
+    static Type = 'GameHub.Move' as const;
+    public type = Move.Type;
+
+    constructor(
+        public game: Game,
+        public index: number,
+        public position: number
+    ) { }
+
+    static in(game: LabelOf<Game>) {
+        return game.successors(Move, (move) => move.game);
+    }
+}
+
 export class Reject {
     static Type = 'GameHub.Reject' as const;
     public type = Reject.Type;
@@ -208,4 +223,5 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(Leave, (m) => m.predecessor('join', Join))
         .type(Challenge, (m) => m.predecessor('challengerJoin', Join).predecessor('opponentJoin', Join))
         .type(Game, (m) => m.predecessor('challenge', Challenge))
+        .type(Move, (m) => m.predecessor('game', Game))
         .type(Reject, (m) => m.predecessor('challenge', Challenge));

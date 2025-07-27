@@ -23,4 +23,7 @@ digraph {
 
     Game -> Challenge
     Reject -> Challenge
+
+    Move -> Game
+    Move [label="Move\n(index: number,\nposition: number)"]
 }
