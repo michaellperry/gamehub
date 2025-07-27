@@ -1,10 +1,11 @@
 import { Challenge, Join, Leave, Player, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
+import { useNavigate } from 'react-router-dom';
 import { j } from '../jinaga-config';
-import { ActiveGamesViewModel } from './useActiveGames';
-import { ChallengeViewModel } from './useChallenge';
-import { ChallengeModalViewModel } from './useChallengeModal';
-import { LeavePlaygroundViewModel } from './useLeavePlayground';
+import { ActiveGamesViewModel, useActiveGames } from './useActiveGames';
+import { ChallengeViewModel, useChallenge } from './useChallenge';
+import { ChallengeModalViewModel, useChallengeModal } from './useChallengeModal';
+import { LeavePlaygroundViewModel, useLeavePlayground } from './useLeavePlayground';
 import { usePlayer } from './usePlayer';
 import { usePlayground } from './usePlayground';
 
@@ -82,6 +83,7 @@ const playerJoinsSpec = model.given(Player, Playground).match((player, playgroun
 );
 
 export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewModel {
+    const navigate = useNavigate();
     const { playerId, player, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
     const { playground, isValidCode, error: playgroundError, loading: playgroundLoading, clearError: clearPlaygroundError } = usePlayground(code);
 
@@ -106,12 +108,14 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     const currentPlayerJoin: Join | null = sessionsByPlayerId && playerId ?
         (sessionsByPlayerId[playerId]?.join || null) : null;
 
+    // Create challenge and modal hooks
+    const challengeViewModel = useChallenge(currentPlayerJoin);
+    const challengeModal = useChallengeModal(challengeViewModel);
+
     const clearError = () => {
         clearPlaygroundError();
         clearPlayerError();
     };
-
-
 
     const handleLeavePlayground = async (): Promise<void> => {
         if (!playground || !player) {
@@ -132,6 +136,55 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         }
     };
 
+    // Create leave playground hook
+    const leavePlayground = useLeavePlayground(handleLeavePlayground);
+
+    // Transform player sessions into PlaygroundPlayer objects
+    const players: PlaygroundPlayer[] | undefined = sessionsByPlayerId ? Object.values(sessionsByPlayerId).map(session => ({
+        playerId: session.playerId,
+        name: session.names[0],
+        joinedAt: new Date(session.joinedAt),
+        isCurrentPlayer: session.playerId === playerId,
+        join: session.join,
+        isChallengePending: session.pendingChallengePlayerIds.some(id => id === playerId)
+    })) : undefined;
+
+    // Create active games hook (placeholder for now)
+    const activeGames = useActiveGames([]);
+
+    // Navigation functions
+    const goHome = () => navigate('/');
+
+    const copyCode = () => {
+        if (code) {
+            navigator.clipboard.writeText(code);
+            // TODO: Show success message
+        }
+    };
+
+    // Create view model instances
+    const navigationViewModel: PlaygroundNavigationViewModel = {
+        goHome,
+    };
+
+    const uiViewModel: PlaygroundUIViewModel = {
+        copyCode,
+    };
+
+    // Create the complete data structure
+    const composedData = players ? {
+        players,
+        games: [], // Placeholder for now
+        navigate: navigationViewModel,
+        challenge: {
+            modal: challengeModal,
+            challengeViewModel,
+        },
+        leave: leavePlayground,
+        activeGames,
+        ui: uiViewModel,
+    } : null;
+
     // Loading state combines player loading, playground loading, and specification loading
     const isLoading = playerLoading || playgroundLoading || playersLoading;
 
@@ -140,7 +193,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
 
     return {
         playground,
-        data: null, // Data will be composed by the composed hook
+        data: composedData,
         error: combinedError,
         loading: isLoading,
         isValidCode,

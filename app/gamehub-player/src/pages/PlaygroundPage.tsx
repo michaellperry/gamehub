@@ -2,11 +2,11 @@ import { useParams } from 'react-router-dom';
 import { Alert, Button, CenteredContent, Container, LoadingIndicator, PageLayout, Typography } from '../components/atoms';
 import { ChallengeModal } from '../components/molecules';
 import { ActiveGames, IncomingChallengesCard, PlaygroundPlayersList } from '../components/organisms';
-import { usePlaygroundPageComposed } from '../hooks/usePlaygroundPageComposed';
+import { usePlaygroundPage } from '../hooks/usePlaygroundPage';
 
 export default function PlaygroundPage() {
     const { code } = useParams<{ code: string }>();
-    const viewModel = usePlaygroundPageComposed(code);
+    const viewModel = usePlaygroundPage(code);
 
     if (!code) {
         return (
