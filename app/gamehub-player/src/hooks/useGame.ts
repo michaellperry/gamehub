@@ -18,6 +18,7 @@ export interface GameViewModel {
     ticTacToeState: TicTacToeState;
     isLoading: boolean;
     error: string | null;
+    makeMove: (position: number) => Promise<{ success: boolean; error?: string }>;
 }
 
 const gameSpec = model.given(Playground).match((playground) => Game.in(playground)
@@ -44,6 +45,117 @@ const movesSpec = model.given(Game).match((game) => Move.in(game)
     }))
 );
 
+// Helper function to create default game state
+function createDefaultGameState(error: string | null = null): GameViewModel {
+    const defaultTicTacToeState: TicTacToeState = {
+        board: Array(9).fill(null),
+        currentPlayer: 'X',
+        currentPlayerId: null,
+        challengerPlayerId: null,
+        opponentPlayerId: null,
+        winner: null,
+        winnerPlayerId: null,
+        isGameOver: false,
+    };
+
+    return {
+        game: null,
+        gameId: null,
+        challengerName: null,
+        opponentName: null,
+        challengerStarts: null,
+        currentPlayerRole: 'observer',
+        isCurrentPlayerTurn: false,
+        createdAt: null,
+        moves: [],
+        ticTacToeState: defaultTicTacToeState,
+        isLoading: false,
+        error,
+        makeMove: async () => ({ success: false, error: error || 'Game not available' }),
+    };
+}
+
+// Helper function to compute player role
+function computePlayerRole(currentPlayerId: string | null, challengerPlayerId: string, opponentPlayerId: string): PlayerRole {
+    if (!currentPlayerId) return 'observer';
+
+    if (currentPlayerId === challengerPlayerId) return 'X';
+    if (currentPlayerId === opponentPlayerId) return 'O';
+    return 'observer';
+}
+
+// Helper function to compute if it's the current player's turn
+function computeIsCurrentPlayerTurn(
+    currentPlayerId: string | null,
+    challengerPlayerId: string,
+    opponentPlayerId: string,
+    movesLength: number
+): boolean {
+    if (!currentPlayerId) return false;
+
+    const isChallengerTurn = movesLength % 2 === 0; // Even moves = challenger (X), odd moves = opponent (O)
+    const isCurrentPlayerChallenger = currentPlayerId === challengerPlayerId;
+    const isCurrentPlayerOpponent = currentPlayerId === opponentPlayerId;
+
+    return (isChallengerTurn && isCurrentPlayerChallenger) || (!isChallengerTurn && isCurrentPlayerOpponent);
+}
+
+// Helper function to create move validation and execution
+function createMakeMoveFunction(
+    currentPlayerId: string | null,
+    gameProjection: any,
+    moves: Move[],
+    ticTacToeState: TicTacToeState
+) {
+    return async (position: number) => {
+        if (!currentPlayerId) {
+            return { success: false, error: 'You are not logged in' };
+        }
+
+        if (!gameProjection?.game) {
+            return { success: false, error: 'Game not found' };
+        }
+
+        // Validate position
+        if (position < 0 || position > 8) {
+            return { success: false, error: 'Invalid position. Must be between 0 and 8' };
+        }
+
+        // Check if it's the current player's turn
+        const isChallengerTurn = moves.length % 2 === 0;
+        const isCurrentPlayerChallenger = currentPlayerId === gameProjection.challengerPlayerId;
+        const isCurrentPlayerOpponent = currentPlayerId === gameProjection.opponentPlayerId;
+        const isCurrentPlayerTurn = (isChallengerTurn && isCurrentPlayerChallenger) || (!isChallengerTurn && isCurrentPlayerOpponent);
+
+        if (!isCurrentPlayerTurn) {
+            return { success: false, error: 'It is not your turn' };
+        }
+
+        // Check if game is over
+        if (ticTacToeState.isGameOver) {
+            return { success: false, error: 'Game is already over' };
+        }
+
+        // Check if position is empty
+        if (ticTacToeState.board[position] !== null) {
+            return { success: false, error: 'Position already occupied' };
+        }
+
+        try {
+            // Create the Move fact
+            await j.fact(new Move(
+                gameProjection.game,
+                moves.length, // index
+                position
+            ));
+            return { success: true };
+        } catch (e) {
+            console.error('Error making move:', e);
+            return { success: false, error: 'Failed to make move' };
+        }
+    };
+}
+
 /**
  * Hook for retrieving a specific game by ID within a playground
  * @param playground - The playground fact
@@ -60,86 +172,28 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
     // Get moves for the specific game if found
     const { data: movesProjections, loading: movesLoading, error: movesError } = useSpecification(j, movesSpec, gameProjection?.game || null);
 
-    const defaultTicTacToeState: TicTacToeState = {
-        board: Array(9).fill(null),
-        currentPlayer: 'X',
-        currentPlayerId: null,
-        challengerPlayerId: null,
-        opponentPlayerId: null,
-        winner: null,
-        winnerPlayerId: null,
-        isGameOver: false,
-    };
-
+    // Early returns for error states
     if (!playground || !gameId) {
-        return {
-            game: null,
-            gameId: null,
-            challengerName: null,
-            opponentName: null,
-            challengerStarts: null,
-            currentPlayerRole: 'observer',
-            isCurrentPlayerTurn: false,
-            createdAt: null,
-            moves: [],
-            ticTacToeState: defaultTicTacToeState,
-            isLoading: false,
-            error: null,
-        };
+        return createDefaultGameState();
     }
 
     const isLoading = gameLoading || movesLoading;
     const error = gameError || movesError;
 
     if (isLoading) {
-        return {
-            game: null,
-            gameId: null,
-            challengerName: null,
-            opponentName: null,
-            challengerStarts: null,
-            currentPlayerRole: 'observer',
-            isCurrentPlayerTurn: false,
-            createdAt: null,
-            moves: [],
-            ticTacToeState: defaultTicTacToeState,
-            isLoading: true,
-            error: null,
-        };
+        const loadingState = createDefaultGameState();
+        loadingState.isLoading = true;
+        loadingState.makeMove = async () => ({ success: false, error: 'Loading game' });
+        return loadingState;
     }
 
     if (error) {
-        return {
-            game: null,
-            gameId: null,
-            challengerName: null,
-            opponentName: null,
-            challengerStarts: null,
-            currentPlayerRole: 'observer',
-            isCurrentPlayerTurn: false,
-            createdAt: null,
-            moves: [],
-            ticTacToeState: defaultTicTacToeState,
-            isLoading: false,
-            error: error.message,
-        };
+        return createDefaultGameState(error.message);
     }
 
     if (!gameProjection) {
-        return {
-            game: null,
-            gameId: null,
-            challengerName: null,
-            opponentName: null,
-            challengerStarts: null,
-            currentPlayerRole: 'observer',
-            isCurrentPlayerTurn: false,
-            createdAt: null,
-            moves: [],
-            ticTacToeState: defaultTicTacToeState,
-            isLoading: false,
-            error: `Game with ID ${gameId} not found in playground ${playground.code}`,
-        };
+        const errorMessage = `Game with ID ${gameId} not found in playground ${playground.code}`;
+        return createDefaultGameState(errorMessage);
     }
 
     // Extract moves from the moves projections
@@ -152,16 +206,25 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
         currentPlayerId
     );
 
-    const currentPlayerRole: PlayerRole = (() => {
-        if (!currentPlayerId) return 'observer';
+    const currentPlayerRole = computePlayerRole(
+        currentPlayerId,
+        gameProjection.challengerPlayerId,
+        gameProjection.opponentPlayerId
+    );
 
-        const isCurrentPlayerChallenger = currentPlayerId === gameProjection.challengerPlayerId;
-        const isCurrentPlayerOpponent = currentPlayerId === gameProjection.opponentPlayerId;
+    const isCurrentPlayerTurn = computeIsCurrentPlayerTurn(
+        currentPlayerId,
+        gameProjection.challengerPlayerId,
+        gameProjection.opponentPlayerId,
+        moves.length
+    );
 
-        if (isCurrentPlayerChallenger) return 'X';
-        if (isCurrentPlayerOpponent) return 'O';
-        return 'observer';
-    })();
+    const makeMove = createMakeMoveFunction(
+        currentPlayerId,
+        gameProjection,
+        moves,
+        ticTacToeState
+    );
 
     return {
         game: gameProjection.game,
@@ -170,19 +233,14 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
         opponentName: gameProjection.opponentNames[0] || null,
         challengerStarts: gameProjection.challengerStarts,
         currentPlayerRole,
-        isCurrentPlayerTurn: (() => {
-            if (!currentPlayerId) return false;
-
-            const isChallengerTurn = moves.length % 2 === 0; // Even moves = challenger (X), odd moves = opponent (O)
-            const isCurrentPlayerChallenger = currentPlayerId === gameProjection.challengerPlayerId;
-            const isCurrentPlayerOpponent = currentPlayerId === gameProjection.opponentPlayerId;
-
-            return (isChallengerTurn && isCurrentPlayerChallenger) || (!isChallengerTurn && isCurrentPlayerOpponent);
-        })(),
-        createdAt: typeof gameProjection.game.challenge.createdAt === 'string' ? new Date(gameProjection.game.challenge.createdAt) : gameProjection.game.challenge.createdAt,
+        isCurrentPlayerTurn,
+        createdAt: typeof gameProjection.game.challenge.createdAt === 'string'
+            ? new Date(gameProjection.game.challenge.createdAt)
+            : gameProjection.game.challenge.createdAt,
         moves,
         ticTacToeState,
         isLoading: false,
         error: null,
+        makeMove,
     };
 } 
