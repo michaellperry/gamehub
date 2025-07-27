@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { playerSessionConfig } from '../config/background-service';
 import { j } from '../jinaga-config';
 import { generateGamingName } from '../utils/gamingNames';
+import { computeTicTacToeState, TicTacToeState } from '../utils/ticTacToe';
 
 export interface PlayerSessionViewModel {
     isEnabled: boolean;
@@ -252,6 +253,15 @@ function watchForGameResponse(challenge: Challenge, challengerJoin: Join): () =>
 function playGame(game: Game, playerJoin: Join): () => void {
     console.log(`Starting to play game ${j.hash(game)} for player ${j.hash(playerJoin)}`);
 
+    // Get player IDs for determining turns
+    const challengerPlayerId = j.hash(game.challenge.challengerJoin.player);
+    const opponentPlayerId = j.hash(game.challenge.opponentJoin.player);
+    const simulatedPlayerId = j.hash(playerJoin.player);
+    const challengerStarts = game.challenge.challengerStarts;
+
+    // Store moves in an array as they come in
+    const moves: Move[] = [];
+
     // Create specification for moves in this game
     const moveSpec = model.given(Game).match((game) =>
         Move.in(game)
@@ -261,13 +271,71 @@ function playGame(game: Game, playerJoin: Join): () => void {
     const observer = j.watch(moveSpec, game, (move) => {
         console.log(`Move detected in game ${j.hash(game)}: index ${move.index}, position ${move.position}`);
 
-        // TODO: Add logic to make simulated moves in response
-        // This could include:
-        // - Checking if it's this player's turn
-        // - Making a move after a random delay
-        // - Checking game state to determine valid moves
+        // Add the new move to our array
+        moves.push(move);
+
+        // Compute current game state using our stored moves
+        const gameState = computeTicTacToeState(
+            moves,
+            challengerPlayerId,
+            opponentPlayerId,
+            simulatedPlayerId,
+            challengerStarts
+        );
+
+        // Check if it's the simulated player's turn
+        const isSimulatedPlayerTurn = gameState.currentPlayerId === simulatedPlayerId && !gameState.isGameOver;
+
+        if (isSimulatedPlayerTurn) {
+            console.log(`It's simulated player's turn in game ${j.hash(game)}`);
+
+            // Make a simulated move after a random delay
+            makeSimulatedMove(game, moves, gameState, 1000, 3000);
+        }
     });
 
     // Return cleanup function
     return () => observer.stop();
+}
+
+/**
+ * Make a simulated move in a game
+ */
+async function makeSimulatedMove(
+    game: Game,
+    currentMoves: Move[],
+    gameState: TicTacToeState,
+    minDelay: number,
+    maxDelay: number
+): Promise<void> {
+    try {
+        // Generate random delay
+        const delay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+        // Wait for the delay
+        await new Promise(resolve => setTimeout(resolve, delay));
+
+        // Find valid moves (empty positions)
+        const validPositions = gameState.board
+            .map((cell, index) => ({ cell, index }))
+            .filter(({ cell }) => cell === null)
+            .map(({ index }) => index);
+
+        if (validPositions.length === 0) {
+            console.log('No valid moves available');
+            return;
+        }
+
+        // Pick a random valid position
+        const randomIndex = Math.floor(Math.random() * validPositions.length);
+        const position = validPositions[randomIndex];
+
+        // Create the move
+        await j.fact(new Move(game, currentMoves.length, position));
+
+        console.log(`Simulated player made move at position ${position} in game ${j.hash(game)}`);
+    } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to make simulated move';
+        console.error('Error making simulated move:', errorMessage);
+    }
 } 
