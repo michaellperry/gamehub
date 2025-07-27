@@ -153,9 +153,7 @@ export class Game {
     }
 
     static in(playground: LabelOf<Playground>) {
-        return playground.successors(Join, (join) => join.playground)
-            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
-            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+        return playground.successors(Game, game => game.challenge.challengerJoin.playground);
     }
 
     // Helper for distribution rules - games where player is challenger

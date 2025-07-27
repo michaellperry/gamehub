@@ -30,7 +30,7 @@ afterAll(() => {
 
 // Test constants
 const TEST_CONSTANTS = {
-    PLAYGROUND_CODE: 'TEST-PLAYGROUND',
+    PLAYGROUND_CODE: 'ABCDEF',
     PLAYER_NAMES: {
         CHALLENGER: 'ChallengerPlayer',
         OPPONENT: 'OpponentPlayer',
@@ -191,18 +191,14 @@ const renderUseGame = async (
     setup: GameSetup,
     playerHash: string
 ) => {
-    // Simulate URL-encoded game ID like in the real application
-    // const encodedGameId = encodeURIComponent(setup.gameId);
-    // const decodedGameId = decodeURIComponent(encodedGameId);
-
     const { result } = renderHook(() => useGame(
         setup.playground,
-        setup.gameId, // Use decoded game ID like in the real application
+        setup.gameId,
         playerHash
     ));
 
     await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
+        expect(result.current.data).not.toBeNull();
     });
 
     return result;

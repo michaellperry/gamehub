@@ -204,19 +204,10 @@ export const TestScenarios = {
  */
     multipleUsersInTenant: async (users: User[]): Promise<{ jinaga: Jinaga; users: User[]; tenant: Tenant }> => {
         const { jinaga, users: userFacts, setupData: tenant } = await JinagaTestUtils.createComplexTestInstance<Tenant>(users, async (j, users) => {
-            const owner = users[0];
-            const tenant = await j.fact(new Tenant(owner));
-
-            // Add all users as administrators
-            for (const user of users) {
-                await j.fact(new Administrator(tenant, user, new Date()));
-            }
-
-            // Add all users as players
-            for (const user of users) {
-                const player = await j.fact(new Player(user, tenant));
-                await j.fact(new PlayerName(player, `Player ${user.publicKey.slice(0, 8)}`, []));
-            }
+            const tenant = await j.singleUse(async (owner) => {
+                const tenant = await j.fact(new Tenant(owner));
+                return tenant;
+            })
 
             return tenant;
         });
