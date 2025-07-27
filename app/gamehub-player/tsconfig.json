@@ -37,7 +37,8 @@
         }
     },
     "include": [
-        "src"
+        "src",
+        "../gamehub-model/**/*.ts"
     ],
     "references": [
         {
