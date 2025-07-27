@@ -1,6 +1,7 @@
 import { j } from '@/jinaga-config';
 import { Game, Move, model, PlayerName, Playground } from '@model/model';
 import { useSpecification } from 'jinaga-react';
+import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
 
 export interface GameViewModel {
     game: Game | null;
@@ -10,6 +11,7 @@ export interface GameViewModel {
     challengerStarts: boolean | null;
     createdAt: Date | null;
     moves: Move[];
+    ticTacToeState: TicTacToeState;
     isLoading: boolean;
     error: string | null;
 }
@@ -52,6 +54,13 @@ export function useGame(playground: Playground | null, gameId: string | null): G
     // Get moves for the specific game if found
     const { data: movesProjections, loading: movesLoading, error: movesError } = useSpecification(j, movesSpec, gameProjection?.game || null);
 
+    const defaultTicTacToeState: TicTacToeState = {
+        board: Array(9).fill(null),
+        currentPlayer: 'X',
+        winner: null,
+        isGameOver: false,
+    };
+
     if (!playground || !gameId) {
         return {
             game: null,
@@ -61,6 +70,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             challengerStarts: null,
             createdAt: null,
             moves: [],
+            ticTacToeState: defaultTicTacToeState,
             isLoading: false,
             error: null,
         };
@@ -78,6 +88,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             challengerStarts: null,
             createdAt: null,
             moves: [],
+            ticTacToeState: defaultTicTacToeState,
             isLoading: true,
             error: null,
         };
@@ -92,6 +103,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             challengerStarts: null,
             createdAt: null,
             moves: [],
+            ticTacToeState: defaultTicTacToeState,
             isLoading: false,
             error: error.message,
         };
@@ -106,6 +118,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
             challengerStarts: null,
             createdAt: null,
             moves: [],
+            ticTacToeState: defaultTicTacToeState,
             isLoading: false,
             error: `Game with ID ${gameId} not found in playground ${playground.code}`,
         };
@@ -113,6 +126,8 @@ export function useGame(playground: Playground | null, gameId: string | null): G
 
     // Extract moves from the moves projections
     const moves = movesProjections?.map(projection => projection.move) || [];
+
+    const ticTacToeState = computeTicTacToeState(moves);
 
     return {
         game: gameProjection.game,
@@ -122,6 +137,7 @@ export function useGame(playground: Playground | null, gameId: string | null): G
         challengerStarts: gameProjection.game.challenge.challengerStarts,
         createdAt: typeof gameProjection.game.challenge.createdAt === 'string' ? new Date(gameProjection.game.challenge.createdAt) : gameProjection.game.challenge.createdAt,
         moves,
+        ticTacToeState,
         isLoading: false,
         error: null,
     };
