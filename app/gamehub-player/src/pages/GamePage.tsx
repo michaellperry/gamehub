@@ -17,7 +17,7 @@ function TicTacToeBoard({
     onCellClick: (position: number) => void;
     isCurrentPlayerTurn: boolean;
     currentPlayerRole: 'X' | 'O' | 'observer';
-    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
+    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing' | 'completed';
 }) {
     const getCellContent = (cell: 'X' | 'O' | null) => {
         if (cell === 'X') {
@@ -81,7 +81,7 @@ function GameStatus({
 }: {
     currentPlayerRole: 'X' | 'O' | 'observer';
     isCurrentPlayerTurn: boolean;
-    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
+    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing' | 'completed';
 }) {
     const getStatusMessage = () => {
         if (gameResult === 'won') {
@@ -92,6 +92,9 @@ function GameStatus({
         }
         if (gameResult === 'drawn') {
             return { text: '🤝 It\'s a tie!', color: 'text-yellow-600' };
+        }
+        if (gameResult === 'completed') {
+            return { text: '👀 Game completed', color: 'text-gray-600' };
         }
         if (currentPlayerRole === 'observer') {
             return { text: '👀 Watching the game...', color: 'text-gray-600' };
@@ -130,7 +133,7 @@ function PlayerInfo({
     opponentName: string | null;
     challengerStarts: boolean | null;
     currentPlayerRole: 'X' | 'O' | 'observer';
-    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
+    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing' | 'completed';
 }) {
     const getPlayerStyle = (isCurrentPlayer: boolean, isWinner: boolean) => {
         const baseStyle = "p-4 rounded-lg border-2 transition-all duration-200";

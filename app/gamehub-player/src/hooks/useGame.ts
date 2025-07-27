@@ -15,7 +15,7 @@ type GameProjection = {
 };
 
 export type PlayerRole = 'X' | 'O' | 'observer';
-export type GameResult = 'won' | 'lost' | 'drawn' | 'ongoing';
+export type GameResult = 'won' | 'lost' | 'drawn' | 'ongoing' | 'completed';
 
 export interface GameData {
     game: Game;
@@ -88,7 +88,7 @@ function computeGameResult(
     }
 
     if (currentPlayerRole === 'observer') {
-        return 'ongoing'; // Observers don't have a result
+        return 'completed';
     }
 
     // Check if current player won
