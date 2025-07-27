@@ -19,7 +19,6 @@ export interface TicTacToeState {
  * @param moves - Array of moves sorted by index (chronological order)
  * @param challengerPlayerId - ID of the challenger, or null if unknown
  * @param opponentPlayerId - ID of the opponent, or null if unknown
- * @param currentPlayerId - ID of the current player viewing the game, or null if unknown
  * @param challengerStarts - Whether the challenger starts (plays X)
  * @returns TicTacToeState with board, current player, winner, and game status
  */
@@ -27,7 +26,6 @@ export function computeTicTacToeState(
     moves: Move[],
     challengerPlayerId: string | null,
     opponentPlayerId: string | null,
-    currentPlayerId: string | null,
     challengerStarts: boolean
 ): TicTacToeState {
     // Initialize empty board (9 positions: 0-8)
@@ -47,6 +45,7 @@ export function computeTicTacToeState(
 
     // Determine current player (next move)
     const nextPlayer = sortedMoves.length % 2 === 0 ? 'X' : 'O';
+    const nextPlayerId = sortedMoves.length % 2 === 0 ? challengerPlayerId : opponentPlayerId;
 
     // Check for winner
     const winner = checkWinner(board);
@@ -65,7 +64,7 @@ export function computeTicTacToeState(
     return {
         board,
         currentPlayer: isGameOver ? null : nextPlayer,
-        currentPlayerId,
+        currentPlayerId: nextPlayerId,
         challengerPlayerId,
         opponentPlayerId,
         winner,

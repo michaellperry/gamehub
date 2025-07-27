@@ -257,7 +257,6 @@ function playGame(game: Game, playerJoin: Join): () => void {
     const challengerPlayerId = j.hash(game.challenge.challengerJoin.player);
     const opponentPlayerId = j.hash(game.challenge.opponentJoin.player);
     const simulatedPlayerId = j.hash(playerJoin.player);
-    const challengerStarts = game.challenge.challengerStarts;
 
     // Store moves in an array as they come in
     const moves: Move[] = [];
@@ -279,8 +278,7 @@ function playGame(game: Game, playerJoin: Join): () => void {
             moves,
             challengerPlayerId,
             opponentPlayerId,
-            simulatedPlayerId,
-            challengerStarts
+            game.challenge.challengerStarts
         );
 
         // Check if it's the simulated player's turn

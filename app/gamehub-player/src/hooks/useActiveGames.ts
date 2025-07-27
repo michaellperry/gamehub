@@ -28,8 +28,8 @@ export function useActiveGames(playground: Playground | null, currentPlayerId: s
 
     const games = gameProjections?.map<PlaygroundGame>(projection => ({
         id: projection.gameId,
-        playerX: projection.game.challenge.challengerStarts ? projection.opponentNames[0] : projection.challengerNames[0],
-        playerO: projection.game.challenge.challengerStarts ? projection.challengerNames[0] : projection.opponentNames[0],
+        playerX: projection.game.challenge.challengerStarts ? projection.challengerNames[0] : projection.opponentNames[0],
+        playerO: projection.game.challenge.challengerStarts ? projection.opponentNames[0] : projection.challengerNames[0],
         isActivePlayer: currentPlayerId ?
             (currentPlayerId === projection.opponentPlayerId || currentPlayerId === projection.challengerPlayerId) :
             false,
