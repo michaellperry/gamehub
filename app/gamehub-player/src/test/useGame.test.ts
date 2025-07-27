@@ -221,11 +221,11 @@ describe('useGame', () => {
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
             // When challengerStarts=true, challenger plays X and goes first
-            expect(result.current.currentPlayerRole).toBe('X');
-            expect(result.current.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
-            expect(result.current.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
-            expect(result.current.challengerStarts).toBe(true);
-            expect(result.current.isCurrentPlayerTurn).toBe(true); // X goes first
+            expect(result.current.data?.currentPlayerRole).toBe('X');
+            expect(result.current.data?.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
+            expect(result.current.data?.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
+            expect(result.current.data?.challengerStarts).toBe(true);
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(true); // X goes first
         });
 
 
@@ -262,11 +262,11 @@ describe('useGame', () => {
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.opponentPlayer));
 
             // When challengerStarts=true, opponent plays O and doesn't go first
-            expect(result.current.currentPlayerRole).toBe('O');
-            expect(result.current.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
-            expect(result.current.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
-            expect(result.current.challengerStarts).toBe(true);
-            expect(result.current.isCurrentPlayerTurn).toBe(false); // O doesn't go first
+            expect(result.current.data?.currentPlayerRole).toBe('O');
+            expect(result.current.data?.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
+            expect(result.current.data?.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
+            expect(result.current.data?.challengerStarts).toBe(true);
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(false); // O doesn't go first
         });
     });
 
@@ -280,9 +280,9 @@ describe('useGame', () => {
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.opponentPlayer));
 
             // When challengerStarts=false, opponent plays X and goes first
-            expect(result.current.currentPlayerRole).toBe('X');
-            expect(result.current.isCurrentPlayerTurn).toBe(true);
-            expect(result.current.challengerStarts).toBe(false);
+            expect(result.current.data?.currentPlayerRole).toBe('X');
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(true);
+            expect(result.current.data?.challengerStarts).toBe(false);
         });
 
         it('should handle challengerStarts=false correctly (challenger should be O)', async () => {
@@ -294,9 +294,9 @@ describe('useGame', () => {
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
             // When challengerStarts=false, challenger plays O and doesn't go first
-            expect(result.current.currentPlayerRole).toBe('O');
-            expect(result.current.isCurrentPlayerTurn).toBe(false);
-            expect(result.current.challengerStarts).toBe(false);
+            expect(result.current.data?.currentPlayerRole).toBe('O');
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(false);
+            expect(result.current.data?.challengerStarts).toBe(false);
         });
     });
 
@@ -308,13 +308,13 @@ describe('useGame', () => {
             // Test with observer player hash
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.observerPlayer));
 
-            expect(result.current.currentPlayerRole).toBe('observer');
-            expect(result.current.isCurrentPlayerTurn).toBe(false);
+            expect(result.current.data?.currentPlayerRole).toBe('observer');
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(false);
 
             // Try to make a move as observer
-            const moveResult = await result.current.makeMove(0);
-            expect(moveResult.success).toBe(false);
-            expect(moveResult.error).toBe('You are not logged in');
+            const moveResult = await result.current.data?.makeMove(0);
+            expect(moveResult?.success).toBe(false);
+            expect(moveResult?.error).toBe('You are not logged in');
         });
 
         it('should prevent moves when it is not the player\'s turn', async () => {
@@ -325,13 +325,13 @@ describe('useGame', () => {
             // Test with opponent player hash (should not be their turn)
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.opponentPlayer));
 
-            expect(result.current.currentPlayerRole).toBe('O');
-            expect(result.current.isCurrentPlayerTurn).toBe(false);
+            expect(result.current.data?.currentPlayerRole).toBe('O');
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(false);
 
             // Try to make a move when it's not the player's turn
-            const moveResult = await result.current.makeMove(0);
-            expect(moveResult.success).toBe(false);
-            expect(moveResult.error).toBe('It is not your turn');
+            const moveResult = await result.current.data?.makeMove(0);
+            expect(moveResult?.success).toBe(false);
+            expect(moveResult?.error).toBe('It is not your turn');
         });
 
         it('should allow valid moves when it is the player\'s turn', async () => {
@@ -342,13 +342,13 @@ describe('useGame', () => {
             // Test with challenger player hash (should be their turn)
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
-            expect(result.current.currentPlayerRole).toBe('X');
-            expect(result.current.isCurrentPlayerTurn).toBe(true);
+            expect(result.current.data?.currentPlayerRole).toBe('X');
+            expect(result.current.data?.isCurrentPlayerTurn).toBe(true);
 
             // Make a valid move
-            const moveResult = await result.current.makeMove(0);
-            expect(moveResult.error).toBe(null);
-            expect(moveResult.success).toBe(true);
+            const moveResult = await result.current.data?.makeMove(0);
+            expect(moveResult?.error).toBe(null);
+            expect(moveResult?.success).toBe(true);
         });
     });
 
@@ -362,23 +362,23 @@ describe('useGame', () => {
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
             // Initial state
-            expect(result.current.moves.length).toBe(0);
-            expect(result.current.ticTacToeState.board).toEqual(Array(9).fill(null));
-            expect(result.current.ticTacToeState.currentPlayer).toBe('X');
+            expect(result.current.data?.moves.length).toBe(0);
+            expect(result.current.data?.ticTacToeState.board).toEqual(Array(9).fill(null));
+            expect(result.current.data?.ticTacToeState.currentPlayer).toBe('X');
 
             // Make a move
-            const moveResult = await result.current.makeMove(0);
-            expect(moveResult.error).toBe(null);
-            expect(moveResult.success).toBe(true);
+            const moveResult = await result.current.data?.makeMove(0);
+            expect(moveResult?.error).toBe(null);
+            expect(moveResult?.success).toBe(true);
 
             // Wait for the move to be processed
             await waitFor(() => {
-                expect(result.current.moves.length).toBe(1);
+                expect(result.current.data?.moves.length).toBe(1);
             });
 
             // Check that the board was updated
-            expect(result.current.ticTacToeState.board[0]).toBe('X');
-            expect(result.current.ticTacToeState.currentPlayer).toBe('O');
+            expect(result.current.data?.ticTacToeState.board[0]).toBe('X');
+            expect(result.current.data?.ticTacToeState.currentPlayer).toBe('O');
         });
 
         it('should prevent moves on occupied positions', async () => {
@@ -390,14 +390,14 @@ describe('useGame', () => {
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
             // Make first move
-            const moveResult1 = await result.current.makeMove(0);
-            expect(moveResult1.error).toBe(null);
-            expect(moveResult1.success).toBe(true);
+            const moveResult1 = await result.current.data?.makeMove(0);
+            expect(moveResult1?.error).toBe(null);
+            expect(moveResult1?.success).toBe(true);
 
             // Try to make a move on the same position
-            const moveResult2 = await result.current.makeMove(0);
-            expect(moveResult2.success).toBe(false);
-            expect(moveResult2.error).toBe('Position already occupied');
+            const moveResult2 = await result.current.data?.makeMove(0);
+            expect(moveResult2?.success).toBe(false);
+            expect(moveResult2?.error).toBe('Position already occupied');
         });
     });
 
@@ -422,7 +422,7 @@ describe('useGame', () => {
             });
 
             expect(result.current.error).toBe(`Game with ID invalid-game-id not found in playground ${TEST_CONSTANTS.PLAYGROUND_CODE}`);
-            expect(result.current.game).toBe(null);
+            expect(result.current.data).toBe(null);
         });
 
         it('should handle null playground gracefully', async () => {
@@ -432,8 +432,7 @@ describe('useGame', () => {
                 'test-player-id'
             ));
 
-            expect(result.current.game).toBe(null);
-            expect(result.current.gameId).toBe(null);
+            expect(result.current.data).toBe(null);
             expect(result.current.error).toBe(null);
         });
 
@@ -452,8 +451,7 @@ describe('useGame', () => {
                 'test-player-id'
             ));
 
-            expect(result.current.game).toBe(null);
-            expect(result.current.gameId).toBe(null);
+            expect(result.current.data).toBe(null);
             expect(result.current.error).toBe(null);
         });
     });

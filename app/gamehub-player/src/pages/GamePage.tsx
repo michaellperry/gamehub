@@ -199,13 +199,13 @@ export default function GamePage() {
     const game = useGame(playground.playground, decodedGameId || null, playerId);
 
     const handleCellClick = async (position: number) => {
-        if (isMakingMove || game.gameResult !== 'ongoing' || game.currentPlayerRole === 'observer' || !game.isCurrentPlayerTurn) {
+        if (!game.data || isMakingMove || game.data.gameResult !== 'ongoing' || game.data.currentPlayerRole === 'observer' || !game.data.isCurrentPlayerTurn) {
             return;
         }
 
         setIsMakingMove(true);
         try {
-            const result = await game.makeMove(position);
+            const result = await game.data.makeMove(position);
             if (!result.success) {
                 console.error('Move failed:', result.error);
                 // You could show a toast notification here
@@ -294,43 +294,43 @@ export default function GamePage() {
                                     {game.error}
                                 </Alert>
                             </div>
-                        ) : game.game ? (
+                        ) : game.data ? (
                             <div className="space-y-8 max-w-2xl mx-auto">
                                 {/* Player Information */}
                                 <PlayerInfo
-                                    challengerName={game.challengerName}
-                                    opponentName={game.opponentName}
-                                    challengerStarts={game.challengerStarts}
-                                    currentPlayerRole={game.currentPlayerRole}
-                                    gameResult={game.gameResult}
+                                    challengerName={game.data.challengerName}
+                                    opponentName={game.data.opponentName}
+                                    challengerStarts={game.data.challengerStarts}
+                                    currentPlayerRole={game.data.currentPlayerRole}
+                                    gameResult={game.data.gameResult}
                                 />
 
                                 {/* Game Status */}
                                 <GameStatus
-                                    currentPlayerRole={game.currentPlayerRole}
-                                    isCurrentPlayerTurn={game.isCurrentPlayerTurn}
-                                    gameResult={game.gameResult}
+                                    currentPlayerRole={game.data.currentPlayerRole}
+                                    isCurrentPlayerTurn={game.data.isCurrentPlayerTurn}
+                                    gameResult={game.data.gameResult}
                                 />
 
                                 {/* Game Board */}
                                 <div className="flex justify-center">
                                     <TicTacToeBoard
-                                        board={game.ticTacToeState.board}
+                                        board={game.data.ticTacToeState.board}
                                         onCellClick={handleCellClick}
-                                        isCurrentPlayerTurn={game.isCurrentPlayerTurn}
-                                        currentPlayerRole={game.currentPlayerRole}
-                                        gameResult={game.gameResult}
+                                        isCurrentPlayerTurn={game.data.isCurrentPlayerTurn}
+                                        currentPlayerRole={game.data.currentPlayerRole}
+                                        gameResult={game.data.gameResult}
                                     />
                                 </div>
 
                                 {/* Game Info */}
-                                {game.createdAt && (
+                                {game.data.createdAt && (
                                     <div className="text-center">
                                         <Typography variant="body" className="text-sm text-gray-500">
-                                            Game started: {game.createdAt.toLocaleDateString()} at {game.createdAt.toLocaleTimeString()}
+                                            Game started: {game.data.createdAt.toLocaleDateString()} at {game.data.createdAt.toLocaleTimeString()}
                                         </Typography>
                                         <Typography variant="body" className="text-sm text-gray-500">
-                                            Moves made: {game.moves.length}
+                                            Moves made: {game.data.moves.length}
                                         </Typography>
                                     </div>
                                 )}

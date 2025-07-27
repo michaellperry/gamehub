@@ -17,21 +17,25 @@ type GameProjection = {
 export type PlayerRole = 'X' | 'O' | 'observer';
 export type GameResult = 'won' | 'lost' | 'drawn' | 'ongoing';
 
-export interface GameViewModel {
-    game: Game | null;
-    gameId: string | null;
+export interface GameData {
+    game: Game;
+    gameId: string;
     challengerName: string | null;
     opponentName: string | null;
-    challengerStarts: boolean | null;
+    challengerStarts: boolean;
     currentPlayerRole: PlayerRole;
     isCurrentPlayerTurn: boolean;
     gameResult: GameResult;
-    createdAt: Date | null;
+    createdAt: Date;
     moves: Move[];
     ticTacToeState: TicTacToeState;
+    makeMove: (position: number) => Promise<{ success: boolean; error?: string }>;
+}
+
+export interface GameViewModel {
+    data: GameData | null;
     isLoading: boolean;
     error: string | null;
-    makeMove: (position: number) => Promise<{ success: boolean; error?: string }>;
 }
 
 // Simplified game specification for testing
@@ -63,32 +67,10 @@ const movesSpec = model.given(Game).match((game) => Move.in(game)
 
 // Helper function to create default game state
 function createDefaultGameState(error: string | null = null): GameViewModel {
-    const defaultTicTacToeState: TicTacToeState = {
-        board: Array(9).fill(null),
-        currentPlayer: 'X',
-        currentPlayerId: null,
-        challengerPlayerId: null,
-        opponentPlayerId: null,
-        winner: null,
-        winnerPlayerId: null,
-        isGameOver: false,
-    };
-
     return {
-        game: null,
-        gameId: null,
-        challengerName: null,
-        opponentName: null,
-        challengerStarts: null,
-        currentPlayerRole: 'observer',
-        isCurrentPlayerTurn: false,
-        gameResult: 'ongoing',
-        createdAt: null,
-        moves: [],
-        ticTacToeState: defaultTicTacToeState,
+        data: null,
         isLoading: false,
         error,
-        makeMove: async () => ({ success: false, error: error || 'Game not available' }),
     };
 }
 
@@ -242,10 +224,11 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
     const error = gameError || movesError;
 
     if (isLoading) {
-        const loadingState = createDefaultGameState();
-        loadingState.isLoading = true;
-        loadingState.makeMove = async () => ({ success: false, error: 'Loading game' });
-        return loadingState;
+        return {
+            data: null,
+            isLoading: true,
+            error: null,
+        };
     }
 
     if (error) {
@@ -253,7 +236,7 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
     }
 
     if (!gameProjection) {
-        const errorMessage = `Game with ID ${gameId} not found in playground ${playground.code}`;
+        const errorMessage = `Game with ID ${gameId} not found in playground ${playground.code}. Available game IDs: ${gameProjections?.map(p => p.gameId).join(', ') || 'none'}`;
         return createDefaultGameState(errorMessage);
     }
 
@@ -291,21 +274,23 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
     );
 
     return {
-        game: gameProjection.game,
-        gameId: gameProjection.gameId,
-        challengerName: gameProjection.challengerNames[0] || null,
-        opponentName: gameProjection.opponentNames[0] || null,
-        challengerStarts: gameProjection.challengerStarts,
-        currentPlayerRole,
-        isCurrentPlayerTurn,
-        gameResult: computeGameResult(currentPlayerRole, ticTacToeState),
-        createdAt: typeof gameProjection.game.challenge.createdAt === 'string'
-            ? new Date(gameProjection.game.challenge.createdAt)
-            : gameProjection.game.challenge.createdAt,
-        moves,
-        ticTacToeState,
+        data: {
+            game: gameProjection.game,
+            gameId: gameProjection.gameId,
+            challengerName: gameProjection.challengerNames[0] || null,
+            opponentName: gameProjection.opponentNames[0] || null,
+            challengerStarts: gameProjection.challengerStarts,
+            currentPlayerRole,
+            isCurrentPlayerTurn,
+            gameResult: computeGameResult(currentPlayerRole, ticTacToeState),
+            createdAt: typeof gameProjection.game.challenge.createdAt === 'string'
+                ? new Date(gameProjection.game.challenge.createdAt)
+                : gameProjection.game.challenge.createdAt,
+            moves,
+            ticTacToeState,
+            makeMove,
+        },
         isLoading: false,
         error: null,
-        makeMove,
     };
 } 
