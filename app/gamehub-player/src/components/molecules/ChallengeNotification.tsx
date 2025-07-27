@@ -10,6 +10,7 @@ export interface ChallengeNotificationProps {
     onReject: () => void;
     challenger: PlaygroundPlayer;
     playgroundCode: string;
+    challengerStarts: boolean;
     loading?: boolean;
 }
 
@@ -20,6 +21,7 @@ export const ChallengeNotification: React.FC<ChallengeNotificationProps> = ({
     onReject,
     challenger,
     playgroundCode,
+    challengerStarts,
     loading = false,
 }) => {
     const handleAccept = () => {
@@ -87,6 +89,10 @@ export const ChallengeNotification: React.FC<ChallengeNotificationProps> = ({
                     <Typography variant="body" className="text-gray-600">
                         {challenger.name} wants to play a game with you!
                     </Typography>
+                    {/* Display who starts first based on challengerStarts */}
+                    <Typography variant="body" className="text-sm text-gray-500 mt-2">
+                        {challengerStarts ? `${challenger.name} will start first.` : 'You will start first.'}
+                    </Typography>
                     <Typography variant="body" className="text-sm text-gray-500 mt-2">
                         Accept to start playing, or reject to decline the challenge.
                     </Typography>
@@ -101,6 +107,7 @@ export const ChallengeNotification: React.FC<ChallengeNotificationProps> = ({
                         <div className="space-y-1 text-sm text-gray-600">
                             <div>Challenger: {challenger.name}</div>
                             <div>Playground: {playgroundCode}</div>
+                            <div>First Move: {challengerStarts ? challenger.name : 'You'}</div>
                             <div>Received: {challenger.joinedAt.toLocaleTimeString()}</div>
                         </div>
                     </CenteredContent>

@@ -77,6 +77,7 @@ export const IncomingChallengesCard: React.FC<IncomingChallengesCardProps> = ({
                         isChallengePending: false
                     }}
                     playgroundCode={playgroundCode}
+                    challengerStarts={viewModel.selectedChallenge.challengerStarts}
                     loading={viewModel.loading}
                 />
             )}

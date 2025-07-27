@@ -6,6 +6,7 @@ export interface IncomingChallenge {
     challenge: Challenge;
     challengeId: string;
     challengerName: string;
+    challengerStarts: boolean;
     createdAt: Date;
     challengerJoin: Join;
 }
@@ -38,6 +39,7 @@ export function useIncomingChallenges(currentPlayerJoin: Join | null): IncomingC
         challenge: challenge.challenge,
         challengeId: challenge.challengeId,
         challengerName: challenge.challengerName,
+        challengerStarts: challenge.challengerStarts,
         createdAt: challenge.createdAt,
         challengerJoin: challenge.challengerJoin
     }));
