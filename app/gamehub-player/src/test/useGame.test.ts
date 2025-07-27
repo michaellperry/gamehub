@@ -35,7 +35,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, users } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -90,7 +90,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, users } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -146,7 +146,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, users } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -204,7 +204,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, users } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -258,7 +258,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, users } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);

@@ -3,6 +3,17 @@ import { Game, Move, model, PlayerName, Playground } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
 
+// Type for the game projection returned by gameSpec
+type GameProjection = {
+    gameId: string;
+    game: Game;
+    opponentPlayerId: string;
+    opponentNames: string[];
+    challengerPlayerId: string;
+    challengerNames: string[];
+    challengerStarts: boolean;
+};
+
 export type PlayerRole = 'X' | 'O' | 'observer';
 export type GameResult = 'won' | 'lost' | 'drawn' | 'ongoing';
 
@@ -134,7 +145,7 @@ function computeIsCurrentPlayerTurn(
 // Helper function to create move validation and execution
 function createMakeMoveFunction(
     currentPlayerId: string | null,
-    gameProjection: any,
+    gameProjection: GameProjection,
     moves: Move[],
     ticTacToeState: TicTacToeState
 ) {

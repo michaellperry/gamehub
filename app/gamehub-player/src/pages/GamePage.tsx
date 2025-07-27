@@ -133,7 +133,7 @@ function PlayerInfo({
     gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
 }) {
     const getPlayerStyle = (isCurrentPlayer: boolean, isWinner: boolean) => {
-        let baseStyle = "p-4 rounded-lg border-2 transition-all duration-200";
+        const baseStyle = "p-4 rounded-lg border-2 transition-all duration-200";
 
         if (isWinner) {
             return `${baseStyle} border-green-500 bg-green-50`;
