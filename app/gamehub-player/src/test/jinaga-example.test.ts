@@ -1,4 +1,4 @@
-import { Join, model, Player, Playground, Tenant } from 'gamehub-model/model';
+import { Join, model, Player, Playground, Tenant } from '@model/model';
 import { User } from 'jinaga';
 import { describe, expect, it } from 'vitest';
 import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';

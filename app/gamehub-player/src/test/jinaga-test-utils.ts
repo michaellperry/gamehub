@@ -5,7 +5,7 @@ import {
     PlayerName,
     Playground,
     Tenant
-} from 'gamehub-model/model';
+} from '@model/model';
 import { Jinaga, JinagaTest, User } from 'jinaga';
 
 /**

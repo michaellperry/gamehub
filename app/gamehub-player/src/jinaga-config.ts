@@ -1,5 +1,5 @@
-import { authorization } from 'gamehub-model';
-import { Player, PlayerName, Tenant } from 'gamehub-model/model';
+import { authorization } from '@model';
+import { Player, PlayerName, Tenant } from '@model/model';
 import { JinagaBrowser, Trace, Tracer, User } from 'jinaga';
 import { AuthProvider } from './auth/AuthProvider';
 import { getEnv } from './utils/environment';

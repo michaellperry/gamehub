@@ -1,4 +1,4 @@
-import { Challenge, Game, Join, Player, PlayerName, Playground, Reject, Tenant, model } from 'gamehub-model/model';
+import { Challenge, Game, Join, Player, PlayerName, Playground, Reject, Tenant, model } from '@model/model';
 import { User } from 'jinaga';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playerSessionConfig } from '../config/background-service';
