@@ -19,7 +19,7 @@ function TicTacToeBoard({
     currentPlayerRole: 'X' | 'O' | 'observer';
     gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
 }) {
-    const getCellContent = (cell: 'X' | 'O' | null, index: number) => {
+    const getCellContent = (cell: 'X' | 'O' | null) => {
         if (cell === 'X') {
             return (
                 <div className="text-4xl font-bold text-blue-600 animate-pulse">
@@ -37,7 +37,7 @@ function TicTacToeBoard({
         return null;
     };
 
-    const getCellStyle = (index: number) => {
+    const getCellStyle = () => {
         const baseStyle = "w-20 h-20 border-2 border-gray-300 flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:bg-gray-50";
 
         if (gameResult !== 'ongoing') {
@@ -61,11 +61,11 @@ function TicTacToeBoard({
                 {board.map((cell, index) => (
                     <button
                         key={index}
-                        className={getCellStyle(index)}
+                        className={getCellStyle()}
                         onClick={() => onCellClick(index)}
                         disabled={gameResult !== 'ongoing' || currentPlayerRole === 'observer' || !isCurrentPlayerTurn}
                     >
-                        {getCellContent(cell, index)}
+                        {getCellContent(cell)}
                     </button>
                 ))}
             </div>
@@ -75,12 +75,10 @@ function TicTacToeBoard({
 
 // Game Status Component
 function GameStatus({
-    game,
     currentPlayerRole,
     isCurrentPlayerTurn,
     gameResult
 }: {
-    game: any;
     currentPlayerRole: 'X' | 'O' | 'observer';
     isCurrentPlayerTurn: boolean;
     gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
@@ -306,7 +304,6 @@ export default function GamePage() {
 
                                 {/* Game Status */}
                                 <GameStatus
-                                    game={game}
                                     currentPlayerRole={game.currentPlayerRole}
                                     isCurrentPlayerTurn={game.isCurrentPlayerTurn}
                                     gameResult={game.gameResult}

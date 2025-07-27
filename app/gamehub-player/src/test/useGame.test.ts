@@ -1,5 +1,5 @@
-import { Challenge, Game, Join, Move, Player, PlayerName, Playground, Tenant } from '@model/model';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { Challenge, Game, Join, Player, PlayerName, Playground, Tenant } from '@model/model';
+import { renderHook, waitFor } from '@testing-library/react';
 import { User } from 'jinaga';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { useGame } from '../hooks/useGame';

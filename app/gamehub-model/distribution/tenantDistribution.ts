@@ -9,7 +9,7 @@ export const tenantDistribution = (r: DistributionRules) =>
                 .given(Tenant, User)
                 .match((tenant, user) => Administrator.of(tenant).join((admin) => admin.user, user))
         )
-        .with(model.given(Tenant, User).match((tenant, user) => Administrator.usersOf(tenant)))
+        .with(model.given(Tenant, User).match((tenant) => Administrator.usersOf(tenant)))
 
         // Share tenants of administrator with the user
         .share(
