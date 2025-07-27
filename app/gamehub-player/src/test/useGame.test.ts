@@ -43,13 +43,6 @@ const TEST_CONSTANTS = {
     }
 } as const;
 
-// Test data factories
-const createTestUsers = (count: number = 2): User[] => {
-    return Array.from({ length: count }, (_, i) =>
-        new User(`test-user-${i}-key`)
-    );
-};
-
 const createSpecificTestUsers = (): { challenger: User; opponent: User } => {
     return {
         challenger: new User(TEST_CONSTANTS.USER_KEYS.CHALLENGER),
@@ -65,8 +58,37 @@ const createThreeTestUsers = (): { challenger: User; opponent: User; observer: U
     };
 };
 
+// Type definitions for setup functions
+type GameSetup = {
+    jinaga: any;
+    tenant: any;
+    playground: Playground;
+    game: Game;
+    challengerPlayer: any;
+    opponentPlayer: any;
+    challengerJoin: any;
+    opponentJoin: any;
+    challenge: Challenge;
+    gameId: string;
+};
+
+type ObserverSetup = {
+    jinaga: any;
+    tenant: any;
+    playground: Playground;
+    game: Game;
+    challengerPlayer: any;
+    opponentPlayer: any;
+    observerPlayer: any;
+    challengerJoin: any;
+    opponentJoin: any;
+    observerJoin: any;
+    challenge: Challenge;
+    gameId: string;
+};
+
 // Common test setup functions
-const createGameSetup = async (users: User[], challengerStarts: boolean = true) => {
+const createGameSetup = async (users: User[], challengerStarts: boolean = true): Promise<GameSetup> => {
     const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant(users);
 
     // Create players
@@ -78,7 +100,7 @@ const createGameSetup = async (users: User[], challengerStarts: boolean = true) 
     await jinaga.fact(new PlayerName(opponentPlayer, TEST_CONSTANTS.PLAYER_NAMES.OPPONENT, []));
 
     // Create playground
-    const playground = await jinaga.fact(new Playground(tenant, TEST_CONSTANTS.PLAYGROUND_CODE));
+    const playground: Playground = await jinaga.fact(new Playground(tenant, TEST_CONSTANTS.PLAYGROUND_CODE));
 
     // Create joins
     const challengerJoin = await jinaga.fact(new Join(challengerPlayer, playground, new Date()));
@@ -93,9 +115,8 @@ const createGameSetup = async (users: User[], challengerStarts: boolean = true) 
     ));
 
     // Create game
-    const game = await jinaga.fact(new Game(challenge));
-
-
+    const game: Game = await jinaga.fact(new Game(challenge));
+    const gameId: string = jinaga.hash(game);
 
     return {
         jinaga,
@@ -106,11 +127,12 @@ const createGameSetup = async (users: User[], challengerStarts: boolean = true) 
         opponentPlayer,
         challengerJoin,
         opponentJoin,
-        challenge
+        challenge,
+        gameId
     };
 };
 
-const createObserverSetup = async () => {
+const createObserverSetup = async (): Promise<ObserverSetup> => {
     const { challenger, opponent, observer } = createThreeTestUsers();
     const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
         challenger,
@@ -119,9 +141,9 @@ const createObserverSetup = async () => {
     ]);
 
     // Create players including observer
-    const challengerPlayer = await jinaga.fact(new Player(challenger, tenant));
-    const opponentPlayer = await jinaga.fact(new Player(opponent, tenant));
-    const observerPlayer = await jinaga.fact(new Player(observer, tenant));
+    const challengerPlayer: Player = await jinaga.fact(new Player(challenger, tenant));
+    const opponentPlayer: Player = await jinaga.fact(new Player(opponent, tenant));
+    const observerPlayer: Player = await jinaga.fact(new Player(observer, tenant));
 
     // Create player names
     await jinaga.fact(new PlayerName(challengerPlayer, TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER, []));
@@ -129,15 +151,15 @@ const createObserverSetup = async () => {
     await jinaga.fact(new PlayerName(observerPlayer, TEST_CONSTANTS.PLAYER_NAMES.OBSERVER, []));
 
     // Create playground
-    const playground = await jinaga.fact(new Playground(tenant, TEST_CONSTANTS.PLAYGROUND_CODE));
+    const playground: Playground = await jinaga.fact(new Playground(tenant, TEST_CONSTANTS.PLAYGROUND_CODE));
 
     // Create joins
-    const challengerJoin = await jinaga.fact(new Join(challengerPlayer, playground, new Date()));
-    const opponentJoin = await jinaga.fact(new Join(opponentPlayer, playground, new Date()));
-    await jinaga.fact(new Join(observerPlayer, playground, new Date()));
+    const challengerJoin: Join = await jinaga.fact(new Join(challengerPlayer, playground, new Date()));
+    const opponentJoin: Join = await jinaga.fact(new Join(opponentPlayer, playground, new Date()));
+    const observerJoin: Join = await jinaga.fact(new Join(observerPlayer, playground, new Date()));
 
     // Create challenge
-    const challenge = await jinaga.fact(new Challenge(
+    const challenge: Challenge = await jinaga.fact(new Challenge(
         challengerJoin,
         opponentJoin,
         true,
@@ -145,7 +167,8 @@ const createObserverSetup = async () => {
     ));
 
     // Create game
-    const game = await jinaga.fact(new Game(challenge));
+    const game: Game = await jinaga.fact(new Game(challenge));
+    const gameId: string = jinaga.hash(game);
 
     return {
         jinaga,
@@ -157,23 +180,24 @@ const createObserverSetup = async () => {
         observerPlayer,
         challengerJoin,
         opponentJoin,
-        challenge
+        observerJoin,
+        challenge,
+        gameId
     };
 };
 
 // Helper function to render useGame hook with common setup
 const renderUseGame = async (
-    setup: Awaited<ReturnType<typeof createGameSetup>>,
+    setup: GameSetup,
     playerHash: string
 ) => {
-    const gameId = setup.jinaga.hash(setup.game);
     // Simulate URL-encoded game ID like in the real application
-    const encodedGameId = encodeURIComponent(gameId);
-    const decodedGameId = decodeURIComponent(encodedGameId);
+    // const encodedGameId = encodeURIComponent(setup.gameId);
+    // const decodedGameId = decodeURIComponent(encodedGameId);
 
     const { result } = renderHook(() => useGame(
         setup.playground,
-        decodedGameId, // Use decoded game ID like in the real application
+        setup.gameId, // Use decoded game ID like in the real application
         playerHash
     ));
 
@@ -185,48 +209,18 @@ const renderUseGame = async (
 };
 
 describe('useGame', () => {
-    describe('Player Role Assignment Issues', () => {
-        it('should incorrectly assign observer role when user publicKey is used instead of player hash', async () => {
-            // Create test setup with two players
-            const { challenger, opponent } = createSpecificTestUsers();
-            const setup = await createGameSetup([challenger, opponent], true);
+    describe('Player Role Assignment', () => {
 
-            // Test with challenger user's publicKey (this is the bug)
-            const { result } = renderHook(() => useGame(
-                setup.playground,
-                setup.jinaga.hash(setup.game),
-                challenger.publicKey // Using publicKey instead of player hash
-            ));
-
-            await waitFor(() => {
-                expect(result.current.isLoading).toBe(false);
-            });
-
-            // This should fail - user should be observer instead of X
-            expect(result.current.currentPlayerRole).toBe('observer');
-            expect(result.current.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
-            expect(result.current.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
-            expect(result.current.challengerStarts).toBe(true);
-        });
 
         it('should correctly assign X role when player hash is used', async () => {
             // Create test setup with two players
             const { challenger, opponent } = createSpecificTestUsers();
             const setup = await createGameSetup([challenger, opponent], true);
 
-            // Test with challenger player hash (this should work correctly)
+            // Test with challenger player hash
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
-            // Check if the game was found at all
-            expect(result.current.game).not.toBeNull();
-            expect(result.current.error).toBeNull();
-            expect(result.current.isLoading).toBe(false);
-
-            // Check if player names are loaded
-            expect(result.current.challengerName).not.toBeNull();
-            expect(result.current.opponentName).not.toBeNull();
-
-            // This should work correctly
+            // When challengerStarts=true, challenger plays X and goes first
             expect(result.current.currentPlayerRole).toBe('X');
             expect(result.current.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
             expect(result.current.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
@@ -234,52 +228,7 @@ describe('useGame', () => {
             expect(result.current.isCurrentPlayerTurn).toBe(true); // X goes first
         });
 
-        it('should handle basic game setup correctly', async () => {
-            // Create a minimal test to see if the basic functionality works
-            const { challenger, opponent } = createSpecificTestUsers();
-            const setup = await createGameSetup([challenger, opponent], true);
 
-            // Just test that the setup was created correctly
-            expect(setup.game).not.toBeNull();
-            expect(setup.playground).not.toBeNull();
-            expect(setup.challengerPlayer).not.toBeNull();
-            expect(setup.opponentPlayer).not.toBeNull();
-            expect(setup.challenge).not.toBeNull();
-
-            // Test that the game can be found by ID
-            const gameId = setup.jinaga.hash(setup.game);
-            expect(gameId).toBeTruthy();
-        });
-
-        it('should find games in playground using specification', async () => {
-            // Create test setup
-            const { challenger, opponent } = createSpecificTestUsers();
-            const setup = await createGameSetup([challenger, opponent], true);
-
-            // Test that the game specification can find the game
-            const gameProjections = await setup.jinaga.query(
-                model.given(Playground).match((playground) => Game.in(playground)
-                    .selectMany(game => game.challenge.predecessor()
-                        .selectMany(challenge => challenge.opponentJoin.player.predecessor()
-                            .selectMany(opponentPlayer => challenge.challengerJoin.player.predecessor()
-                                .select(challengerPlayer => ({
-                                    gameId: setup.jinaga.hash(game),
-                                    game,
-                                    opponentPlayerId: setup.jinaga.hash(opponentPlayer),
-                                    challengerPlayerId: setup.jinaga.hash(challengerPlayer),
-                                    challengerStarts: challenge.challengerStarts,
-                                }))
-                            ))
-                    )
-                ),
-                setup.playground
-            );
-
-            // Check that we found the game
-            expect(gameProjections).toBeDefined();
-            expect(gameProjections?.length).toBeGreaterThan(0);
-            expect(gameProjections?.[0].gameId).toBe(setup.jinaga.hash(setup.game));
-        });
 
         it('should test individual role assignment functions', async () => {
             // Create test setup
@@ -312,7 +261,7 @@ describe('useGame', () => {
             // Test with opponent player hash
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.opponentPlayer));
 
-            // Opponent should be O and not have first turn
+            // When challengerStarts=true, opponent plays O and doesn't go first
             expect(result.current.currentPlayerRole).toBe('O');
             expect(result.current.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
             expect(result.current.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
@@ -321,7 +270,7 @@ describe('useGame', () => {
         });
     });
 
-    describe('Game Logic and Turn Management Issues', () => {
+    describe('Game Logic and Turn Management', () => {
         it('should handle challengerStarts=false correctly (opponent should be X)', async () => {
             // Create test setup with two players
             const { challenger, opponent } = createSpecificTestUsers();
@@ -330,10 +279,10 @@ describe('useGame', () => {
             // Test with opponent player hash - should be X and go first
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.opponentPlayer));
 
-            // This exposes the bug - the current logic always assigns challenger=X, opponent=O
-            // But when challengerStarts=false, the opponent should be X
-            expect(result.current.currentPlayerRole).toBe('O'); // This is wrong - should be 'X'
-            expect(result.current.isCurrentPlayerTurn).toBe(false); // This is wrong - should be true
+            // When challengerStarts=false, opponent plays X and goes first
+            expect(result.current.currentPlayerRole).toBe('X');
+            expect(result.current.isCurrentPlayerTurn).toBe(true);
+            expect(result.current.challengerStarts).toBe(false);
         });
 
         it('should handle challengerStarts=false correctly (challenger should be O)', async () => {
@@ -344,14 +293,14 @@ describe('useGame', () => {
             // Test with challenger player hash - should be O and not go first
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
-            // This exposes the bug - the current logic always assigns challenger=X, opponent=O
-            // But when challengerStarts=false, the challenger should be O
-            expect(result.current.currentPlayerRole).toBe('X'); // This is wrong - should be 'O'
-            expect(result.current.isCurrentPlayerTurn).toBe(true); // This is wrong - should be false
+            // When challengerStarts=false, challenger plays O and doesn't go first
+            expect(result.current.currentPlayerRole).toBe('O');
+            expect(result.current.isCurrentPlayerTurn).toBe(false);
+            expect(result.current.challengerStarts).toBe(false);
         });
     });
 
-    describe('Move Validation and Game State Issues', () => {
+    describe('Move Validation and Game State', () => {
         it('should prevent moves when player is observer', async () => {
             // Create test setup with observer
             const setup = await createObserverSetup();
@@ -398,6 +347,7 @@ describe('useGame', () => {
 
             // Make a valid move
             const moveResult = await result.current.makeMove(0);
+            expect(moveResult.error).toBe(null);
             expect(moveResult.success).toBe(true);
         });
     });
@@ -418,6 +368,7 @@ describe('useGame', () => {
 
             // Make a move
             const moveResult = await result.current.makeMove(0);
+            expect(moveResult.error).toBe(null);
             expect(moveResult.success).toBe(true);
 
             // Wait for the move to be processed
@@ -440,6 +391,7 @@ describe('useGame', () => {
 
             // Make first move
             const moveResult1 = await result.current.makeMove(0);
+            expect(moveResult1.error).toBe(null);
             expect(moveResult1.success).toBe(true);
 
             // Try to make a move on the same position

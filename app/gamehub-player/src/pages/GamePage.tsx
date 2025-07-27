@@ -1,10 +1,9 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, CenteredContent, Container, PageLayout, Typography } from '../components/atoms';
-import { useUser } from '../auth/UserProvider';
 import { useGame } from '../hooks/useGame';
-import { usePlayground } from '../hooks/usePlayground';
 import { usePlayer } from '../hooks/usePlayer';
-import { useState } from 'react';
+import { usePlayground } from '../hooks/usePlayground';
 
 // TicTacToe Board Component
 function TicTacToeBoard({
@@ -189,7 +188,6 @@ function PlayerInfo({
 export default function GamePage() {
     const { code, gameId } = useParams<{ code: string; gameId: string }>();
     const navigate = useNavigate();
-    const { user } = useUser();
     const [isMakingMove, setIsMakingMove] = useState(false);
 
     // Decode the game ID to handle URL-encoded special characters
