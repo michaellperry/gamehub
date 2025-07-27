@@ -1,8 +1,8 @@
-import { Challenge, Game, Join, Player, PlayerName, Playground, Tenant } from '@model/model';
+import { Challenge, Game, Join, Player, PlayerName, Playground, model } from '@model/model';
 import { renderHook, waitFor } from '@testing-library/react';
 import { User } from 'jinaga';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { useGame } from '../hooks/useGame';
+import { computePlayerRole, useGame } from '../hooks/useGame';
 import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
 
 // Mock the configuration to control test behavior
@@ -95,6 +95,8 @@ const createGameSetup = async (users: User[], challengerStarts: boolean = true) 
     // Create game
     const game = await jinaga.fact(new Game(challenge));
 
+
+
     return {
         jinaga,
         tenant,
@@ -164,9 +166,14 @@ const renderUseGame = async (
     setup: Awaited<ReturnType<typeof createGameSetup>>,
     playerHash: string
 ) => {
+    const gameId = setup.jinaga.hash(setup.game);
+    // Simulate URL-encoded game ID like in the real application
+    const encodedGameId = encodeURIComponent(gameId);
+    const decodedGameId = decodeURIComponent(encodedGameId);
+
     const { result } = renderHook(() => useGame(
         setup.playground,
-        setup.jinaga.hash(setup.game),
+        decodedGameId, // Use decoded game ID like in the real application
         playerHash
     ));
 
@@ -210,12 +217,91 @@ describe('useGame', () => {
             // Test with challenger player hash (this should work correctly)
             const result = await renderUseGame(setup, setup.jinaga.hash(setup.challengerPlayer));
 
+            // Check if the game was found at all
+            expect(result.current.game).not.toBeNull();
+            expect(result.current.error).toBeNull();
+            expect(result.current.isLoading).toBe(false);
+
+            // Check if player names are loaded
+            expect(result.current.challengerName).not.toBeNull();
+            expect(result.current.opponentName).not.toBeNull();
+
             // This should work correctly
             expect(result.current.currentPlayerRole).toBe('X');
             expect(result.current.challengerName).toBe(TEST_CONSTANTS.PLAYER_NAMES.CHALLENGER);
             expect(result.current.opponentName).toBe(TEST_CONSTANTS.PLAYER_NAMES.OPPONENT);
             expect(result.current.challengerStarts).toBe(true);
             expect(result.current.isCurrentPlayerTurn).toBe(true); // X goes first
+        });
+
+        it('should handle basic game setup correctly', async () => {
+            // Create a minimal test to see if the basic functionality works
+            const { challenger, opponent } = createSpecificTestUsers();
+            const setup = await createGameSetup([challenger, opponent], true);
+
+            // Just test that the setup was created correctly
+            expect(setup.game).not.toBeNull();
+            expect(setup.playground).not.toBeNull();
+            expect(setup.challengerPlayer).not.toBeNull();
+            expect(setup.opponentPlayer).not.toBeNull();
+            expect(setup.challenge).not.toBeNull();
+
+            // Test that the game can be found by ID
+            const gameId = setup.jinaga.hash(setup.game);
+            expect(gameId).toBeTruthy();
+        });
+
+        it('should find games in playground using specification', async () => {
+            // Create test setup
+            const { challenger, opponent } = createSpecificTestUsers();
+            const setup = await createGameSetup([challenger, opponent], true);
+
+            // Test that the game specification can find the game
+            const gameProjections = await setup.jinaga.query(
+                model.given(Playground).match((playground) => Game.in(playground)
+                    .selectMany(game => game.challenge.predecessor()
+                        .selectMany(challenge => challenge.opponentJoin.player.predecessor()
+                            .selectMany(opponentPlayer => challenge.challengerJoin.player.predecessor()
+                                .select(challengerPlayer => ({
+                                    gameId: setup.jinaga.hash(game),
+                                    game,
+                                    opponentPlayerId: setup.jinaga.hash(opponentPlayer),
+                                    challengerPlayerId: setup.jinaga.hash(challengerPlayer),
+                                    challengerStarts: challenge.challengerStarts,
+                                }))
+                            ))
+                    )
+                ),
+                setup.playground
+            );
+
+            // Check that we found the game
+            expect(gameProjections).toBeDefined();
+            expect(gameProjections?.length).toBeGreaterThan(0);
+            expect(gameProjections?.[0].gameId).toBe(setup.jinaga.hash(setup.game));
+        });
+
+        it('should test individual role assignment functions', async () => {
+            // Create test setup
+            const { challenger, opponent } = createSpecificTestUsers();
+            const setup = await createGameSetup([challenger, opponent], true);
+
+            const challengerPlayerId = setup.jinaga.hash(setup.challengerPlayer);
+            const opponentPlayerId = setup.jinaga.hash(setup.opponentPlayer);
+
+            // Test role assignment when challengerStarts is true
+            const challengerRole = computePlayerRole(challengerPlayerId, challengerPlayerId, opponentPlayerId, true);
+            const opponentRole = computePlayerRole(opponentPlayerId, challengerPlayerId, opponentPlayerId, true);
+
+            expect(challengerRole).toBe('X');
+            expect(opponentRole).toBe('O');
+
+            // Test role assignment when challengerStarts is false
+            const challengerRole2 = computePlayerRole(challengerPlayerId, challengerPlayerId, opponentPlayerId, false);
+            const opponentRole2 = computePlayerRole(opponentPlayerId, challengerPlayerId, opponentPlayerId, false);
+
+            expect(challengerRole2).toBe('O');
+            expect(opponentRole2).toBe('X');
         });
 
         it('should correctly assign O role for opponent when challengerStarts is true', async () => {

@@ -34,6 +34,7 @@ export interface GameViewModel {
     makeMove: (position: number) => Promise<{ success: boolean; error?: string }>;
 }
 
+// Simplified game specification for testing
 const gameSpec = model.given(Playground).match((playground) => Game.in(playground)
     .selectMany(game => game.challenge.predecessor()
         .selectMany(challenge => challenge.opponentJoin.player.predecessor()
@@ -118,11 +119,20 @@ function computeGameResult(
 }
 
 // Helper function to compute player role
-function computePlayerRole(currentPlayerId: string | null, challengerPlayerId: string, opponentPlayerId: string): PlayerRole {
+export function computePlayerRole(
+    currentPlayerId: string | null,
+    challengerPlayerId: string,
+    opponentPlayerId: string,
+    challengerStarts: boolean
+): PlayerRole {
     if (!currentPlayerId) return 'observer';
 
-    if (currentPlayerId === challengerPlayerId) return 'X';
-    if (currentPlayerId === opponentPlayerId) return 'O';
+    // Determine who plays X and who plays O based on challengerStarts
+    const xPlayerId = challengerStarts ? challengerPlayerId : opponentPlayerId;
+    const oPlayerId = challengerStarts ? opponentPlayerId : challengerPlayerId;
+
+    if (currentPlayerId === xPlayerId) return 'X';
+    if (currentPlayerId === oPlayerId) return 'O';
     return 'observer';
 }
 
@@ -131,15 +141,21 @@ function computeIsCurrentPlayerTurn(
     currentPlayerId: string | null,
     challengerPlayerId: string,
     opponentPlayerId: string,
-    movesLength: number
+    movesLength: number,
+    challengerStarts: boolean
 ): boolean {
     if (!currentPlayerId) return false;
 
-    const isChallengerTurn = movesLength % 2 === 0; // Even moves = challenger (X), odd moves = opponent (O)
-    const isCurrentPlayerChallenger = currentPlayerId === challengerPlayerId;
-    const isCurrentPlayerOpponent = currentPlayerId === opponentPlayerId;
+    // Determine who plays X and who plays O based on challengerStarts
+    const xPlayerId = challengerStarts ? challengerPlayerId : opponentPlayerId;
+    const oPlayerId = challengerStarts ? opponentPlayerId : challengerPlayerId;
 
-    return (isChallengerTurn && isCurrentPlayerChallenger) || (!isChallengerTurn && isCurrentPlayerOpponent);
+    // X always goes first, so even moves (0, 2, 4...) are X's turns
+    const isXTurn = movesLength % 2 === 0;
+    const isCurrentPlayerX = currentPlayerId === xPlayerId;
+    const isCurrentPlayerO = currentPlayerId === oPlayerId;
+
+    return (isXTurn && isCurrentPlayerX) || (!isXTurn && isCurrentPlayerO);
 }
 
 // Helper function to create move validation and execution
@@ -164,10 +180,13 @@ function createMakeMoveFunction(
         }
 
         // Check if it's the current player's turn
-        const isChallengerTurn = moves.length % 2 === 0;
-        const isCurrentPlayerChallenger = currentPlayerId === gameProjection.challengerPlayerId;
-        const isCurrentPlayerOpponent = currentPlayerId === gameProjection.opponentPlayerId;
-        const isCurrentPlayerTurn = (isChallengerTurn && isCurrentPlayerChallenger) || (!isChallengerTurn && isCurrentPlayerOpponent);
+        const xPlayerId = gameProjection.challengerStarts ? gameProjection.challengerPlayerId : gameProjection.opponentPlayerId;
+        const oPlayerId = gameProjection.challengerStarts ? gameProjection.opponentPlayerId : gameProjection.challengerPlayerId;
+
+        const isXTurn = moves.length % 2 === 0; // X always goes first
+        const isCurrentPlayerX = currentPlayerId === xPlayerId;
+        const isCurrentPlayerO = currentPlayerId === oPlayerId;
+        const isCurrentPlayerTurn = (isXTurn && isCurrentPlayerX) || (!isXTurn && isCurrentPlayerO);
 
         if (!isCurrentPlayerTurn) {
             return { success: false, error: 'It is not your turn' };
@@ -245,20 +264,23 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
         moves,
         gameProjection.challengerPlayerId,
         gameProjection.opponentPlayerId,
-        currentPlayerId
+        currentPlayerId,
+        gameProjection.challengerStarts
     );
 
     const currentPlayerRole = computePlayerRole(
         currentPlayerId,
         gameProjection.challengerPlayerId,
-        gameProjection.opponentPlayerId
+        gameProjection.opponentPlayerId,
+        gameProjection.challengerStarts
     );
 
     const isCurrentPlayerTurn = computeIsCurrentPlayerTurn(
         currentPlayerId,
         gameProjection.challengerPlayerId,
         gameProjection.opponentPlayerId,
-        moves.length
+        moves.length,
+        gameProjection.challengerStarts
     );
 
     const makeMove = createMakeMoveFunction(

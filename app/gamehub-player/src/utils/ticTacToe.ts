@@ -17,16 +17,18 @@ export interface TicTacToeState {
 /**
  * Computes the current state of a tic-tac-toe board from moves
  * @param moves - Array of moves sorted by index (chronological order)
- * @param challengerPlayerId - ID of the challenger (plays X, even indexes), or null if unknown
- * @param opponentPlayerId - ID of the opponent (plays O, odd indexes), or null if unknown
+ * @param challengerPlayerId - ID of the challenger, or null if unknown
+ * @param opponentPlayerId - ID of the opponent, or null if unknown
  * @param currentPlayerId - ID of the current player viewing the game, or null if unknown
+ * @param challengerStarts - Whether the challenger starts (plays X)
  * @returns TicTacToeState with board, current player, winner, and game status
  */
 export function computeTicTacToeState(
     moves: Move[],
     challengerPlayerId: string | null,
     opponentPlayerId: string | null,
-    currentPlayerId: string | null
+    currentPlayerId: string | null,
+    challengerStarts: boolean
 ): TicTacToeState {
     // Initialize empty board (9 positions: 0-8)
     const board: BoardState = Array(9).fill(null);
@@ -54,10 +56,10 @@ export function computeTicTacToeState(
 
     // Determine winner player ID (only if player IDs are provided)
     let winnerPlayerId: string | null = null;
-    if (winner === 'X' && challengerPlayerId) {
-        winnerPlayerId = challengerPlayerId;
-    } else if (winner === 'O' && opponentPlayerId) {
-        winnerPlayerId = opponentPlayerId;
+    if (winner === 'X') {
+        winnerPlayerId = challengerStarts ? challengerPlayerId : opponentPlayerId;
+    } else if (winner === 'O') {
+        winnerPlayerId = challengerStarts ? opponentPlayerId : challengerPlayerId;
     }
 
     return {

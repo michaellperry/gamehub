@@ -3,6 +3,7 @@ import { Alert, Button, CenteredContent, Container, PageLayout, Typography } fro
 import { useUser } from '../auth/UserProvider';
 import { useGame } from '../hooks/useGame';
 import { usePlayground } from '../hooks/usePlayground';
+import { usePlayer } from '../hooks/usePlayer';
 import { useState } from 'react';
 
 // TicTacToe Board Component
@@ -146,19 +147,23 @@ function PlayerInfo({
         return `${baseStyle} border-gray-200 bg-gray-50`;
     };
 
-    const isChallengerCurrent = currentPlayerRole === 'X';
-    const isOpponentCurrent = currentPlayerRole === 'O';
-    const challengerWon = gameResult === 'won' && currentPlayerRole === 'X';
-    const opponentWon = gameResult === 'won' && currentPlayerRole === 'O';
+    // Determine who is X and who is O based on challengerStarts
+    const xPlayerName = challengerStarts ? challengerName : opponentName;
+    const oPlayerName = challengerStarts ? opponentName : challengerName;
+
+    const isXCurrent = currentPlayerRole === 'X';
+    const isOCurrent = currentPlayerRole === 'O';
+    const xWon = gameResult === 'won' && currentPlayerRole === 'X';
+    const oWon = gameResult === 'won' && currentPlayerRole === 'O';
 
     return (
         <div className="flex justify-center space-x-8">
-            <div className={getPlayerStyle(isChallengerCurrent, challengerWon)}>
+            <div className={getPlayerStyle(isXCurrent, xWon)}>
                 <div className="text-center">
                     <div className="text-2xl font-bold text-blue-600 mb-1">X</div>
-                    <div className="font-semibold text-gray-800">{challengerName || 'Unknown'}</div>
-                    {challengerStarts && <div className="text-xs text-gray-500">Starts first</div>}
-                    {isChallengerCurrent && gameResult === 'ongoing' && (
+                    <div className="font-semibold text-gray-800">{xPlayerName || 'Unknown'}</div>
+                    <div className="text-xs text-gray-500">Starts first</div>
+                    {isXCurrent && gameResult === 'ongoing' && (
                         <div className="text-xs text-blue-600 font-semibold">You</div>
                     )}
                 </div>
@@ -168,12 +173,11 @@ function PlayerInfo({
                 <div className="text-2xl font-bold text-gray-400">VS</div>
             </div>
 
-            <div className={getPlayerStyle(isOpponentCurrent, opponentWon)}>
+            <div className={getPlayerStyle(isOCurrent, oWon)}>
                 <div className="text-center">
                     <div className="text-2xl font-bold text-red-600 mb-1">O</div>
-                    <div className="font-semibold text-gray-800">{opponentName || 'Unknown'}</div>
-                    {!challengerStarts && <div className="text-xs text-gray-500">Starts first</div>}
-                    {isOpponentCurrent && gameResult === 'ongoing' && (
+                    <div className="font-semibold text-gray-800">{oPlayerName || 'Unknown'}</div>
+                    {isOCurrent && gameResult === 'ongoing' && (
                         <div className="text-xs text-red-600 font-semibold">You</div>
                     )}
                 </div>
@@ -193,7 +197,8 @@ export default function GamePage() {
 
     // Get playground and game data
     const playground = usePlayground(code);
-    const game = useGame(playground.playground, decodedGameId || null, user?.publicKey || null);
+    const { playerId } = usePlayer();
+    const game = useGame(playground.playground, decodedGameId || null, playerId);
 
     const handleCellClick = async (position: number) => {
         if (isMakingMove || game.gameResult !== 'ongoing' || game.currentPlayerRole === 'observer' || !game.isCurrentPlayerTurn) {
