@@ -24,18 +24,20 @@ export interface GameViewModel {
 }
 
 const gameSpec = model.given(Playground).match((playground) => Game.in(playground)
-    .selectMany(game => game.challenge.opponentJoin.player.predecessor()
-        .selectMany(opponentPlayer => game.challenge.challengerJoin.player.predecessor()
-            .select(challengerPlayer => ({
-                gameId: j.hash(game),
-                game,
-                opponentPlayerId: j.hash(opponentPlayer),
-                opponentNames: PlayerName.current(opponentPlayer).select(name => name.name),
-                challengerPlayerId: j.hash(challengerPlayer),
-                challengerNames: PlayerName.current(challengerPlayer).select(name => name.name),
-                challengerStarts: game.challenge.challengerStarts,
-            }))
-        ))
+    .selectMany(game => game.challenge.predecessor()
+        .selectMany(challenge => challenge.opponentJoin.player.predecessor()
+            .selectMany(opponentPlayer => challenge.challengerJoin.player.predecessor()
+                .select(challengerPlayer => ({
+                    gameId: j.hash(game),
+                    game,
+                    opponentPlayerId: j.hash(opponentPlayer),
+                    opponentNames: PlayerName.current(opponentPlayer).select(name => name.name),
+                    challengerPlayerId: j.hash(challengerPlayer),
+                    challengerNames: PlayerName.current(challengerPlayer).select(name => name.name),
+                    challengerStarts: challenge.challengerStarts,
+                }))
+            ))
+    )
 );
 
 const movesSpec = model.given(Game).match((game) => Move.in(game)
