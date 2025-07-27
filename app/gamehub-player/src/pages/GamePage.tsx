@@ -3,11 +3,192 @@ import { Alert, Button, CenteredContent, Container, PageLayout, Typography } fro
 import { useUser } from '../auth/UserProvider';
 import { useGame } from '../hooks/useGame';
 import { usePlayground } from '../hooks/usePlayground';
+import { useState } from 'react';
+
+// TicTacToe Board Component
+function TicTacToeBoard({
+    board,
+    onCellClick,
+    isCurrentPlayerTurn,
+    currentPlayerRole,
+    gameResult
+}: {
+    board: ('X' | 'O' | null)[];
+    onCellClick: (position: number) => void;
+    isCurrentPlayerTurn: boolean;
+    currentPlayerRole: 'X' | 'O' | 'observer';
+    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
+}) {
+    const getCellContent = (cell: 'X' | 'O' | null, index: number) => {
+        if (cell === 'X') {
+            return (
+                <div className="text-4xl font-bold text-blue-600 animate-pulse">
+                    ✕
+                </div>
+            );
+        }
+        if (cell === 'O') {
+            return (
+                <div className="text-4xl font-bold text-red-600 animate-pulse">
+                    ○
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const getCellStyle = (index: number) => {
+        const baseStyle = "w-20 h-20 border-2 border-gray-300 flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:bg-gray-50";
+
+        if (gameResult !== 'ongoing') {
+            return `${baseStyle} cursor-default`;
+        }
+
+        if (currentPlayerRole === 'observer') {
+            return `${baseStyle} cursor-default`;
+        }
+
+        if (!isCurrentPlayerTurn) {
+            return `${baseStyle} cursor-not-allowed opacity-50`;
+        }
+
+        return `${baseStyle} cursor-pointer hover:bg-blue-50 hover:border-blue-400`;
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2 bg-white p-4 rounded-lg shadow-lg">
+                {board.map((cell, index) => (
+                    <button
+                        key={index}
+                        className={getCellStyle(index)}
+                        onClick={() => onCellClick(index)}
+                        disabled={gameResult !== 'ongoing' || currentPlayerRole === 'observer' || !isCurrentPlayerTurn}
+                    >
+                        {getCellContent(cell, index)}
+                    </button>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+// Game Status Component
+function GameStatus({
+    game,
+    currentPlayerRole,
+    isCurrentPlayerTurn,
+    gameResult
+}: {
+    game: any;
+    currentPlayerRole: 'X' | 'O' | 'observer';
+    isCurrentPlayerTurn: boolean;
+    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
+}) {
+    const getStatusMessage = () => {
+        if (gameResult === 'won') {
+            return { text: '🎉 Congratulations! You won!', color: 'text-green-600' };
+        }
+        if (gameResult === 'lost') {
+            return { text: '😔 Better luck next time!', color: 'text-red-600' };
+        }
+        if (gameResult === 'drawn') {
+            return { text: '🤝 It\'s a tie!', color: 'text-yellow-600' };
+        }
+        if (currentPlayerRole === 'observer') {
+            return { text: '👀 Watching the game...', color: 'text-gray-600' };
+        }
+        if (isCurrentPlayerTurn) {
+            return { text: '🎯 Your turn!', color: 'text-blue-600' };
+        }
+        return { text: '⏳ Waiting for opponent...', color: 'text-gray-600' };
+    };
+
+    const status = getStatusMessage();
+
+    return (
+        <div className="text-center space-y-2">
+            <div className={`text-xl font-bold ${status.color}`}>
+                {status.text}
+            </div>
+            {gameResult === 'ongoing' && currentPlayerRole !== 'observer' && (
+                <div className="text-sm text-gray-600">
+                    You are playing as <span className="font-semibold">{currentPlayerRole}</span>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// Player Info Component
+function PlayerInfo({
+    challengerName,
+    opponentName,
+    challengerStarts,
+    currentPlayerRole,
+    gameResult
+}: {
+    challengerName: string | null;
+    opponentName: string | null;
+    challengerStarts: boolean | null;
+    currentPlayerRole: 'X' | 'O' | 'observer';
+    gameResult: 'won' | 'lost' | 'drawn' | 'ongoing';
+}) {
+    const getPlayerStyle = (isCurrentPlayer: boolean, isWinner: boolean) => {
+        let baseStyle = "p-4 rounded-lg border-2 transition-all duration-200";
+
+        if (isWinner) {
+            return `${baseStyle} border-green-500 bg-green-50`;
+        }
+
+        if (isCurrentPlayer && gameResult === 'ongoing') {
+            return `${baseStyle} border-blue-500 bg-blue-50`;
+        }
+
+        return `${baseStyle} border-gray-200 bg-gray-50`;
+    };
+
+    const isChallengerCurrent = currentPlayerRole === 'X';
+    const isOpponentCurrent = currentPlayerRole === 'O';
+    const challengerWon = gameResult === 'won' && currentPlayerRole === 'X';
+    const opponentWon = gameResult === 'won' && currentPlayerRole === 'O';
+
+    return (
+        <div className="flex justify-center space-x-8">
+            <div className={getPlayerStyle(isChallengerCurrent, challengerWon)}>
+                <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600 mb-1">X</div>
+                    <div className="font-semibold text-gray-800">{challengerName || 'Unknown'}</div>
+                    {challengerStarts && <div className="text-xs text-gray-500">Starts first</div>}
+                    {isChallengerCurrent && gameResult === 'ongoing' && (
+                        <div className="text-xs text-blue-600 font-semibold">You</div>
+                    )}
+                </div>
+            </div>
+
+            <div className="flex items-center">
+                <div className="text-2xl font-bold text-gray-400">VS</div>
+            </div>
+
+            <div className={getPlayerStyle(isOpponentCurrent, opponentWon)}>
+                <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600 mb-1">O</div>
+                    <div className="font-semibold text-gray-800">{opponentName || 'Unknown'}</div>
+                    {!challengerStarts && <div className="text-xs text-gray-500">Starts first</div>}
+                    {isOpponentCurrent && gameResult === 'ongoing' && (
+                        <div className="text-xs text-red-600 font-semibold">You</div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function GamePage() {
     const { code, gameId } = useParams<{ code: string; gameId: string }>();
     const navigate = useNavigate();
     const { user } = useUser();
+    const [isMakingMove, setIsMakingMove] = useState(false);
 
     // Decode the game ID to handle URL-encoded special characters
     const decodedGameId = gameId ? decodeURIComponent(gameId) : undefined;
@@ -15,6 +196,25 @@ export default function GamePage() {
     // Get playground and game data
     const playground = usePlayground(code);
     const game = useGame(playground.playground, decodedGameId || null, user?.publicKey || null);
+
+    const handleCellClick = async (position: number) => {
+        if (isMakingMove || game.gameResult !== 'ongoing' || game.currentPlayerRole === 'observer' || !game.isCurrentPlayerTurn) {
+            return;
+        }
+
+        setIsMakingMove(true);
+        try {
+            const result = await game.makeMove(position);
+            if (!result.success) {
+                console.error('Move failed:', result.error);
+                // You could show a toast notification here
+            }
+        } catch (error) {
+            console.error('Error making move:', error);
+        } finally {
+            setIsMakingMove(false);
+        }
+    };
 
     if (!code || !decodedGameId) {
         return (
@@ -44,14 +244,14 @@ export default function GamePage() {
                     <CenteredContent className="space-y-4">
                         <div className="flex items-center justify-center space-x-4">
                             <Typography variant="h1" className="text-3xl font-bold text-gray-900">
-                                Game
+                                🎮 Tic-Tac-Toe
                             </Typography>
                             <div className="flex items-center space-x-2">
                                 <Typography variant="body" className="text-lg font-mono bg-gray-100 px-3 py-1 rounded">
                                     {code}
                                 </Typography>
                                 <Typography variant="body" className="text-lg font-mono bg-gray-100 px-3 py-1 rounded">
-                                    {decodedGameId}
+                                    {decodedGameId.slice(0, 8)}...
                                 </Typography>
                             </div>
                         </div>
@@ -73,9 +273,10 @@ export default function GamePage() {
                     </CenteredContent>
 
                     {/* Game Content */}
-                    <CenteredContent className="py-12">
+                    <CenteredContent className="py-8">
                         {playground.loading || game.isLoading ? (
                             <div className="text-center space-y-4">
+                                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
                                 <Typography variant="body" className="text-gray-600">
                                     Loading game...
                                 </Typography>
@@ -93,46 +294,56 @@ export default function GamePage() {
                                 </Alert>
                             </div>
                         ) : game.game ? (
-                            <div className="text-center space-y-6">
-                                <div className="space-y-4">
-                                    <Typography variant="h2" className="text-2xl font-semibold text-gray-700">
-                                        {game.challengerName} vs {game.opponentName}
-                                    </Typography>
-                                    <div className="flex justify-center space-x-4">
-                                        <div className="text-center">
-                                            <Typography variant="body" className="font-semibold">
-                                                {game.challengerStarts ? 'X' : 'O'}
-                                            </Typography>
-                                            <Typography variant="body" className="text-sm text-gray-600">
-                                                {game.challengerName}
-                                            </Typography>
-                                        </div>
-                                        <div className="text-center">
-                                            <Typography variant="body" className="font-semibold">
-                                                {game.challengerStarts ? 'O' : 'X'}
-                                            </Typography>
-                                            <Typography variant="body" className="text-sm text-gray-600">
-                                                {game.opponentName}
-                                            </Typography>
-                                        </div>
-                                    </div>
-                                    {game.createdAt && (
-                                        <Typography variant="body" className="text-sm text-gray-500">
-                                            Game started: {game.createdAt.toLocaleDateString()}
-                                        </Typography>
-                                    )}
+                            <div className="space-y-8 max-w-2xl mx-auto">
+                                {/* Player Information */}
+                                <PlayerInfo
+                                    challengerName={game.challengerName}
+                                    opponentName={game.opponentName}
+                                    challengerStarts={game.challengerStarts}
+                                    currentPlayerRole={game.currentPlayerRole}
+                                    gameResult={game.gameResult}
+                                />
+
+                                {/* Game Status */}
+                                <GameStatus
+                                    game={game}
+                                    currentPlayerRole={game.currentPlayerRole}
+                                    isCurrentPlayerTurn={game.isCurrentPlayerTurn}
+                                    gameResult={game.gameResult}
+                                />
+
+                                {/* Game Board */}
+                                <div className="flex justify-center">
+                                    <TicTacToeBoard
+                                        board={game.ticTacToeState.board}
+                                        onCellClick={handleCellClick}
+                                        isCurrentPlayerTurn={game.isCurrentPlayerTurn}
+                                        currentPlayerRole={game.currentPlayerRole}
+                                        gameResult={game.gameResult}
+                                    />
                                 </div>
 
-                                {/* Game Board Placeholder */}
-                                <div className="mt-8">
-                                    <Typography variant="h3" className="text-xl font-semibold text-gray-700 mb-4">
-                                        Game Board Coming Soon
-                                    </Typography>
-                                    <Typography variant="body" className="text-gray-600 max-w-md">
-                                        This is where the actual tic-tac-toe board will be implemented.
-                                        The game will show the board state, player turns, and game state.
-                                    </Typography>
-                                </div>
+                                {/* Game Info */}
+                                {game.createdAt && (
+                                    <div className="text-center">
+                                        <Typography variant="body" className="text-sm text-gray-500">
+                                            Game started: {game.createdAt.toLocaleDateString()} at {game.createdAt.toLocaleTimeString()}
+                                        </Typography>
+                                        <Typography variant="body" className="text-sm text-gray-500">
+                                            Moves made: {game.moves.length}
+                                        </Typography>
+                                    </div>
+                                )}
+
+                                {/* Loading indicator for moves */}
+                                {isMakingMove && (
+                                    <div className="text-center">
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                                        <Typography variant="body" className="text-sm text-gray-600 mt-2">
+                                            Making move...
+                                        </Typography>
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <div className="text-center space-y-4">
