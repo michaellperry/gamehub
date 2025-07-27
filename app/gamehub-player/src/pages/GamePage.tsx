@@ -1,18 +1,20 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, CenteredContent, Container, PageLayout, Typography } from '../components/atoms';
+import { useUser } from '../auth/UserProvider';
 import { useGame } from '../hooks/useGame';
 import { usePlayground } from '../hooks/usePlayground';
 
 export default function GamePage() {
     const { code, gameId } = useParams<{ code: string; gameId: string }>();
     const navigate = useNavigate();
+    const { user } = useUser();
 
     // Decode the game ID to handle URL-encoded special characters
     const decodedGameId = gameId ? decodeURIComponent(gameId) : undefined;
 
     // Get playground and game data
     const playground = usePlayground(code);
-    const game = useGame(playground.playground, decodedGameId || null);
+    const game = useGame(playground.playground, decodedGameId || null, user?.publicKey || null);
 
     if (!code || !decodedGameId) {
         return (

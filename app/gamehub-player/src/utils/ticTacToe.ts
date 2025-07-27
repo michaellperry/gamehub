@@ -6,16 +6,28 @@ export type BoardState = BoardCell[];
 export interface TicTacToeState {
     board: BoardState;
     currentPlayer: 'X' | 'O' | null;
+    currentPlayerId: string | null;
+    challengerPlayerId: string | null;
+    opponentPlayerId: string | null;
     winner: 'X' | 'O' | 'draw' | null;
+    winnerPlayerId: string | null;
     isGameOver: boolean;
 }
 
 /**
  * Computes the current state of a tic-tac-toe board from moves
  * @param moves - Array of moves sorted by index (chronological order)
+ * @param challengerPlayerId - ID of the challenger (plays X, even indexes), or null if unknown
+ * @param opponentPlayerId - ID of the opponent (plays O, odd indexes), or null if unknown
+ * @param currentPlayerId - ID of the current player viewing the game, or null if unknown
  * @returns TicTacToeState with board, current player, winner, and game status
  */
-export function computeTicTacToeState(moves: Move[]): TicTacToeState {
+export function computeTicTacToeState(
+    moves: Move[],
+    challengerPlayerId: string | null,
+    opponentPlayerId: string | null,
+    currentPlayerId: string | null
+): TicTacToeState {
     // Initialize empty board (9 positions: 0-8)
     const board: BoardState = Array(9).fill(null);
 
@@ -40,10 +52,22 @@ export function computeTicTacToeState(moves: Move[]): TicTacToeState {
     // Game is over if there's a winner or board is full
     const isGameOver = winner !== null || board.every(cell => cell !== null);
 
+    // Determine winner player ID (only if player IDs are provided)
+    let winnerPlayerId: string | null = null;
+    if (winner === 'X' && challengerPlayerId) {
+        winnerPlayerId = challengerPlayerId;
+    } else if (winner === 'O' && opponentPlayerId) {
+        winnerPlayerId = opponentPlayerId;
+    }
+
     return {
         board,
         currentPlayer: isGameOver ? null : nextPlayer,
+        currentPlayerId,
+        challengerPlayerId,
+        opponentPlayerId,
         winner,
+        winnerPlayerId,
         isGameOver,
     };
 }
