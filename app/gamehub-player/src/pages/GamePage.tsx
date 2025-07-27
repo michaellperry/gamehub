@@ -1,5 +1,7 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, CenteredContent, Container, PageLayout, Typography } from '../components/atoms';
+import { useGame } from '../hooks/useGame';
+import { usePlayground } from '../hooks/usePlayground';
 
 export default function GamePage() {
     const { code, gameId } = useParams<{ code: string; gameId: string }>();
@@ -7,6 +9,10 @@ export default function GamePage() {
 
     // Decode the game ID to handle URL-encoded special characters
     const decodedGameId = gameId ? decodeURIComponent(gameId) : undefined;
+
+    // Get playground and game data
+    const playground = usePlayground(code);
+    const game = useGame(playground.playground, decodedGameId || null);
 
     if (!code || !decodedGameId) {
         return (
@@ -64,17 +70,78 @@ export default function GamePage() {
                         </div>
                     </CenteredContent>
 
-                    {/* Game Content Placeholder */}
+                    {/* Game Content */}
                     <CenteredContent className="py-12">
-                        <div className="text-center space-y-4">
-                            <Typography variant="h2" className="text-2xl font-semibold text-gray-700">
-                                Game Page Coming Soon
-                            </Typography>
-                            <Typography variant="body" className="text-gray-600 max-w-md">
-                                This is where the actual game interface will be implemented.
-                                The game will show the tic-tac-toe board, player turns, and game state.
-                            </Typography>
-                        </div>
+                        {playground.loading || game.isLoading ? (
+                            <div className="text-center space-y-4">
+                                <Typography variant="body" className="text-gray-600">
+                                    Loading game...
+                                </Typography>
+                            </div>
+                        ) : playground.error ? (
+                            <div className="text-center space-y-4">
+                                <Alert variant="error" title="Playground Error">
+                                    {playground.error}
+                                </Alert>
+                            </div>
+                        ) : game.error ? (
+                            <div className="text-center space-y-4">
+                                <Alert variant="error" title="Game Error">
+                                    {game.error}
+                                </Alert>
+                            </div>
+                        ) : game.game ? (
+                            <div className="text-center space-y-6">
+                                <div className="space-y-4">
+                                    <Typography variant="h2" className="text-2xl font-semibold text-gray-700">
+                                        {game.challengerName} vs {game.opponentName}
+                                    </Typography>
+                                    <div className="flex justify-center space-x-4">
+                                        <div className="text-center">
+                                            <Typography variant="body" className="font-semibold">
+                                                {game.challengerStarts ? 'X' : 'O'}
+                                            </Typography>
+                                            <Typography variant="body" className="text-sm text-gray-600">
+                                                {game.challengerName}
+                                            </Typography>
+                                        </div>
+                                        <div className="text-center">
+                                            <Typography variant="body" className="font-semibold">
+                                                {game.challengerStarts ? 'O' : 'X'}
+                                            </Typography>
+                                            <Typography variant="body" className="text-sm text-gray-600">
+                                                {game.opponentName}
+                                            </Typography>
+                                        </div>
+                                    </div>
+                                    {game.createdAt && (
+                                        <Typography variant="body" className="text-sm text-gray-500">
+                                            Game started: {game.createdAt.toLocaleDateString()}
+                                        </Typography>
+                                    )}
+                                </div>
+
+                                {/* Game Board Placeholder */}
+                                <div className="mt-8">
+                                    <Typography variant="h3" className="text-xl font-semibold text-gray-700 mb-4">
+                                        Game Board Coming Soon
+                                    </Typography>
+                                    <Typography variant="body" className="text-gray-600 max-w-md">
+                                        This is where the actual tic-tac-toe board will be implemented.
+                                        The game will show the board state, player turns, and game state.
+                                    </Typography>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center space-y-4">
+                                <Typography variant="h2" className="text-2xl font-semibold text-gray-700">
+                                    Game Not Found
+                                </Typography>
+                                <Typography variant="body" className="text-gray-600 max-w-md">
+                                    The specified game could not be found in this playground.
+                                </Typography>
+                            </div>
+                        )}
                     </CenteredContent>
                 </div>
             </Container>
