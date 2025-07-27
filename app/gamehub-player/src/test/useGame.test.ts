@@ -35,11 +35,10 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
-            const tenant = await jinaga.fact(new Tenant(challengerUser));
 
             // Create players
             const challengerPlayer = await jinaga.fact(new Player(challengerUser, tenant));
@@ -90,11 +89,10 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
-            const tenant = await jinaga.fact(new Tenant(challengerUser));
 
             // Create players
             const challengerPlayer = await jinaga.fact(new Player(challengerUser, tenant));
@@ -146,11 +144,10 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
-            const tenant = await jinaga.fact(new Tenant(challengerUser));
 
             // Create players
             const challengerPlayer = await jinaga.fact(new Player(challengerUser, tenant));
@@ -204,11 +201,10 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
-            const tenant = await jinaga.fact(new Tenant(challengerUser));
 
             // Create players
             const challengerPlayer = await jinaga.fact(new Player(challengerUser, tenant));
@@ -258,11 +254,10 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga } = await TestScenarios.multipleUsersInTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
-            const tenant = await jinaga.fact(new Tenant(challengerUser));
 
             // Create players
             const challengerPlayer = await jinaga.fact(new Player(challengerUser, tenant));
@@ -315,7 +310,7 @@ describe('useGame', () => {
             const opponentUser = new User('opponent-user-key');
             const observerUser = new User('observer-user-key');
 
-            const { jinaga, tenant } = await TestScenarios.multiUserWithTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser,
                 observerUser
@@ -375,7 +370,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, tenant } = await TestScenarios.multiUserWithTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -431,7 +426,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, tenant } = await TestScenarios.multiUserWithTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -488,7 +483,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, tenant } = await TestScenarios.multiUserWithTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);
@@ -554,7 +549,7 @@ describe('useGame', () => {
             const challengerUser = new User('challenger-user-key');
             const opponentUser = new User('opponent-user-key');
 
-            const { jinaga, tenant } = await TestScenarios.multiUserWithTenant([
+            const { jinaga, tenant } = await TestScenarios.multipleUsersInTenant([
                 challengerUser,
                 opponentUser
             ]);

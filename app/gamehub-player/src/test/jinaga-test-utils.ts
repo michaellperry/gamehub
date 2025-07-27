@@ -102,19 +102,20 @@ export class JinagaTestUtils {
     /**
      * Create a test instance with multiple users and complex state
      */
-    static async createComplexTestInstance(
+    static async createComplexTestInstance<T = void>(
         users: User[],
-        setupCallback?: (jinaga: Jinaga, users: User[]) => Promise<void>
-    ): Promise<{ jinaga: Jinaga; users: User[] }> {
+        setupCallback?: (jinaga: Jinaga, users: User[]) => Promise<T>
+    ): Promise<{ jinaga: Jinaga; users: User[]; setupData?: T }> {
         const jinaga: Jinaga = JinagaTest.create({
             user: users[0], // First user is the "logged in" user
         });
 
+        let setupData: T | undefined;
         if (setupCallback) {
-            await setupCallback(jinaga, users);
+            setupData = await setupCallback(jinaga, users);
         }
 
-        return { jinaga, users };
+        return { jinaga, users, setupData };
     }
 
     /**
@@ -199,10 +200,10 @@ export const TestScenarios = {
     },
 
     /**
-     * Scenario: Multiple users in a tenant
-     */
+ * Scenario: Multiple users in a tenant
+ */
     multipleUsersInTenant: async (users: User[]) => {
-        const { jinaga, users: userFacts } = await JinagaTestUtils.createComplexTestInstance(users, async (j, users) => {
+        const { jinaga, users: userFacts, setupData: tenant } = await JinagaTestUtils.createComplexTestInstance<Tenant>(users, async (j, users) => {
             const owner = users[0];
             const tenant = await j.fact(new Tenant(owner));
 
@@ -216,9 +217,11 @@ export const TestScenarios = {
                 const player = await j.fact(new Player(user, tenant));
                 await j.fact(new PlayerName(player, `Player ${user.publicKey.slice(0, 8)}`, []));
             }
+
+            return tenant;
         });
 
-        return { jinaga, users: userFacts };
+        return { jinaga, users: userFacts, tenant: tenant! };
     },
 
     /**
