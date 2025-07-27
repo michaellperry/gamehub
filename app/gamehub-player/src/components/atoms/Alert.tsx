@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 
 export type AlertVariant = 'info' | 'success' | 'warning' | 'error' | 'game-event';
 
@@ -72,7 +72,7 @@ export const Alert: React.FC<AlertProps> = ({
                 {alertIcon && (
                     <div className="flex-shrink-0 mr-3">
                         <Icon
-                            name={alertIcon as any}
+                            name={alertIcon as IconName}
                             size="md"
                             className="mt-0.5"
                         />

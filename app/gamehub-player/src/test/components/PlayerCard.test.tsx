@@ -8,6 +8,7 @@ describe('PlayerCard', () => {
         playground: { type: 'GameHub.Playground', code: 'TEST' },
         player: { type: 'GameHub.Player', user: { type: 'GameHub.User', username: 'test' }, tenant: { type: 'GameHub.Tenant', name: 'test' } },
         joinedAt: new Date('2024-01-01T00:00:00Z')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     const mockPlayer = {

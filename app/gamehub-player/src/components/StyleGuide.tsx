@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from './atoms/Button';
-import { Icon } from './atoms/Icon';
+import { Icon, type IconName } from './atoms/Icon';
 import { Card } from './atoms/Card';
 import { Avatar } from './atoms/Avatar';
 import { Badge } from './atoms/Badge';
@@ -121,7 +121,7 @@ export const StyleGuide: React.FC = () => {
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {['play', 'pause', 'stop', 'join', 'leave', 'ready', 'chat', 'friends', 'notifications', 'home', 'settings', 'close'].map((icon) => (
                                 <div key={icon} className="flex flex-col items-center p-3 bg-white rounded-lg border border-gray-200">
-                                    <Icon name={icon as any} size="md" className="mb-2" />
+                                    <Icon name={icon as IconName} size="md" className="mb-2" />
                                     <span className="text-xs text-gray-600">{icon}</span>
                                 </div>
                             ))}

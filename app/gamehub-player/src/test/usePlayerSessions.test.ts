@@ -38,9 +38,12 @@ describe('usePlayerSessions Integration Tests', () => {
             const { result } = renderHook(() => usePlayerSession(tenant));
 
             // Create multiple playgrounds in sequence
-            const playground1 = await jinaga.fact(new Playground(tenant, 'REACTIVE-TEST-1'));
-            const playground2 = await jinaga.fact(new Playground(tenant, 'REACTIVE-TEST-2'));
-            const playground3 = await jinaga.fact(new Playground(tenant, 'REACTIVE-TEST-3'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground1 = await jinaga.fact(new Playground(tenant, 'REACTIVE-TEST-1'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground2 = await jinaga.fact(new Playground(tenant, 'REACTIVE-TEST-2'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground3 = await jinaga.fact(new Playground(tenant, 'REACTIVE-TEST-3'));
 
             // The hook should remain functional
             expect(result.current.isEnabled).toBe(true);
@@ -77,7 +80,8 @@ describe('usePlayerSessions Integration Tests', () => {
             const { result } = renderHook(() => usePlayerSession(tenant));
 
             // Create a playground
-            const playground = await jinaga.fact(new Playground(tenant, 'AUTO-CREATION-TEST'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground = await jinaga.fact(new Playground(tenant, 'AUTO-CREATION-TEST'));
 
             // The hook should remain functional
             expect(result.current.isEnabled).toBe(true);
@@ -93,8 +97,10 @@ describe('usePlayerSessions Integration Tests', () => {
             const { result } = renderHook(() => usePlayerSession(tenant));
 
             // Create multiple playgrounds
-            const playground1 = await jinaga.fact(new Playground(tenant, 'NAMES-TEST-1'));
-            const playground2 = await jinaga.fact(new Playground(tenant, 'NAMES-TEST-2'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground1 = await jinaga.fact(new Playground(tenant, 'NAMES-TEST-1'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground2 = await jinaga.fact(new Playground(tenant, 'NAMES-TEST-2'));
 
             // The hook should remain functional
             expect(result.current.isEnabled).toBe(true);
@@ -105,7 +111,7 @@ describe('usePlayerSessions Integration Tests', () => {
 
     describe('Development Mode Behavior', () => {
         it('should be enabled by default in development mode', async () => {
-            const { jinaga, tenant } = await TestScenarios.singleUserWithTenant(
+            const { tenant } = await TestScenarios.singleUserWithTenant(
                 new User('test-user-key')
             );
 
@@ -116,7 +122,7 @@ describe('usePlayerSessions Integration Tests', () => {
         });
 
         it('should allow manual enable/disable control', async () => {
-            const { jinaga, tenant } = await TestScenarios.singleUserWithTenant(
+            const { tenant } = await TestScenarios.singleUserWithTenant(
                 new User('test-user-key')
             );
 
@@ -145,7 +151,7 @@ describe('usePlayerSessions Integration Tests', () => {
                 new User('test-user-key')
             );
 
-            const { result, unmount } = renderHook(() => usePlayerSession(tenant));
+            const { unmount } = renderHook(() => usePlayerSession(tenant));
 
             // Unmount
             unmount();
@@ -167,7 +173,8 @@ describe('usePlayerSessions Integration Tests', () => {
             const { result } = renderHook(() => usePlayerSession(tenant));
 
             // Create a playground
-            const playground = await jinaga.fact(new Playground(tenant, 'ERROR-RESILIENCE-TEST'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground = await jinaga.fact(new Playground(tenant, 'ERROR-RESILIENCE-TEST'));
 
             // The hook should handle any fact creation errors gracefully
             // and not crash the application

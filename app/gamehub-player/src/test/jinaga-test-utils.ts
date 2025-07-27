@@ -34,7 +34,7 @@ export class JinagaTestUtils {
     /**
      * Create a basic Jinaga test instance
      */
-    static createBasicTestInstance(user?: User): any {
+    static createBasicTestInstance(user?: User): Jinaga {
         return JinagaTest.create({
             user: user,
         });
@@ -43,6 +43,7 @@ export class JinagaTestUtils {
     /**
      * Create a Jinaga test instance with authorization rules
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static createTestInstanceWithAuth(user?: User, authRules?: any): any {
         return JinagaTest.create({
             authorization: authRules,
@@ -53,6 +54,7 @@ export class JinagaTestUtils {
     /**
      * Create a Jinaga test instance with distribution rules
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static createTestInstanceWithDistribution(user?: User, distRules?: any): any {
         return JinagaTest.create({
             distribution: distRules,
@@ -64,8 +66,10 @@ export class JinagaTestUtils {
      * Create a test instance with pre-initialized state
      */
     static createTestInstanceWithState(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         initialState: any[],
         user?: User
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ): any {
         return JinagaTest.create({
             user: user,
@@ -79,7 +83,7 @@ export class JinagaTestUtils {
     static async createTestInstanceWithTenant(
         tenantOwner: User,
         tenantData?: Partial<TestTenant>
-    ): Promise<{ jinaga: any; tenant: Tenant; owner: User }> {
+    ): Promise<{ jinaga: Jinaga; tenant: Tenant; owner: User }> {
         const jinaga = JinagaTest.create({
             user: tenantOwner,
         });
@@ -100,7 +104,7 @@ export class JinagaTestUtils {
      */
     static async createComplexTestInstance(
         users: User[],
-        setupCallback?: (jinaga: any, users: User[]) => Promise<void>
+        setupCallback?: (jinaga: Jinaga, users: User[]) => Promise<void>
     ): Promise<{ jinaga: Jinaga; users: User[] }> {
         const jinaga: Jinaga = JinagaTest.create({
             user: users[0], // First user is the "logged in" user

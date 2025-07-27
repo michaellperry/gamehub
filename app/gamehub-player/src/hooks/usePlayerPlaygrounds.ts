@@ -43,10 +43,10 @@ export function usePlayerPlaygrounds(): PlayerPlaygroundsViewModel {
 
     // Convert the data to the expected format
     const playgrounds: PlayerPlayground[] | null = playerPlaygrounds ?
-        playerPlaygrounds.map((playgroundData: any) => ({
-            playgroundCode: playgroundData.playgroundCode,
-            joinedAt: new Date(playgroundData.joinedAt),
-            playerCount: new Set(playgroundData.playerHashes).size
+        playerPlaygrounds.map((playgroundData: Record<string, unknown>) => ({
+            playgroundCode: playgroundData.playgroundCode as string,
+            joinedAt: new Date(playgroundData.joinedAt as string),
+            playerCount: new Set(playgroundData.playerHashes as string[]).size
         })) : null;
 
     const clearError = () => {

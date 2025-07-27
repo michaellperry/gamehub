@@ -31,7 +31,7 @@ afterAll(() => {
 describe('usePlayerSession', () => {
     describe('Hook Initialization and State', () => {
         it('should initialize with enabled state when tenant is provided', async () => {
-            const { jinaga, tenant } = await TestScenarios.singleUserWithTenant(
+            const { tenant } = await TestScenarios.singleUserWithTenant(
                 new User('test-user-key')
             );
 
@@ -43,7 +43,7 @@ describe('usePlayerSession', () => {
         });
 
         it('should allow enabling and disabling simulation', async () => {
-            const { jinaga, tenant } = await TestScenarios.singleUserWithTenant(
+            const { tenant } = await TestScenarios.singleUserWithTenant(
                 new User('test-user-key')
             );
 
@@ -77,7 +77,8 @@ describe('usePlayerSession', () => {
             const { result } = renderHook(() => usePlayerSession(tenant));
 
             // Create a playground
-            const playground = await jinaga.fact(new Playground(tenant, 'TEST-PLAYGROUND'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground = await jinaga.fact(new Playground(tenant, 'TEST-PLAYGROUND'));
 
             // The hook should be functional without errors
             expect(result.current.isEnabled).toBe(true);
@@ -100,7 +101,8 @@ describe('usePlayerSession', () => {
             expect(result.current.isEnabled).toBe(false);
 
             // Create a playground while disabled
-            const playground = await jinaga.fact(new Playground(tenant, 'DISABLED-TEST'));
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _playground = await jinaga.fact(new Playground(tenant, 'DISABLED-TEST'));
 
             // Hook should remain functional
             expect(result.current.isEnabled).toBe(false);
@@ -110,8 +112,8 @@ describe('usePlayerSession', () => {
     describe('Error Handling Scenarios', () => {
         it('should handle Jinaga connection errors gracefully', async () => {
             // Create a test instance that might have connection issues
-            const jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
-            const tenant = await jinaga.fact(new Tenant(new User('test-user-key')));
+            const _jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
+            const tenant = await _jinaga.fact(new Tenant(new User('test-user-key')));
 
             const { result } = renderHook(() => usePlayerSession(tenant));
 
@@ -122,6 +124,7 @@ describe('usePlayerSession', () => {
         });
 
         it('should handle null tenant gracefully', () => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
 
             const { result } = renderHook(() => usePlayerSession(null));
@@ -135,7 +138,7 @@ describe('usePlayerSession', () => {
 
     describe('Development Mode Behavior', () => {
         it('should be enabled by default in development mode', async () => {
-            const { jinaga, tenant } = await TestScenarios.singleUserWithTenant(
+            const { tenant } = await TestScenarios.singleUserWithTenant(
                 new User('test-user-key')
             );
 
@@ -146,7 +149,7 @@ describe('usePlayerSession', () => {
         });
 
         it('should allow manual enable/disable control', async () => {
-            const { jinaga, tenant } = await TestScenarios.singleUserWithTenant(
+            const { tenant } = await TestScenarios.singleUserWithTenant(
                 new User('test-user-key')
             );
 

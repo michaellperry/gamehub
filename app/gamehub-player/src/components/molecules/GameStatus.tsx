@@ -1,6 +1,6 @@
 import React from 'react';
-import { Badge } from '../atoms/Badge';
-import { Icon } from '../atoms/Icon';
+import { Badge, type BadgeVariant } from '../atoms/Badge';
+import { Icon, type IconName } from '../atoms/Icon';
 import { formatDuration } from '../../utils/dateUtils';
 
 export type GameStatusType = 'waiting' | 'active' | 'finished' | 'lobby' | 'paused' | 'loading';
@@ -72,7 +72,7 @@ export const GameStatus: React.FC<GameStatusProps> = ({
         <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
             <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                    <Icon name={config.icon as any} size="md" className="text-gray-600" />
+                    <Icon name={config.icon as IconName} size="md" className="text-gray-600" />
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900">
                             {config.text}
@@ -83,7 +83,7 @@ export const GameStatus: React.FC<GameStatusProps> = ({
                     </div>
                 </div>
 
-                <Badge variant={config.color as any} icon={config.icon}>
+                <Badge variant={config.color as BadgeVariant} icon={config.icon}>
                     {status}
                 </Badge>
             </div>

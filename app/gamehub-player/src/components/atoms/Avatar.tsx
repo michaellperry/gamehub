@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 
 export type PlayerStatus = 'online' | 'offline' | 'away' | 'busy' | 'in-game' | 'ready' | 'spectating';
 
@@ -108,7 +108,7 @@ export const Avatar: React.FC<AvatarProps> = ({
                 {showStatus && (
                     <div className={statusClasses}>
                         <Icon
-                            name={statusIcons[status] as any}
+                            name={statusIcons[status] as IconName}
                             size="xs"
                             className="text-white"
                         />

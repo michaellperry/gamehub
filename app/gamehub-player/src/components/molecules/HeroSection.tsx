@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from '../atoms';
+import { Icon, type IconName } from '../atoms';
 import { Typography } from '../atoms/Typography';
 
 export interface HeroSectionProps {
@@ -19,7 +19,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className={`text-center mb-8 ${className}`}>
             {icon && (
                 <Icon
-                    name={icon as any}
+                    name={icon as IconName}
                     size="xl"
                     className="text-primary-600 mx-auto mb-4"
                 />

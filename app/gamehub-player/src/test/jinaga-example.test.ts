@@ -41,7 +41,7 @@ describe('Jinaga Test Examples', () => {
 
     describe('Tenant Setup Scenarios', () => {
         it('should create a tenant with owner', async () => {
-            const { jinaga, tenant, owner } = await TestScenarios.singleUserWithTenant(
+            const { tenant, owner } = await TestScenarios.singleUserWithTenant(
                 new User('test-owner-key')
             );
 
@@ -57,7 +57,7 @@ describe('Jinaga Test Examples', () => {
                 new User('user-3')
             ];
 
-            const { jinaga, users: userFacts } = await TestScenarios.multipleUsersInTenant(users);
+            const { users: userFacts } = await TestScenarios.multipleUsersInTenant(users);
 
             // Verify all users were created
             expect(userFacts).toHaveLength(3);
@@ -67,7 +67,7 @@ describe('Jinaga Test Examples', () => {
         });
 
         it('should create a tenant with active playground and players', async () => {
-            const { jinaga, tenant, owner, players, playground, joins } =
+            const { tenant, players, playground, joins } =
                 await TestScenarios.tenantWithActivePlayground(
                     new User('test-owner-key'),
                     3
@@ -81,7 +81,7 @@ describe('Jinaga Test Examples', () => {
 
             // Verify players have names
             for (const { playerName } of players) {
-                expect((playerName as any).name).toMatch(/Player \d+/);
+                expect((playerName as Record<string, unknown>).name).toMatch(/Player \d+/);
             }
         });
     });
@@ -122,7 +122,7 @@ describe('Jinaga Test Examples', () => {
                 new User('player2')
             ];
 
-            const { jinaga, users: userFacts } = await JinagaTestUtils.createComplexTestInstance(
+            const { jinaga } = await JinagaTestUtils.createComplexTestInstance(
                 users,
                 async (j, users) => {
                     const admin = users[0];

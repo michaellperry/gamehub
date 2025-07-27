@@ -133,7 +133,6 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     cancelText = 'Cancel',
     onConfirm,
     confirmDisabled = false,
-    confirmVariant = 'primary',
     ...props
 }) => {
     return (
