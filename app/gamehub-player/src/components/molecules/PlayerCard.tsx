@@ -1,13 +1,12 @@
 import React from 'react';
+import { PlaygroundPlayer } from '../../hooks/usePlaygroundPage';
 import { Button, Icon, Typography } from '../atoms';
 import { ChallengeStatus } from './ChallengeStatus';
-import { PlaygroundPlayer } from '../../hooks/usePlaygroundPage';
 
 export interface PlayerCardProps {
     player: PlaygroundPlayer;
     isCurrentPlayer: boolean;
     onChallengeClick?: (player: PlaygroundPlayer) => void;
-    onChallengeStatusClick?: () => void;
     className?: string;
 }
 
@@ -15,18 +14,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
     player,
     isCurrentPlayer,
     onChallengeClick,
-    onChallengeStatusClick,
     className = '',
 }) => {
     const handleChallengeClick = () => {
         if (onChallengeClick && !isCurrentPlayer) {
             onChallengeClick(player);
-        }
-    };
-
-    const handleChallengeStatusClick = () => {
-        if (onChallengeStatusClick && player.isChallengePending) {
-            onChallengeStatusClick();
         }
     };
 
@@ -45,9 +37,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                             </Typography>
                         )}
                     </div>
-                    <Typography variant="body-sm" className="text-gray-500">
-                        Joined {new Date(player.joinedAt).toLocaleDateString()}
-                    </Typography>
                 </div>
             </div>
 
@@ -57,7 +46,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                     <ChallengeStatus
                         type="pending"
                         size="sm"
-                        onClick={handleChallengeStatusClick}
                         pulse={true}
                     />
                 )}

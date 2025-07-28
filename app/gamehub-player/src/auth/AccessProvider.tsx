@@ -16,12 +16,12 @@ const isPrivateBrowsingMode = (): boolean => {
         localStorage.setItem('test', 'test');
         localStorage.removeItem('test');
         return false;
-    } catch (e) {
+    } catch {
         return true;
     }
 };
 
-export function AccessProvider({ children }: PropsWithChildren<{}>) {
+export function AccessProvider({ children }: PropsWithChildren) {
     // Check for private browsing mode
     useEffect(() => {
         if (isPrivateBrowsingMode()) {

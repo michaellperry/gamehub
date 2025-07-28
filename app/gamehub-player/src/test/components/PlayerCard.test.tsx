@@ -8,6 +8,7 @@ describe('PlayerCard', () => {
         playground: { type: 'GameHub.Playground', code: 'TEST' },
         player: { type: 'GameHub.Player', user: { type: 'GameHub.User', username: 'test' }, tenant: { type: 'GameHub.Tenant', name: 'test' } },
         joinedAt: new Date('2024-01-01T00:00:00Z')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any;
 
     const mockPlayer = {
@@ -33,7 +34,6 @@ describe('PlayerCard', () => {
         render(<PlayerCard player={mockPlayer} isCurrentPlayer={false} />);
 
         expect(screen.getByText('Test Player')).toBeInTheDocument();
-        expect(screen.getByText(/Joined/)).toBeInTheDocument();
         expect(screen.getByText('Challenge')).toBeInTheDocument();
     });
 
@@ -68,21 +68,6 @@ describe('PlayerCard', () => {
 
         fireEvent.click(screen.getByText('Challenge'));
         expect(handleChallengeClick).toHaveBeenCalledWith(mockPlayer);
-    });
-
-    it('calls onChallengeStatusClick when challenge status is clicked', () => {
-        const handleChallengeStatusClick = vi.fn();
-
-        render(
-            <PlayerCard
-                player={mockPlayerWithPendingChallenge}
-                isCurrentPlayer={false}
-                onChallengeStatusClick={handleChallengeStatusClick}
-            />
-        );
-
-        fireEvent.click(screen.getByText('Pending'));
-        expect(handleChallengeStatusClick).toHaveBeenCalled();
     });
 
     it('disables challenge button when challenge is pending', () => {

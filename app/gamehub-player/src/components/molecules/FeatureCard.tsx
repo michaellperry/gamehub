@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Icon } from '../atoms';
+import { Card, Icon, type IconName } from '../atoms';
 import { Typography } from '../atoms/Typography';
 
 export interface FeatureCardProps {
@@ -18,7 +18,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
     return (
         <Card variant="player" size="md" className={`text-center ${className}`}>
             <Icon
-                name={icon as any}
+                name={icon as IconName}
                 size="lg"
                 className="text-primary-600 mx-auto mb-2"
             />

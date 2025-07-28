@@ -1,5 +1,5 @@
-import { authorization } from 'gamehub-model';
-import { Player, PlayerName, Tenant } from 'gamehub-model/model';
+import { authorization } from '@model';
+import { Player, PlayerName, Tenant } from '@model/model';
 import { JinagaBrowser, Trace, Tracer, User } from 'jinaga';
 import { AuthProvider } from './auth/AuthProvider';
 import { getEnv } from './utils/environment';
@@ -34,20 +34,20 @@ if (import.meta.env.DEV) {
 
 // Be quiet about info, metrics, and counters.
 class ErrorConsoleTracer implements Tracer {
-    info(_message: string): void {
+    info(): void {
     }
     warn(message: string): void {
         console.warn(message);
     }
-    error(error: any): void {
+    error(error: unknown): void {
         console.error(error);
     }
     dependency<T>(_name: string, _data: string, operation: () => Promise<T>): Promise<T> {
         return operation();
     }
-    metric(_message: string, _measurements: { [key: string]: number; }): void {
+    metric(): void {
     }
-    counter(_name: string, _value: number): void {
+    counter(): void {
     }
 }
 

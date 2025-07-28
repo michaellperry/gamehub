@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { PlayerPlayground } from '../../hooks/usePlayerPlaygrounds';
-import { Button, Card, Icon, LoadingIndicator, Typography } from '../atoms';
+import { Button, Card, Icon, LoadingIndicator, Typography, CenteredContent } from '../atoms';
 import { getFriendlyDate } from '../../utils/dateUtils';
 
 export interface PlayerPlaygroundsListProps {
@@ -27,9 +27,9 @@ export function PlayerPlaygroundsList({
     if (loading) {
         return (
             <Card variant="game" size="lg" className={`max-w-md mx-auto ${className}`}>
-                <div className="text-center py-8">
+                <CenteredContent className="py-8">
                     <LoadingIndicator size="md" variant="spinner" text="Loading your playgrounds..." />
-                </div>
+                </CenteredContent>
             </Card>
         );
     }
@@ -37,7 +37,7 @@ export function PlayerPlaygroundsList({
     if (error) {
         return (
             <Card variant="game" size="lg" className={`max-w-md mx-auto ${className}`}>
-                <div className="text-center py-4">
+                <CenteredContent className="py-4">
                     <Typography variant="body" className="text-red-600">
                         {error}
                     </Typography>
@@ -49,7 +49,7 @@ export function PlayerPlaygroundsList({
                     >
                         Try Again
                     </Button>
-                </div>
+                </CenteredContent>
             </Card>
         );
     }
@@ -57,7 +57,7 @@ export function PlayerPlaygroundsList({
     if (!playgrounds || playgrounds.length === 0) {
         return (
             <Card variant="game" size="lg" className={`max-w-md mx-auto ${className}`}>
-                <div className="text-center py-8">
+                <CenteredContent className="py-8">
                     <Icon name="friends" size="lg" className="text-gray-400 mx-auto mb-4" />
                     <Typography variant="h3" className="text-lg font-semibold text-gray-900 mb-2">
                         No Playgrounds Yet
@@ -65,7 +65,7 @@ export function PlayerPlaygroundsList({
                     <Typography variant="body-sm" className="text-gray-600">
                         Start a new playground or join one to get started!
                     </Typography>
-                </div>
+                </CenteredContent>
             </Card>
         );
     }
@@ -73,7 +73,7 @@ export function PlayerPlaygroundsList({
     return (
         <Card variant="game" size="lg" className={`max-w-md mx-auto ${className}`}>
             <div className="space-y-4">
-                <div className="text-center">
+                <CenteredContent>
                     <Icon name="friends" size="md" className="text-primary-600 mx-auto mb-2" />
                     <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                         Your Playgrounds ({playgrounds.length})
@@ -81,7 +81,7 @@ export function PlayerPlaygroundsList({
                     <Typography variant="body-sm" className="text-gray-600">
                         Playgrounds you've joined recently
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 <div className="space-y-3">
                     {playgrounds.map((playground) => (

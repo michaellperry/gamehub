@@ -11,7 +11,7 @@
         "generate-policies": "npm run generate-policies --workspace=gamehub-model",
         "lint": "eslint .",
         "preview": "vite preview",
-        "typecheck": "tsc --noEmit",
+        "type-check": "tsc --noEmit",
         "test": "vitest run",
         "test:ui": "vitest --ui",
         "test:run": "vitest run",

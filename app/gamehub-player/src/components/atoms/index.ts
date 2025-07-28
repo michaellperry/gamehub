@@ -33,3 +33,6 @@ export type { SelectableCardProps } from './SelectableCard';
 
 export { IconButton } from './IconButton';
 export type { IconButtonProps } from './IconButton';
+
+export { CenteredContent } from './CenteredContent';
+export type { CenteredContentProps } from './CenteredContent';

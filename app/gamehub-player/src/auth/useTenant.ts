@@ -1,4 +1,4 @@
-import { Tenant } from 'gamehub-model/model';
+import { Tenant } from '@model/model';
 import { User } from 'jinaga';
 
 function createTenant() {

@@ -44,7 +44,7 @@ export const Card: React.FC<CardProps> = ({
         xl: 'p-8',
     };
 
-    const interactiveClasses = interactive ? 'cursor-pointer hover:scale-105' : '';
+    const interactiveClasses = interactive ? 'cursor-pointer' : '';
     const selectedClasses = selected ? 'ring-2 ring-primary-500 border-primary-500' : '';
 
     const classes = [

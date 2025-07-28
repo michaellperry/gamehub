@@ -24,6 +24,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
+            '@model': resolve(__dirname, '../gamehub-model'),
             '@': resolve(__dirname, './src')
         }
     }

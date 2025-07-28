@@ -1,6 +1,11 @@
 import { Challenge, Join, Leave, Player, PlayerName, Playground, model } from '@model/model';
 import { useSpecification } from 'jinaga-react';
+import { useNavigate } from 'react-router-dom';
 import { j } from '../jinaga-config';
+import { ActiveGamesViewModel, useActiveGames } from './useActiveGames';
+import { ChallengeViewModel, useChallenge } from './useChallenge';
+import { ChallengeModalViewModel, useChallengeModal } from './useChallengeModal';
+import { LeavePlaygroundViewModel, useLeavePlayground } from './useLeavePlayground';
 import { usePlayer } from './usePlayer';
 import { usePlayground } from './usePlayground';
 
@@ -15,14 +20,34 @@ export interface PlaygroundPlayer {
 
 export interface PlaygroundGame {
     id: string;
-    playerX: PlaygroundPlayer;
-    playerO: PlaygroundPlayer;
-    status: 'waiting' | 'active' | 'finished';
+    playerX: string;
+    playerO: string;
+    isActivePlayer: boolean;
+}
+
+export interface PlaygroundNavigationViewModel {
+    goHome: () => void;
+}
+
+export interface PlaygroundUIViewModel {
+    copyCode: () => void;
 }
 
 export interface PlaygroundPageData {
     players: PlaygroundPlayer[];
-    games: PlaygroundGame[];
+    // Navigation
+    navigate: PlaygroundNavigationViewModel;
+    // Challenge functionality
+    challenge: {
+        modal: ChallengeModalViewModel;
+        challengeViewModel: ChallengeViewModel;
+    };
+    // Leave playground functionality
+    leave: LeavePlaygroundViewModel;
+    // Active games functionality
+    activeGames: ActiveGamesViewModel;
+    // UI state
+    ui: PlaygroundUIViewModel;
 }
 
 export interface PlaygroundPageViewModel {
@@ -33,8 +58,6 @@ export interface PlaygroundPageViewModel {
     isValidCode: boolean;
     currentPlayerJoin: Join | null;
     clearError: () => void;
-    handleChallengePlayer: (player: PlaygroundPlayer) => void;
-    handleJoinGame: (game: PlaygroundGame) => void;
     handleLeavePlayground: () => Promise<void>;
 }
 
@@ -44,7 +67,6 @@ const playgroundPlayersSpec = model.given(Playground).match((playground) =>
         .selectMany(join => join.player.predecessor()
             .select(player => ({
                 playerId: j.hash(player),
-                sessionId: j.hash(join),
                 joinedAt: join.joinedAt,
                 names: PlayerName.current(player).select(name => name.name),
                 join: join,
@@ -60,6 +82,7 @@ const playerJoinsSpec = model.given(Player, Playground).match((player, playgroun
 );
 
 export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewModel {
+    const navigate = useNavigate();
     const { playerId, player, error: playerError, loading: playerLoading, clearError: clearPlayerError } = usePlayer();
     const { playground, isValidCode, error: playgroundError, loading: playgroundLoading, clearError: clearPlaygroundError } = usePlayground(code);
 
@@ -80,32 +103,17 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         return acc;
     }, {} as Record<string, typeof playerSessions[number]>);
 
-    const players: PlaygroundPlayer[] | undefined = sessionsByPlayerId ? Object.values(sessionsByPlayerId).map(session => ({
-        playerId: session.playerId,
-        name: session.names[0],
-        joinedAt: new Date(session.joinedAt),
-        isCurrentPlayer: session.playerId === playerId,
-        join: session.join,
-        isChallengePending: session.pendingChallengePlayerIds.some(id => id === playerId)
-    })) : undefined;
-
     // Extract the current player's join from the sessions data
     const currentPlayerJoin: Join | null = sessionsByPlayerId && playerId ?
         (sessionsByPlayerId[playerId]?.join || null) : null;
 
+    // Create challenge and modal hooks
+    const challengeViewModel = useChallenge(currentPlayerJoin);
+    const challengeModal = useChallengeModal(challengeViewModel);
+
     const clearError = () => {
         clearPlaygroundError();
         clearPlayerError();
-    };
-
-    const handleChallengePlayer = (player: PlaygroundPlayer) => {
-        // TODO: Implement challenge logic
-        console.log('Challenge player:', player);
-    };
-
-    const handleJoinGame = (game: PlaygroundGame) => {
-        // TODO: Implement join game logic
-        console.log('Join game:', game);
     };
 
     const handleLeavePlayground = async (): Promise<void> => {
@@ -127,6 +135,54 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
         }
     };
 
+    // Create leave playground hook
+    const leavePlayground = useLeavePlayground(handleLeavePlayground);
+
+    // Transform player sessions into PlaygroundPlayer objects
+    const players: PlaygroundPlayer[] | undefined = sessionsByPlayerId ? Object.values(sessionsByPlayerId).map(session => ({
+        playerId: session.playerId,
+        name: session.names[0],
+        joinedAt: new Date(session.joinedAt),
+        isCurrentPlayer: session.playerId === playerId,
+        join: session.join,
+        isChallengePending: session.pendingChallengePlayerIds.some(id => id === playerId)
+    })) : undefined;
+
+    // Create active games hook
+    const activeGames = useActiveGames(playground, playerId);
+
+    // Navigation functions
+    const goHome = () => navigate('/');
+
+    const copyCode = () => {
+        if (code) {
+            navigator.clipboard.writeText(code);
+            // TODO: Show success message
+        }
+    };
+
+    // Create view model instances
+    const navigationViewModel: PlaygroundNavigationViewModel = {
+        goHome,
+    };
+
+    const uiViewModel: PlaygroundUIViewModel = {
+        copyCode,
+    };
+
+    // Create the complete data structure
+    const composedData = players && activeGames ? {
+        players,
+        navigate: navigationViewModel,
+        challenge: {
+            modal: challengeModal,
+            challengeViewModel,
+        },
+        leave: leavePlayground,
+        activeGames,
+        ui: uiViewModel,
+    } : null;
+
     // Loading state combines player loading, playground loading, and specification loading
     const isLoading = playerLoading || playgroundLoading || playersLoading;
 
@@ -135,17 +191,12 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
 
     return {
         playground,
-        data: players ? {
-            players,
-            games: [], // Placeholder for now
-        } : null,
+        data: composedData,
         error: combinedError,
         loading: isLoading,
         isValidCode,
         currentPlayerJoin,
         clearError,
-        handleChallengePlayer,
-        handleJoinGame,
         handleLeavePlayground,
     };
 } 

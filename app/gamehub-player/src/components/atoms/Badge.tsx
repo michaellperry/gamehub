@@ -1,5 +1,5 @@
 import React from 'react';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
 
 export type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info' | 'primary' | 'achievement' | 'rank';
 
@@ -75,13 +75,13 @@ export const Badge: React.FC<BadgeProps> = ({
             tabIndex={interactive ? 0 : undefined}
         >
             {icon && iconPosition === 'left' && (
-                <Icon name={icon as any} size="xs" className="mr-1" />
+                <Icon name={icon as IconName} size="xs" className="mr-1" />
             )}
 
             {children}
 
             {icon && iconPosition === 'right' && (
-                <Icon name={icon as any} size="xs" className="ml-1" />
+                <Icon name={icon as IconName} size="xs" className="ml-1" />
             )}
         </span>
     );

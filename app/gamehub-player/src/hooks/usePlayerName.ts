@@ -1,4 +1,4 @@
-import { Player, PlayerName, Tenant, model } from 'gamehub-model/model';
+import { Player, PlayerName, Tenant, model } from '@model/model';
 import { User } from 'jinaga';
 import { useSpecification } from 'jinaga-react';
 import { useState } from 'react';

@@ -149,25 +149,46 @@ export class Game {
     ) { }
 
     static from(challenge: LabelOf<Challenge>) {
-        return challenge.successors(Game, (game) => game.challenge);
+        return challenge.successors(Game, (game) => game.challenge)
+            .notExists((game) => game.successors(Win, (win) => win.game))
+            .notExists((game) => game.successors(Draw, (draw) => draw.game));
     }
 
     static in(playground: LabelOf<Playground>) {
-        return playground.successors(Join, (join) => join.playground)
-            .selectMany((join) => join.successors(Challenge, (challenge) => challenge.challengerJoin))
-            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+        return playground.successors(Game, game => game.challenge.challengerJoin.playground)
+            .notExists((game) => game.successors(Win, (win) => win.game))
+            .notExists((game) => game.successors(Draw, (draw) => draw.game));
     }
 
     // Helper for distribution rules - games where player is challenger
     static whereChallenger(player: LabelOf<Player>) {
         return Challenge.by(player)
-            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge))
+            .notExists((game) => game.successors(Win, (win) => win.game))
+            .notExists((game) => game.successors(Draw, (draw) => draw.game));
     }
 
     // Helper for distribution rules - games where player is opponent
     static whereOpponent(player: LabelOf<Player>) {
         return Challenge.for(player)
-            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge));
+            .selectMany((challenge) => challenge.successors(Game, (game) => game.challenge))
+            .notExists((game) => game.successors(Win, (win) => win.game))
+            .notExists((game) => game.successors(Draw, (draw) => draw.game));
+    }
+}
+
+export class Move {
+    static Type = 'GameHub.Move' as const;
+    public type = Move.Type;
+
+    constructor(
+        public game: Game,
+        public index: number,
+        public position: number
+    ) { }
+
+    static in(game: LabelOf<Game>) {
+        return game.successors(Move, (move) => move.game);
     }
 }
 
@@ -196,6 +217,25 @@ export class Reject {
     }
 }
 
+export class Win {
+    static Type = 'GameHub.Win' as const;
+    public type = Win.Type;
+
+    constructor(
+        public game: Game,
+        public winner: Player
+    ) { }
+}
+
+export class Draw {
+    static Type = 'GameHub.Draw' as const;
+    public type = Draw.Type;
+
+    constructor(
+        public game: Game
+    ) { }
+}
+
 export const gameHubModel = (b: ModelBuilder) =>
     b
         .type(User)
@@ -208,4 +248,7 @@ export const gameHubModel = (b: ModelBuilder) =>
         .type(Leave, (m) => m.predecessor('join', Join))
         .type(Challenge, (m) => m.predecessor('challengerJoin', Join).predecessor('opponentJoin', Join))
         .type(Game, (m) => m.predecessor('challenge', Challenge))
-        .type(Reject, (m) => m.predecessor('challenge', Challenge));
+        .type(Move, (m) => m.predecessor('game', Game))
+        .type(Reject, (m) => m.predecessor('challenge', Challenge))
+        .type(Win, (m) => m.predecessor('game', Game).predecessor('winner', Player))
+        .type(Draw, (m) => m.predecessor('game', Game));

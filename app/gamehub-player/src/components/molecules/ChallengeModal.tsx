@@ -1,46 +1,31 @@
-import React, { useState } from 'react';
-import { Button, Typography } from '../atoms';
-import { Modal, GameStarterSelector } from './index';
-import { PlaygroundPlayer } from '../../hooks/usePlaygroundPage';
+import React from 'react';
+import { ChallengeModalViewModel } from '../../hooks/useChallengeModal';
+import { Button, Typography, CenteredContent } from '../atoms';
+import { GameStarterSelector, Modal } from './index';
 
 export interface ChallengeModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onChallenge: (opponent: PlaygroundPlayer, challengerStarts: boolean) => void;
-    selectedOpponent: PlaygroundPlayer;
+    viewModel: ChallengeModalViewModel;
     challengerName: string;
     playgroundCode: string;
-    loading?: boolean;
 }
 
 export const ChallengeModal: React.FC<ChallengeModalProps> = ({
-    isOpen,
-    onClose,
-    onChallenge,
-    selectedOpponent,
+    viewModel,
     challengerName,
     playgroundCode,
-    loading = false,
 }) => {
-    const [challengerStarts, setChallengerStarts] = useState<boolean>(true);
-
-    // Reset state when modal opens
-    React.useEffect(() => {
-        if (isOpen) {
-            setChallengerStarts(true);
-        }
-    }, [isOpen]);
-
     const handleChallenge = () => {
-        onChallenge(selectedOpponent, challengerStarts);
+        if (viewModel.selectedOpponent) {
+            viewModel.handleChallengeSubmit(viewModel.selectedOpponent, viewModel.challengerStarts);
+        }
     };
 
-    const canSubmit = !loading;
+    const canSubmit = !viewModel.loading;
 
     return (
         <Modal
-            isOpen={isOpen}
-            onClose={onClose}
+            isOpen={viewModel.showChallengeModal}
+            onClose={viewModel.handleChallengeClose}
             title="Challenge Player"
             size="md"
             footer={
@@ -49,15 +34,15 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                         variant="primary"
                         onClick={handleChallenge}
                         disabled={!canSubmit}
-                        loading={loading}
+                        loading={viewModel.loading}
                         className="sm:col-start-2"
                     >
-                        {loading ? 'Sending Challenge...' : 'Send Challenge'}
+                        {viewModel.loading ? 'Sending Challenge...' : 'Send Challenge'}
                     </Button>
                     <Button
                         variant="secondary"
-                        onClick={onClose}
-                        disabled={loading}
+                        onClick={viewModel.handleChallengeClose}
+                        disabled={viewModel.loading}
                         className="mt-3 sm:mt-0 sm:col-start-1"
                     >
                         Cancel
@@ -67,21 +52,21 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
         >
             <div className="space-y-6">
                 {/* Playground Info */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="body" className="text-gray-600">
                         Playground: {playgroundCode}
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Selected Opponent Info */}
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="h3" className="text-sm font-medium mb-2">
                         Challenging:
                     </Typography>
                     <Typography variant="body" className="text-lg font-semibold">
-                        {selectedOpponent.name}
+                        {viewModel.selectedOpponent?.name}
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Who Starts Selection */}
                 <div>
@@ -90,9 +75,9 @@ export const ChallengeModal: React.FC<ChallengeModalProps> = ({
                     </Typography>
                     <GameStarterSelector
                         challengerName={challengerName}
-                        selectedOpponent={selectedOpponent}
-                        challengerStarts={challengerStarts}
-                        onStarterChange={setChallengerStarts}
+                        selectedOpponent={viewModel.selectedOpponent!}
+                        challengerStarts={viewModel.challengerStarts}
+                        onStarterChange={viewModel.setChallengerStarts}
                     />
                 </div>
             </div>

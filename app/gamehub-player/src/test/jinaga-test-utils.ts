@@ -5,7 +5,7 @@ import {
     PlayerName,
     Playground,
     Tenant
-} from 'gamehub-model/model';
+} from '@model/model';
 import { Jinaga, JinagaTest, User } from 'jinaga';
 
 /**
@@ -34,7 +34,7 @@ export class JinagaTestUtils {
     /**
      * Create a basic Jinaga test instance
      */
-    static createBasicTestInstance(user?: User): any {
+    static createBasicTestInstance(user?: User): Jinaga {
         return JinagaTest.create({
             user: user,
         });
@@ -43,6 +43,7 @@ export class JinagaTestUtils {
     /**
      * Create a Jinaga test instance with authorization rules
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static createTestInstanceWithAuth(user?: User, authRules?: any): any {
         return JinagaTest.create({
             authorization: authRules,
@@ -53,6 +54,7 @@ export class JinagaTestUtils {
     /**
      * Create a Jinaga test instance with distribution rules
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static createTestInstanceWithDistribution(user?: User, distRules?: any): any {
         return JinagaTest.create({
             distribution: distRules,
@@ -64,8 +66,10 @@ export class JinagaTestUtils {
      * Create a test instance with pre-initialized state
      */
     static createTestInstanceWithState(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         initialState: any[],
         user?: User
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ): any {
         return JinagaTest.create({
             user: user,
@@ -79,7 +83,7 @@ export class JinagaTestUtils {
     static async createTestInstanceWithTenant(
         tenantOwner: User,
         tenantData?: Partial<TestTenant>
-    ): Promise<{ jinaga: any; tenant: Tenant; owner: User }> {
+    ): Promise<{ jinaga: Jinaga; tenant: Tenant; owner: User }> {
         const jinaga = JinagaTest.create({
             user: tenantOwner,
         });
@@ -98,19 +102,20 @@ export class JinagaTestUtils {
     /**
      * Create a test instance with multiple users and complex state
      */
-    static async createComplexTestInstance(
+    static async createComplexTestInstance<T = void>(
         users: User[],
-        setupCallback?: (jinaga: any, users: User[]) => Promise<void>
-    ): Promise<{ jinaga: Jinaga; users: User[] }> {
+        setupCallback?: (jinaga: Jinaga, users: User[]) => Promise<T>
+    ): Promise<{ jinaga: Jinaga; users: User[]; setupData?: T }> {
         const jinaga: Jinaga = JinagaTest.create({
             user: users[0], // First user is the "logged in" user
         });
 
+        let setupData: T | undefined;
         if (setupCallback) {
-            await setupCallback(jinaga, users);
+            setupData = await setupCallback(jinaga, users);
         }
 
-        return { jinaga, users };
+        return { jinaga, users, setupData };
     }
 
     /**
@@ -195,26 +200,19 @@ export const TestScenarios = {
     },
 
     /**
-     * Scenario: Multiple users in a tenant
-     */
-    multipleUsersInTenant: async (users: User[]) => {
-        const { jinaga, users: userFacts } = await JinagaTestUtils.createComplexTestInstance(users, async (j, users) => {
-            const owner = users[0];
-            const tenant = await j.fact(new Tenant(owner));
+ * Scenario: Multiple users in a tenant
+ */
+    multipleUsersInTenant: async (users: User[]): Promise<{ jinaga: Jinaga; users: User[]; tenant: Tenant }> => {
+        const { jinaga, users: userFacts, setupData: tenant } = await JinagaTestUtils.createComplexTestInstance<Tenant>(users, async (j) => {
+            const tenant = await j.singleUse(async (owner) => {
+                const tenant = await j.fact(new Tenant(owner));
+                return tenant;
+            })
 
-            // Add all users as administrators
-            for (const user of users) {
-                await j.fact(new Administrator(tenant, user, new Date()));
-            }
-
-            // Add all users as players
-            for (const user of users) {
-                const player = await j.fact(new Player(user, tenant));
-                await j.fact(new PlayerName(player, `Player ${user.publicKey.slice(0, 8)}`, []));
-            }
+            return tenant;
         });
 
-        return { jinaga, users: userFacts };
+        return { jinaga, users: userFacts, tenant: tenant! };
     },
 
     /**

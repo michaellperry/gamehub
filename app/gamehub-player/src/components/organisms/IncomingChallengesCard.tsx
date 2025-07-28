@@ -1,7 +1,7 @@
 import { Join } from '@model/model';
 import React from 'react';
 import { useIncomingChallenges } from '../../hooks/useIncomingChallenges';
-import { Button, Card, Icon, Typography } from '../atoms';
+import { Button, Card, Icon, Typography, CenteredContent } from '../atoms';
 import { ChallengeNotification } from '../molecules';
 
 export interface IncomingChallengesCardProps {
@@ -25,11 +25,11 @@ export const IncomingChallengesCard: React.FC<IncomingChallengesCardProps> = ({
         <>
             <Card variant="game" size="lg">
                 <div className="space-y-4">
-                    <div className="text-center">
+                    <CenteredContent>
                         <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                             Incoming Challenges ({viewModel.challenges.length})
                         </Typography>
-                    </div>
+                    </CenteredContent>
                     <div className="space-y-2">
                         {viewModel.challenges.map(challenge => (
                             <div
@@ -77,6 +77,7 @@ export const IncomingChallengesCard: React.FC<IncomingChallengesCardProps> = ({
                         isChallengePending: false
                     }}
                     playgroundCode={playgroundCode}
+                    challengerStarts={viewModel.selectedChallenge.challengerStarts}
                     loading={viewModel.loading}
                 />
             )}

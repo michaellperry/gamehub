@@ -1,5 +1,5 @@
 import { DateFormatType, formatDate, formatDuration, getFriendlyDate } from '../../utils/dateUtils';
-import { Card, Typography } from '../atoms';
+import { Card, Typography, CenteredContent } from '../atoms';
 
 export interface DateFormattingExampleProps {
     className?: string;
@@ -33,14 +33,14 @@ export function DateFormattingExample({ className = '' }: DateFormattingExampleP
     return (
         <Card variant="game" size="lg" className={className}>
             <div className="space-y-6">
-                <div className="text-center">
+                <CenteredContent>
                     <Typography variant="h2" className="text-xl font-semibold text-gray-900">
                         Date Formatting Examples
                     </Typography>
                     <Typography variant="body-sm" className="text-gray-600">
                         Demonstrating the various date formatting options
                     </Typography>
-                </div>
+                </CenteredContent>
 
                 {/* Format Types */}
                 <div className="space-y-4">

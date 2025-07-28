@@ -29,15 +29,16 @@
                 "./src/*"
             ],
             "@model": [
-                "../gamehub-model/dist/types/index.d.ts"
+                "../gamehub-model"
             ],
             "@model/*": [
-                "../gamehub-model/dist/types/*"
+                "../gamehub-model/*"
             ]
         }
     },
     "include": [
-        "src"
+        "src",
+        "../gamehub-model/**/*.ts"
     ],
     "references": [
         {
