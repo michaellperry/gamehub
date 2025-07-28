@@ -368,7 +368,7 @@ describe('useGame', () => {
             // Initial state
             expect(result.current.data?.moves.length).toBe(0);
             expect(result.current.data?.ticTacToeState.board).toEqual(Array(9).fill(null));
-            expect(result.current.data?.ticTacToeState.currentPlayer).toBe('X');
+            expect(result.current.data?.ticTacToeState.nextPlayer).toBe('X');
 
             // Make a move
             const moveResult = await result.current.data?.makeMove(0);
@@ -382,7 +382,7 @@ describe('useGame', () => {
 
             // Check that the board was updated
             expect(result.current.data?.ticTacToeState.board[0]).toBe('X');
-            expect(result.current.data?.ticTacToeState.currentPlayer).toBe('O');
+            expect(result.current.data?.ticTacToeState.nextPlayer).toBe('O');
         });
 
         it('should prevent moves on occupied positions', async () => {
@@ -500,11 +500,11 @@ describe('useGame - endGame function', () => {
             { index: 1, position: 1 }, // O in top-center
             { index: 2, position: 2 }, // X in top-right
             { index: 3, position: 4 }, // O in center
-            { index: 4, position: 6 }, // X in bottom-left
-            { index: 5, position: 3 }, // O in middle-left
-            { index: 6, position: 5 }, // X in middle-right
-            { index: 7, position: 7 }, // O in bottom-center
-            { index: 8, position: 8 }, // X in bottom-right (draw)
+            { index: 4, position: 8 }, // X in bottom-right
+            { index: 5, position: 6 }, // O in bottom-left
+            { index: 6, position: 3 }, // X in middle-left
+            { index: 7, position: 5 }, // O in middle-right
+            { index: 8, position: 7 }, // X in bottom-center (draw)
         ];
 
         // Create all moves

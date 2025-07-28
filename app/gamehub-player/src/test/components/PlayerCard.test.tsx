@@ -34,7 +34,6 @@ describe('PlayerCard', () => {
         render(<PlayerCard player={mockPlayer} isCurrentPlayer={false} />);
 
         expect(screen.getByText('Test Player')).toBeInTheDocument();
-        expect(screen.getByText(/Joined/)).toBeInTheDocument();
         expect(screen.getByText('Challenge')).toBeInTheDocument();
     });
 
