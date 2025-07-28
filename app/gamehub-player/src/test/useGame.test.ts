@@ -1,4 +1,4 @@
-import { Challenge, Game, Join, Player, PlayerName, Playground } from '@model/model';
+import { Challenge, Draw, Game, Join, model, Move, Player, PlayerName, Playground, Tenant, Win } from '@model/model';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Jinaga, User } from 'jinaga';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -55,6 +55,13 @@ const createThreeTestUsers = (): { challenger: User; opponent: User; observer: U
         challenger: new User(TEST_CONSTANTS.USER_KEYS.CHALLENGER),
         opponent: new User(TEST_CONSTANTS.USER_KEYS.OPPONENT),
         observer: new User(TEST_CONSTANTS.USER_KEYS.OBSERVER)
+    };
+};
+
+const createTwoTestUsers = (): { challenger: User; opponent: User } => {
+    return {
+        challenger: new User(TEST_CONSTANTS.USER_KEYS.CHALLENGER),
+        opponent: new User(TEST_CONSTANTS.USER_KEYS.OPPONENT)
     };
 };
 
@@ -479,5 +486,156 @@ describe('useGame', () => {
             expect(result.current.data).toBe(null);
             expect(result.current.error).toBe(null);
         });
+    });
+});
+
+describe('useGame - endGame function', () => {
+    it('should create Draw fact when game ends in draw', async () => {
+        const { challenger, opponent } = createTwoTestUsers();
+        const { jinaga, game, gameId, playground } = await createGameSetup([challenger, opponent], true);
+
+        // Make moves to create a draw scenario
+        const moves = [
+            { index: 0, position: 0 }, // X in top-left
+            { index: 1, position: 1 }, // O in top-center
+            { index: 2, position: 2 }, // X in top-right
+            { index: 3, position: 4 }, // O in center
+            { index: 4, position: 6 }, // X in bottom-left
+            { index: 5, position: 3 }, // O in middle-left
+            { index: 6, position: 5 }, // X in middle-right
+            { index: 7, position: 7 }, // O in bottom-center
+            { index: 8, position: 8 }, // X in bottom-right (draw)
+        ];
+
+        // Create all moves
+        for (const move of moves) {
+            await jinaga.fact(new Move(game, move.index, move.position));
+        }
+
+        // Use the hook
+        const { result } = renderHook(() => useGame(jinaga, playground, gameId, challenger.publicKey));
+
+        // Wait for data to load
+        await waitFor(() => {
+            expect(result.current.data).toBeTruthy();
+            expect(result.current.data?.ticTacToeState.isGameOver).toBe(true);
+            expect(result.current.data?.ticTacToeState.winner).toBe('draw');
+        });
+
+        // Call endGame
+        const endGameResult = await result.current.data!.endGame();
+        expect(endGameResult.success).toBe(true);
+
+        // Verify Draw fact was created
+        const drawSpec = model.given(Game).match(game =>
+            game.successors(Draw, draw => draw.game)
+        );
+        const draws = await jinaga.query(drawSpec, game);
+        expect(draws).toHaveLength(1);
+    });
+
+    it('should create Win fact when X wins', async () => {
+        const { challenger, opponent } = createTwoTestUsers();
+        const { jinaga, game, gameId, playground } = await createGameSetup([challenger, opponent], true);
+
+        // Make moves to create a win for X (challenger starts, so challenger is X)
+        const moves = [
+            { index: 0, position: 0 }, // X in top-left
+            { index: 1, position: 1 }, // O in top-center
+            { index: 2, position: 3 }, // X in middle-left
+            { index: 3, position: 4 }, // O in center
+            { index: 4, position: 6 }, // X in bottom-left (wins)
+        ];
+
+        // Create all moves
+        for (const move of moves) {
+            await jinaga.fact(new Move(game, move.index, move.position));
+        }
+
+        // Use the hook
+        const { result } = renderHook(() => useGame(jinaga, playground, gameId, challenger.publicKey));
+
+        // Wait for data to load
+        await waitFor(() => {
+            expect(result.current.data).toBeTruthy();
+            expect(result.current.data?.ticTacToeState.isGameOver).toBe(true);
+            expect(result.current.data?.ticTacToeState.winner).toBe('X');
+        });
+
+        // Call endGame
+        const endGameResult = await result.current.data!.endGame();
+        expect(endGameResult.success).toBe(true);
+
+        // Verify Win fact was created with challenger as winner
+        const winSpec = model.given(Game).match(game =>
+            game.successors(Win, win => win.game)
+        );
+        const wins = await jinaga.query(winSpec, game);
+        expect(wins).toHaveLength(1);
+        expect(wins[0].winner.user.publicKey).toBe(challenger.publicKey);
+    });
+
+    it('should create Win fact when O wins', async () => {
+        const { challenger, opponent } = createTwoTestUsers();
+        const { jinaga, game, gameId, playground } = await createGameSetup([challenger, opponent], false);
+
+        // Make moves to create a win for O (challenger does not start, so opponent is X, challenger is O)
+        const moves = [
+            { index: 0, position: 0 }, // X in top-left
+            { index: 1, position: 1 }, // O in top-center
+            { index: 2, position: 3 }, // X in middle-left
+            { index: 3, position: 4 }, // O in center
+            { index: 4, position: 2 }, // X in top-right
+            { index: 5, position: 7 }, // O in bottom-center (wins)
+        ];
+
+        // Create all moves
+        for (const move of moves) {
+            await jinaga.fact(new Move(game, move.index, move.position));
+        }
+
+        // Use the hook
+        const { result } = renderHook(() => useGame(jinaga, playground, gameId, challenger.publicKey));
+
+        // Wait for data to load
+        await waitFor(() => {
+            expect(result.current.data).toBeTruthy();
+            expect(result.current.data?.ticTacToeState.isGameOver).toBe(true);
+            expect(result.current.data?.ticTacToeState.winner).toBe('O');
+        });
+
+        // Call endGame
+        const endGameResult = await result.current.data!.endGame();
+        expect(endGameResult.success).toBe(true);
+
+        // Verify Win fact was created with challenger as winner (since challenger is O)
+        const winSpec = model.given(Game).match(game =>
+            game.successors(Win, win => win.game)
+        );
+        const wins = await jinaga.query(winSpec, game);
+        expect(wins).toHaveLength(1);
+        expect(wins[0].winner.user.publicKey).toBe(challenger.publicKey);
+    });
+
+    it('should return error when game is not over', async () => {
+        const { challenger, opponent } = createTwoTestUsers();
+        const { jinaga, game, gameId, playground } = await createGameSetup([challenger, opponent], true);
+
+        // Make only one move (game not over)
+        await jinaga.fact(new Move(game, 0, 0));
+
+        // Use the hook
+        const { result } = renderHook(() => useGame(jinaga, playground, gameId, challenger.publicKey));
+
+        // Wait for data to load
+        await waitFor(() => {
+            expect(result.current.data).toBeTruthy();
+            expect(result.current.data?.ticTacToeState.isGameOver).toBe(false);
+        });
+
+        // Call endGame
+        const endGameResult = await result.current.data!.endGame();
+        expect(endGameResult.success).toBe(false);
+        expect(endGameResult.error).toBe('Game is not over yet');
     });
 }); 

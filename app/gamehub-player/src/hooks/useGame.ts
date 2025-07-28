@@ -1,5 +1,5 @@
 import { j } from '@/jinaga-config';
-import { Game, Move, model, PlayerName, Playground } from '@model/model';
+import { Game, Move, model, PlayerName, Playground, Draw, Win, Player } from '@model/model';
 import { useSpecification } from 'jinaga-react';
 import { Jinaga } from 'jinaga';
 import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
@@ -31,6 +31,7 @@ export interface GameData {
     moves: Move[];
     ticTacToeState: TicTacToeState;
     makeMove: (position: number) => Promise<{ success: boolean; error?: string }>;
+    endGame: (onSuccess?: () => void) => Promise<{ success: boolean; error?: string }>;
 }
 
 export interface GameViewModel {
@@ -200,6 +201,63 @@ function createMakeMoveFunction(
     };
 }
 
+// Helper function to create game ending function
+function createEndGameFunction(
+    currentPlayerId: string | null,
+    gameProjection: GameProjection,
+    ticTacToeState: TicTacToeState,
+    jinaga: Jinaga
+) {
+    return async (onSuccess?: () => void) => {
+        if (!currentPlayerId) {
+            return { success: false, error: 'You are not logged in' };
+        }
+
+        if (!gameProjection?.game) {
+            return { success: false, error: 'Game not found' };
+        }
+
+        // Check if game is already over
+        if (!ticTacToeState.isGameOver) {
+            return { success: false, error: 'Game is not over yet' };
+        }
+
+        try {
+            if (ticTacToeState.winner === 'draw') {
+                // Create Draw fact
+                await jinaga.fact(new Draw(gameProjection.game));
+
+                // Call success callback if provided
+                onSuccess?.();
+            } else if (ticTacToeState.winner === 'X' || ticTacToeState.winner === 'O') {
+                // Determine the winning player
+                const challengerPlayer = gameProjection.game.challenge.challengerJoin.player;
+                const opponentPlayer = gameProjection.game.challenge.opponentJoin.player;
+                const xPlayer = gameProjection.challengerStarts ? challengerPlayer : opponentPlayer;
+                const yPlayer = gameProjection.challengerStarts ? opponentPlayer : challengerPlayer;
+
+                // X is the winner if challenger starts, otherwise O is the winner
+                const winningPlayer = ticTacToeState.winner === 'X'
+                    ? xPlayer
+                    : yPlayer;
+
+                // Create Win fact
+                await jinaga.fact(new Win(gameProjection.game, winningPlayer));
+            } else {
+                return { success: false, error: 'Game state is invalid' };
+            }
+
+            // Call success callback if provided
+            onSuccess?.();
+
+            return { success: true };
+        } catch (e) {
+            console.error('Error ending game:', e);
+            return { success: false, error: 'Failed to end game' };
+        }
+    };
+}
+
 /**
  * Hook for retrieving a specific game by ID within a playground
  * @param jinaga - The Jinaga instance to use for queries and mutations
@@ -280,6 +338,13 @@ export function useGame(
         jinaga
     );
 
+    const endGame = createEndGameFunction(
+        currentPlayerId,
+        gameProjection,
+        ticTacToeState,
+        jinaga
+    );
+
     return {
         data: {
             game: gameProjection.game,
@@ -296,6 +361,7 @@ export function useGame(
             moves,
             ticTacToeState,
             makeMove,
+            endGame,
         },
         isLoading: false,
         error: null,

@@ -202,6 +202,8 @@ export default function GamePage() {
     const { playerId } = usePlayer();
     const game = useGame(j, playground.playground, decodedGameId || null, playerId);
 
+    const [isEndingGame, setIsEndingGame] = useState(false);
+
     const handleCellClick = async (position: number) => {
         if (!game.data || isMakingMove || game.data.gameResult !== 'ongoing' || game.data.currentPlayerRole === 'observer' || !game.data.isCurrentPlayerTurn) {
             return;
@@ -218,6 +220,28 @@ export default function GamePage() {
             console.error('Error making move:', error);
         } finally {
             setIsMakingMove(false);
+        }
+    };
+
+    const handleEndGame = async () => {
+        if (!game.data || isEndingGame) {
+            return;
+        }
+
+        setIsEndingGame(true);
+        try {
+            const result = await game.data.endGame(() => {
+                // Navigate back to playground after successfully ending the game
+                navigate(`/playground/${code}`);
+            });
+            if (!result.success) {
+                console.error('End game failed:', result.error);
+                // You could show a toast notification here
+            }
+        } catch (error) {
+            console.error('Error ending game:', error);
+        } finally {
+            setIsEndingGame(false);
         }
     };
 
@@ -318,6 +342,20 @@ export default function GamePage() {
                                         gameResult={game.data.gameResult}
                                     />
                                 </div>
+
+                                {/* End Game Button - Show when game is over */}
+                                {game.data.gameResult !== 'ongoing' && (
+                                    <div className="flex justify-center">
+                                        <Button
+                                            variant="primary"
+                                            onClick={handleEndGame}
+                                            loading={isEndingGame}
+                                            disabled={isEndingGame}
+                                        >
+                                            {isEndingGame ? 'Ending Game...' : 'End Game & Return to Playground'}
+                                        </Button>
+                                    </div>
+                                )}
 
                                 {/* Loading indicator for moves */}
                                 {isMakingMove && (
