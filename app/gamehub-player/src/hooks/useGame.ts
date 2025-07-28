@@ -1,8 +1,8 @@
 import { j } from '@/jinaga-config';
-import { Game, Move, model, PlayerName, Playground, Draw, Win, Player } from '@model/model';
-import { useSpecification } from 'jinaga-react';
-import { Jinaga } from 'jinaga';
 import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
+import { Draw, Game, model, Move, PlayerName, Playground, Win } from '@model/model';
+import { Jinaga } from 'jinaga';
+import { useSpecification } from 'jinaga-react';
 
 // Type for the game projection returned by gameSpec
 type GameProjection = {
