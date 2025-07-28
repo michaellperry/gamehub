@@ -282,7 +282,7 @@ function playGame(game: Game, playerJoin: Join): () => void {
         );
 
         // Check if it's the simulated player's turn
-        const isSimulatedPlayerTurn = gameState.currentPlayerId === simulatedPlayerId && !gameState.isGameOver;
+        const isSimulatedPlayerTurn = gameState.nextPlayerId === simulatedPlayerId;
 
         if (isSimulatedPlayerTurn) {
             console.log(`It's simulated player's turn in game ${j.hash(game)}`);

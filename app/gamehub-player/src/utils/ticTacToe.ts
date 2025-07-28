@@ -5,8 +5,8 @@ export type BoardState = BoardCell[];
 
 export interface TicTacToeState {
     board: BoardState;
-    currentPlayer: 'X' | 'O' | null;
-    currentPlayerId: string | null;
+    nextPlayer: 'X' | 'O' | null;
+    nextPlayerId: string | null;
     challengerPlayerId: string | null;
     opponentPlayerId: string | null;
     winner: 'X' | 'O' | 'draw' | null;
@@ -44,8 +44,10 @@ export function computeTicTacToeState(
     });
 
     // Determine current player (next move)
+    const xPlayerId = challengerStarts ? challengerPlayerId : opponentPlayerId;
+    const oPlayerId = challengerStarts ? opponentPlayerId : challengerPlayerId;
     const nextPlayer = sortedMoves.length % 2 === 0 ? 'X' : 'O';
-    const nextPlayerId = sortedMoves.length % 2 === 0 ? challengerPlayerId : opponentPlayerId;
+    const nextPlayerId = sortedMoves.length % 2 === 0 ? xPlayerId : oPlayerId;
 
     // Check for winner
     const winner = checkWinner(board);
@@ -56,15 +58,15 @@ export function computeTicTacToeState(
     // Determine winner player ID (only if player IDs are provided)
     let winnerPlayerId: string | null = null;
     if (winner === 'X') {
-        winnerPlayerId = challengerStarts ? challengerPlayerId : opponentPlayerId;
+        winnerPlayerId = xPlayerId;
     } else if (winner === 'O') {
-        winnerPlayerId = challengerStarts ? opponentPlayerId : challengerPlayerId;
+        winnerPlayerId = oPlayerId;
     }
 
     return {
         board,
-        currentPlayer: isGameOver ? null : nextPlayer,
-        currentPlayerId: nextPlayerId,
+        nextPlayer: isGameOver ? null : nextPlayer,
+        nextPlayerId: isGameOver ? null : nextPlayerId,
         challengerPlayerId,
         opponentPlayerId,
         winner,
