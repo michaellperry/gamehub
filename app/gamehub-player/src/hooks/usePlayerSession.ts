@@ -161,7 +161,7 @@ async function acceptSimulatedChallenge(
         const game = await j.fact(new Game(challenge));
 
         // Play the game
-        playGame(game, playerJoin);
+        playGame(game, player);
 
         console.log(`Automatically accepted challenge to simulated player ${player.user.publicKey}`);
     } catch (err) {
@@ -240,7 +240,7 @@ function watchForGameResponse(challenge: Challenge, challengerJoin: Join): () =>
         console.log(`Game response detected for challenge ${j.hash(challenge)}`);
 
         // Start playing the game (fire and forget)
-        playGame(game, challengerJoin);
+        playGame(game, challengerJoin.player);
     });
 
     // Return cleanup function
@@ -250,16 +250,18 @@ function watchForGameResponse(challenge: Challenge, challengerJoin: Join): () =>
 /**
  * Play a game by watching for moves and making simulated moves
  */
-function playGame(game: Game, playerJoin: Join): () => void {
-    console.log(`Starting to play game ${j.hash(game)} for player ${j.hash(playerJoin)}`);
+function playGame(game: Game, player: Player): () => void {
+    console.log(`Starting to play game ${j.hash(game)} for player ${j.hash(player)}`);
 
     // Get player IDs for determining turns
     const challengerPlayerId = j.hash(game.challenge.challengerJoin.player);
     const opponentPlayerId = j.hash(game.challenge.opponentJoin.player);
-    const simulatedPlayerId = j.hash(playerJoin.player);
+    const simulatedPlayerId = j.hash(player);
 
     // Store moves in an array as they come in
     const moves: Move[] = [];
+
+    moveIfYourTurn();
 
     // Create specification for moves in this game
     const moveSpec = model.given(Game).match((game) =>
@@ -273,6 +275,13 @@ function playGame(game: Game, playerJoin: Join): () => void {
         // Add the new move to our array
         moves.push(move);
 
+        moveIfYourTurn();
+    });
+
+    // Return cleanup function
+    return () => observer.stop();
+
+    function moveIfYourTurn() {
         // Compute current game state using our stored moves
         const gameState = computeTicTacToeState(
             moves,
@@ -290,10 +299,7 @@ function playGame(game: Game, playerJoin: Join): () => void {
             // Make a simulated move after a random delay
             makeSimulatedMove(game, moves, gameState, 1000, 3000);
         }
-    });
-
-    // Return cleanup function
-    return () => observer.stop();
+    }
 }
 
 /**
