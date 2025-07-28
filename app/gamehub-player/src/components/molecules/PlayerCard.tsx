@@ -37,9 +37,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({
                             </Typography>
                         )}
                     </div>
-                    <Typography variant="body-sm" className="text-gray-500">
-                        Joined {new Date(player.joinedAt).toLocaleDateString()}
-                    </Typography>
                 </div>
             </div>
 

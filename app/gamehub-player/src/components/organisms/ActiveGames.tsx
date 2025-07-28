@@ -50,7 +50,7 @@ export function ActiveGames({ viewModel }: ActiveGamesProps) {
                             size="md"
                             interactive={true}
                             onClick={() => handleGameClick(game.id)}
-                            className="hover:border-primary-300 hover:shadow-lg transition-all duration-200"
+                            className="hover:bg-gray-100 transition-colors duration-200"
                         >
                             <div className="flex items-center justify-between">
                                 {/* Game info with avatars */}
@@ -86,9 +86,6 @@ export function ActiveGames({ viewModel }: ActiveGamesProps) {
                                             You
                                         </Badge>
                                     )}
-                                    <Badge variant="success" size="sm" icon="active">
-                                        Active
-                                    </Badge>
                                     <Icon
                                         name="arrow-right"
                                         size="sm"
@@ -98,13 +95,6 @@ export function ActiveGames({ viewModel }: ActiveGamesProps) {
                             </div>
                         </Card>
                     ))}
-                </div>
-
-                {/* Footer with additional info */}
-                <div className="text-center pt-4 border-t border-gray-200">
-                    <Typography variant="body-sm" className="text-gray-500">
-                        Games are updated in real-time
-                    </Typography>
                 </div>
             </div>
         </Card>

@@ -58,7 +58,7 @@ export const Avatar: React.FC<AvatarProps> = ({
     alt = 'Player avatar',
     size = 'md',
     status = 'offline',
-    showStatus = true,
+    showStatus = false,
     className = '',
     onClick,
     interactive = false,

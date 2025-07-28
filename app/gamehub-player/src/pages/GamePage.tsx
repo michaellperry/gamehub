@@ -137,7 +137,7 @@ function PlayerInfo({
     gameResult: 'won' | 'lost' | 'drawn' | 'ongoing' | 'completed';
 }) {
     const getPlayerStyle = (isCurrentPlayer: boolean, isWinner: boolean) => {
-        const baseStyle = "p-4 rounded-lg border-2 transition-all duration-200";
+        const baseStyle = "p-4 rounded-lg border-2 transition-all duration-200 w-[150px]";
 
         if (isWinner) {
             return `${baseStyle} border-green-500 bg-green-50`;
@@ -251,14 +251,6 @@ export default function GamePage() {
                             <Typography variant="h1" className="text-3xl font-bold text-gray-900">
                                 🎮 Tic-Tac-Toe
                             </Typography>
-                            <div className="flex items-center space-x-2">
-                                <Typography variant="body" className="text-lg font-mono bg-gray-100 px-3 py-1 rounded">
-                                    {code}
-                                </Typography>
-                                <Typography variant="body" className="text-lg font-mono bg-gray-100 px-3 py-1 rounded">
-                                    {decodedGameId.slice(0, 8)}...
-                                </Typography>
-                            </div>
                         </div>
 
                         <div className="flex justify-center space-x-4">
@@ -326,18 +318,6 @@ export default function GamePage() {
                                         gameResult={game.data.gameResult}
                                     />
                                 </div>
-
-                                {/* Game Info */}
-                                {game.data.createdAt && (
-                                    <div className="text-center">
-                                        <Typography variant="body" className="text-sm text-gray-500">
-                                            Game started: {game.data.createdAt.toLocaleDateString()} at {game.data.createdAt.toLocaleTimeString()}
-                                        </Typography>
-                                        <Typography variant="body" className="text-sm text-gray-500">
-                                            Moves made: {game.data.moves.length}
-                                        </Typography>
-                                    </div>
-                                )}
 
                                 {/* Loading indicator for moves */}
                                 {isMakingMove && (
