@@ -1,6 +1,7 @@
 import { j } from '@/jinaga-config';
 import { Game, Move, model, PlayerName, Playground } from '@model/model';
 import { useSpecification } from 'jinaga-react';
+import { Jinaga } from 'jinaga';
 import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
 
 // Type for the game projection returned by gameSpec
@@ -38,7 +39,6 @@ export interface GameViewModel {
     error: string | null;
 }
 
-// Simplified game specification for testing
 const gameSpec = model.given(Playground).match((playground) => Game.in(playground)
     .selectMany(game => game.challenge.predecessor()
         .selectMany(challenge => challenge.opponentJoin.player.predecessor()
@@ -145,7 +145,8 @@ function createMakeMoveFunction(
     currentPlayerId: string | null,
     gameProjection: GameProjection,
     moves: Move[],
-    ticTacToeState: TicTacToeState
+    ticTacToeState: TicTacToeState,
+    jinaga: Jinaga
 ) {
     return async (position: number) => {
         if (!currentPlayerId) {
@@ -186,7 +187,7 @@ function createMakeMoveFunction(
 
         try {
             // Create the Move fact
-            await j.fact(new Move(
+            await jinaga.fact(new Move(
                 gameProjection.game,
                 moves.length, // index
                 position
@@ -201,19 +202,25 @@ function createMakeMoveFunction(
 
 /**
  * Hook for retrieving a specific game by ID within a playground
+ * @param jinaga - The Jinaga instance to use for queries and mutations
  * @param playground - The playground fact
  * @param gameId - The hash ID of the game to find
  * @param currentPlayerId - The ID of the current player viewing the game
  * @returns GameViewModel with game details and loading state
  */
-export function useGame(playground: Playground | null, gameId: string | null, currentPlayerId: string | null): GameViewModel {
-    const { data: gameProjections, loading: gameLoading, error: gameError } = useSpecification(j, gameSpec, playground);
+export function useGame(
+    jinaga: Jinaga,
+    playground: Playground | null,
+    gameId: string | null,
+    currentPlayerId: string | null
+): GameViewModel {
+    const { data: gameProjections, loading: gameLoading, error: gameError } = useSpecification(jinaga, gameSpec, playground);
 
     // Find the specific game by ID
     const gameProjection = gameProjections?.find(projection => projection.gameId === gameId);
 
     // Get moves for the specific game if found
-    const { data: movesProjections, loading: movesLoading, error: movesError } = useSpecification(j, movesSpec, gameProjection?.game || null);
+    const { data: movesProjections, loading: movesLoading, error: movesError } = useSpecification(jinaga, movesSpec, gameProjection?.game || null);
 
     // Early returns for error states
     if (!playground || !gameId) {
@@ -270,7 +277,8 @@ export function useGame(playground: Playground | null, gameId: string | null, cu
         currentPlayerId,
         gameProjection,
         moves,
-        ticTacToeState
+        ticTacToeState,
+        jinaga
     );
 
     return {

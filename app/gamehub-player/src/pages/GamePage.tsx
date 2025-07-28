@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Button, CenteredContent, Container, PageLayout, Typography } from '../components/atoms';
+import { j } from '../jinaga-config';
 import { useGame } from '../hooks/useGame';
 import { usePlayer } from '../hooks/usePlayer';
 import { usePlayground } from '../hooks/usePlayground';
@@ -199,7 +200,7 @@ export default function GamePage() {
     // Get playground and game data
     const playground = usePlayground(code);
     const { playerId } = usePlayer();
-    const game = useGame(playground.playground, decodedGameId || null, playerId);
+    const game = useGame(j, playground.playground, decodedGameId || null, playerId);
 
     const handleCellClick = async (position: number) => {
         if (!game.data || isMakingMove || game.data.gameResult !== 'ongoing' || game.data.currentPlayerRole === 'observer' || !game.data.isCurrentPlayerTurn) {

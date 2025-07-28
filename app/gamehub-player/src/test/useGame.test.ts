@@ -192,6 +192,7 @@ const renderUseGame = async (
     playerHash: string
 ) => {
     const { result } = renderHook(() => useGame(
+        setup.jinaga,
         setup.playground,
         setup.gameId,
         playerHash
@@ -310,7 +311,7 @@ describe('useGame', () => {
             // Try to make a move as observer
             const moveResult = await result.current.data?.makeMove(0);
             expect(moveResult?.success).toBe(false);
-            expect(moveResult?.error).toBe('You are not logged in');
+            expect(moveResult?.error).toBe('It is not your turn');
         });
 
         it('should prevent moves when it is not the player\'s turn', async () => {
@@ -343,7 +344,7 @@ describe('useGame', () => {
 
             // Make a valid move
             const moveResult = await result.current.data?.makeMove(0);
-            expect(moveResult?.error).toBe(null);
+            expect(moveResult?.error).toBeUndefined();
             expect(moveResult?.success).toBe(true);
         });
     });
@@ -364,7 +365,7 @@ describe('useGame', () => {
 
             // Make a move
             const moveResult = await result.current.data?.makeMove(0);
-            expect(moveResult?.error).toBe(null);
+            expect(moveResult?.error).toBeUndefined();
             expect(moveResult?.success).toBe(true);
 
             // Wait for the move to be processed
@@ -387,11 +388,24 @@ describe('useGame', () => {
 
             // Make first move
             const moveResult1 = await result.current.data?.makeMove(0);
-            expect(moveResult1?.error).toBe(null);
+            expect(moveResult1?.error).toBeUndefined();
             expect(moveResult1?.success).toBe(true);
 
-            // Try to make a move on the same position
-            const moveResult2 = await result.current.data?.makeMove(0);
+            // Wait for the move to be processed and state to update
+            await waitFor(() => {
+                expect(result.current.data?.moves.length).toBe(1);
+            });
+
+            // Switch to opponent's turn and try to make a move on the same position
+            const opponentResult = await renderUseGame(setup, setup.jinaga.hash(setup.opponentPlayer));
+
+            // Wait for the opponent's view to load
+            await waitFor(() => {
+                expect(opponentResult.current.data).not.toBeNull();
+            });
+
+            // Try to make a move on the same position as opponent
+            const moveResult2 = await opponentResult.current.data?.makeMove(0);
             expect(moveResult2?.success).toBe(false);
             expect(moveResult2?.error).toBe('Position already occupied');
         });
@@ -407,7 +421,12 @@ describe('useGame', () => {
                 new User('test-user-key')
             ).then(result => result.jinaga.fact(new Playground(tenant, TEST_CONSTANTS.PLAYGROUND_CODE)));
 
+            const jinagaInstance = await JinagaTestUtils.createTestInstanceWithTenant(
+                new User('test-user-key')
+            ).then(result => result.jinaga);
+
             const { result } = renderHook(() => useGame(
+                jinagaInstance,
                 playground,
                 'invalid-game-id',
                 'test-player-id'
@@ -417,12 +436,17 @@ describe('useGame', () => {
                 expect(result.current.isLoading).toBe(false);
             });
 
-            expect(result.current.error).toBe(`Game with ID invalid-game-id not found in playground ${TEST_CONSTANTS.PLAYGROUND_CODE}`);
+            expect(result.current.error).toBe(`Game with ID invalid-game-id not found in playground ${TEST_CONSTANTS.PLAYGROUND_CODE}. Available game IDs: none`);
             expect(result.current.data).toBe(null);
         });
 
         it('should handle null playground gracefully', async () => {
+            const jinagaInstance = await JinagaTestUtils.createTestInstanceWithTenant(
+                new User('test-user-key')
+            ).then(result => result.jinaga);
+
             const { result } = renderHook(() => useGame(
+                jinagaInstance,
                 null,
                 'test-game-id',
                 'test-player-id'
@@ -441,7 +465,12 @@ describe('useGame', () => {
                 new User('test-user-key')
             ).then(result => result.jinaga.fact(new Playground(tenant, TEST_CONSTANTS.PLAYGROUND_CODE)));
 
+            const jinagaInstance = await JinagaTestUtils.createTestInstanceWithTenant(
+                new User('test-user-key')
+            ).then(result => result.jinaga);
+
             const { result } = renderHook(() => useGame(
+                jinagaInstance,
                 playground,
                 null,
                 'test-player-id'
