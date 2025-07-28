@@ -1,6 +1,6 @@
-import { Challenge, Game, Join, Player, PlayerName, Playground, model } from '@model/model';
+import { Challenge, Game, Join, Player, PlayerName, Playground } from '@model/model';
 import { renderHook, waitFor } from '@testing-library/react';
-import { User } from 'jinaga';
+import { Jinaga, User } from 'jinaga';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { computePlayerRole, useGame } from '../hooks/useGame';
 import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
@@ -60,29 +60,29 @@ const createThreeTestUsers = (): { challenger: User; opponent: User; observer: U
 
 // Type definitions for setup functions
 type GameSetup = {
-    jinaga: any;
-    tenant: any;
+    jinaga: Jinaga;
+    tenant: Tenant;
     playground: Playground;
     game: Game;
-    challengerPlayer: any;
-    opponentPlayer: any;
-    challengerJoin: any;
-    opponentJoin: any;
+    challengerPlayer: Player;
+    opponentPlayer: Player;
+    challengerJoin: Join;
+    opponentJoin: Join;
     challenge: Challenge;
     gameId: string;
 };
 
 type ObserverSetup = {
-    jinaga: any;
-    tenant: any;
+    jinaga: Jinaga;
+    tenant: Tenant;
     playground: Playground;
     game: Game;
-    challengerPlayer: any;
-    opponentPlayer: any;
-    observerPlayer: any;
-    challengerJoin: any;
-    opponentJoin: any;
-    observerJoin: any;
+    challengerPlayer: Player;
+    opponentPlayer: Player;
+    observerPlayer: Player;
+    challengerJoin: Join;
+    opponentJoin: Join;
+    observerJoin: Join;
     challenge: Challenge;
     gameId: string;
 };

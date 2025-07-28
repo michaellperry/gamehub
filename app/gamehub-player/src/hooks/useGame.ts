@@ -254,7 +254,6 @@ export function useGame(
         moves,
         gameProjection.challengerPlayerId,
         gameProjection.opponentPlayerId,
-        currentPlayerId,
         gameProjection.challengerStarts
     );
 

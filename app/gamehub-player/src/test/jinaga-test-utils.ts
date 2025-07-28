@@ -203,7 +203,7 @@ export const TestScenarios = {
  * Scenario: Multiple users in a tenant
  */
     multipleUsersInTenant: async (users: User[]): Promise<{ jinaga: Jinaga; users: User[]; tenant: Tenant }> => {
-        const { jinaga, users: userFacts, setupData: tenant } = await JinagaTestUtils.createComplexTestInstance<Tenant>(users, async (j, users) => {
+        const { jinaga, users: userFacts, setupData: tenant } = await JinagaTestUtils.createComplexTestInstance<Tenant>(users, async (j) => {
             const tenant = await j.singleUse(async (owner) => {
                 const tenant = await j.fact(new Tenant(owner));
                 return tenant;
