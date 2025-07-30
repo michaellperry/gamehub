@@ -47,4 +47,27 @@ export { GameStarterSelector } from './GameStarterSelector';
 export type { GameStarterSelectorProps } from './GameStarterSelector';
 
 export { ChallengeNotification } from './ChallengeNotification';
-export type { ChallengeNotificationProps } from './ChallengeNotification'; 
+export type { ChallengeNotificationProps } from './ChallengeNotification';
+
+// New TicTacToe components
+export { TicTacToeBoard } from './TicTacToeBoard';
+export type { TicTacToeBoardProps } from './TicTacToeBoard';
+
+export { GameStatusDisplay } from './GameStatusDisplay';
+export type { GameStatusDisplayProps } from './GameStatusDisplay';
+
+export { PlayerInfoDisplay } from './PlayerInfoDisplay';
+export type { PlayerInfoDisplayProps } from './PlayerInfoDisplay';
+
+// Fleet Duel molecules
+export { ShipPlacementGrid } from './ShipPlacementGrid';
+export type { ShipPlacementGridProps, PlacedShip } from './ShipPlacementGrid';
+
+export { FleetMenu } from './FleetMenu';
+export type { FleetMenuProps } from './FleetMenu';
+
+export { PlacementControls } from './PlacementControls';
+export type { PlacementControlsProps } from './PlacementControls';
+
+export { ValidationFeedback } from './ValidationFeedback';
+export type { ValidationFeedbackProps, ValidationError } from './ValidationFeedback'; 
