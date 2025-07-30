@@ -36,3 +36,16 @@ export type { IconButtonProps } from './IconButton';
 
 export { CenteredContent } from './CenteredContent';
 export type { CenteredContentProps } from './CenteredContent';
+
+// Fleet Duel atoms
+export { GridCell } from './GridCell';
+export type { GridCellProps } from './GridCell';
+
+export { Ship } from './Ship';
+export type { ShipProps, ShipType, ShipOrientation } from './Ship';
+
+export { GameGrid } from './GameGrid';
+export type { GameGridProps, GridState } from './GameGrid';
+
+export { FleetPanel } from './FleetPanel';
+export type { FleetPanelProps, FleetShip } from './FleetPanel';
