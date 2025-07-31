@@ -38,8 +38,8 @@ GameHub is a **starter template** that provides everything you need to build you
 
 3. **Start development**:
    ```bash
-   # Admin interface
-   npm run dev:admin
+   # Player interface
+   npm run dev:player
    ```
 
 4. **Launch full environment**:
