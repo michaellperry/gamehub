@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import { vi, describe, it, expect } from 'vitest';
 import { GridCell } from '../../components/atoms/GridCell';
 
 describe('GridCell', () => {
@@ -21,31 +22,31 @@ describe('GridCell', () => {
     });
 
     it('calls onClick when clicked', () => {
-        const mockOnClick = jest.fn();
+        const mockOnClick = vi.fn();
         render(<GridCell {...defaultProps} onClick={mockOnClick} />);
-        
+
         const cell = screen.getByRole('button');
         fireEvent.click(cell);
-        
+
         expect(mockOnClick).toHaveBeenCalledTimes(1);
     });
 
     it('calls mouse event handlers', () => {
-        const mockOnMouseEnter = jest.fn();
-        const mockOnMouseLeave = jest.fn();
-        
+        const mockOnMouseEnter = vi.fn();
+        const mockOnMouseLeave = vi.fn();
+
         render(
-            <GridCell 
-                {...defaultProps} 
+            <GridCell
+                {...defaultProps}
                 onMouseEnter={mockOnMouseEnter}
                 onMouseLeave={mockOnMouseLeave}
             />
         );
-        
+
         const cell = screen.getByRole('button');
         fireEvent.mouseEnter(cell);
         fireEvent.mouseLeave(cell);
-        
+
         expect(mockOnMouseEnter).toHaveBeenCalledTimes(1);
         expect(mockOnMouseLeave).toHaveBeenCalledTimes(1);
     });

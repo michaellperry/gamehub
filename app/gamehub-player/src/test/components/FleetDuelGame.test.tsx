@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { FleetDuelGame } from '../../components/organisms/FleetDuelGame';
 
 describe('FleetDuelGame', () => {
@@ -13,14 +14,14 @@ describe('FleetDuelGame', () => {
             phase: 'ship-placement' as const,
             isFleetLocked: false
         },
-        makeMove: jest.fn(),
-        endGame: jest.fn()
+        makeMove: vi.fn(),
+        endGame: vi.fn()
     };
 
-    const mockOnAction = jest.fn();
+    const mockOnAction = vi.fn();
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('renders ship placement phase correctly', () => {
