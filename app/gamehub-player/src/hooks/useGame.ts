@@ -3,6 +3,7 @@ import { computeTicTacToeState, TicTacToeState } from '@/utils/ticTacToe';
 import { Draw, Game, model, Move, PlayerName, Playground, Win } from '@model/model';
 import { Jinaga } from 'jinaga';
 import { useSpecification } from 'jinaga-react';
+import { GameDataUnion, TicTacToeGameData } from './useGameType';
 
 // Type for the game projection returned by gameSpec
 type GameProjection = {
@@ -18,6 +19,7 @@ type GameProjection = {
 export type PlayerRole = 'X' | 'O' | 'observer';
 export type GameResult = 'won' | 'lost' | 'drawn' | 'ongoing' | 'completed';
 
+// Legacy GameData interface for backward compatibility
 export interface GameData {
     game: Game;
     gameId: string;
@@ -35,7 +37,7 @@ export interface GameData {
 }
 
 export interface GameViewModel {
-    data: GameData | null;
+    data: GameDataUnion | null;
     isLoading: boolean;
     error: string | null;
 }
@@ -347,6 +349,7 @@ export function useGame(
 
     return {
         data: {
+            gameType: 'tic-tac-toe' as const,
             game: gameProjection.game,
             gameId: gameProjection.gameId,
             challengerName: gameProjection.challengerNames[0] || null,
@@ -362,7 +365,7 @@ export function useGame(
             ticTacToeState,
             makeMove,
             endGame,
-        },
+        } as TicTacToeGameData,
         isLoading: false,
         error: null,
     };
