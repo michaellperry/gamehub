@@ -4,8 +4,8 @@ import { useSpecification } from 'jinaga-react';
 import { useState } from 'react';
 import { useUser } from '../auth/UserProvider';
 import { useTenant } from '../auth/useTenant';
-import { j } from '../jinaga-config';
 import { usePlayer } from './usePlayer';
+import { j } from '../jinaga-config';
 
 export interface PlayerNameViewModel {
     playerName: string;
