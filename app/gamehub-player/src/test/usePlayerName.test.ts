@@ -38,9 +38,9 @@ describe('usePlayerName', () => {
         const { result } = renderHook(() => usePlayerName());
 
         await waitFor(() => {
+            expect(result.current.error).toBeNull();
             expect(result.current.data).not.toBeNull();
         });
-        expect(result.current.error).toBeNull();
 
         const data = result.current.data!;
 
