@@ -168,6 +168,45 @@ Only distribute necessary data:
 .share(model.given(Playground).match((playground) => playground.allGames))
 ```
 
+## Critical: Model Rebuilding
+
+**After ANY changes to distribution rules, authorization rules, or model files:**
+```bash
+cd app/gamehub-model
+npm run build
+```
+
+**Why this is critical:**
+- Distribution rules are not applied until the model is rebuilt
+- Tests will fail with old rules even if source code is correct
+- The `@model` import uses compiled output, not source files
+
+## Debugging Distribution Rules
+
+### Common Error Patterns
+1. **"Not authorized: Cannot distribute to..."** = Missing or incorrect distribution rule
+2. **"The property 'type' is not defined..."** = Syntax error in distribution rule  
+3. **"The user does not match..."** = With clause pattern mismatch
+
+### Debugging Steps
+1. **Rebuild the model first** - Most common cause of persistent errors
+2. **Test without distribution** - Remove distribution rules temporarily
+3. **Add distribution back incrementally** - One rule at a time
+4. **Check error message details** - They contain the solution
+
+### Testing Distribution Rules
+```typescript
+// Test with simple case first
+const jinaga = JinagaTest.create({
+  distribution: (d) => myDistributionRules(d),
+  user: testUser
+});
+
+// Test basic query before complex ones
+const simpleData = await jinaga.query(simpleSpec, testUser);
+expect(simpleData).toBeDefined();
+```
+
 ## Validation and Testing
 
 ### Distribution Checklist
@@ -176,12 +215,14 @@ Only distribute necessary data:
 - [ ] With clauses define appropriate user access
 - [ ] Rules enable necessary queries for UI
 - [ ] Performance considerations addressed
+- [ ] Model has been rebuilt after changes
 
 ### Common Issues
 1. **Distribution Complexity**: Keep share clauses simple
 2. **Missing Queries**: Ensure all UI queries are enabled
 3. **Over-distribution**: Only share necessary data
 4. **Complex With Clauses**: Test complex with clauses thoroughly
+5. **Outdated Compiled Rules**: Always rebuild after changes
 
 ### Testing Distribution Rules
 ```typescript

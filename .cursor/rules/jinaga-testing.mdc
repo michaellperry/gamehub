@@ -193,12 +193,38 @@ describe('Distribution Rules', () => {
 
 
 
+## Critical: Model Rebuilding for Tests
+
+**Before running tests after model changes:**
+```bash
+cd app/gamehub-model
+npm run build
+```
+
+**Why this matters for testing:**
+- Tests use the compiled model, not source files
+- Distribution and authorization rules must be rebuilt to take effect
+- Test failures with old error messages often indicate outdated compiled rules
+
+### Testing Workflow
+1. **Make model changes**
+2. **Rebuild the model** (`cd app/gamehub-model && npm run build`)
+3. **Run tests** (`cd ../gamehub-player && npm test`)
+4. **Debug if needed** (check error messages carefully)
+5. **Repeat cycle**
+
+### Common Testing Pitfalls
+1. **Forgetting to rebuild** - Most common cause of "unfixable" test failures
+2. **Testing with old rules** - Distribution rules won't work until rebuilt
+3. **Multiple changes at once** - Makes debugging much harder
+4. **Ignoring error details** - Error messages contain the solution
+
 ## Validation and Testing
 
 ### Build and Policy Generation
 ```bash
 # Always build after changes
-npm run build
+cd app/gamehub-model && npm run build
 
 # Generate policies to verify rules
 npm run generate-policies
@@ -214,6 +240,7 @@ cat mesh/replicator/policies/gamehub.policy
 - [ ] Policy file contains expected rule entries
 - [ ] Facts support intended query patterns
 - [ ] Rules match business logic requirements
+- [ ] Model has been rebuilt after changes
 
 ### Common Issues
 1. **Authorization Errors**: Ensure rules return `LabelOf<User>`

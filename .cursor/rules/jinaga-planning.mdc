@@ -51,9 +51,10 @@ alwaysApply: false
 ### Phase 7: Generate Policies
 1. **Compile authorization policies**
 2. **Compile distribution policies**
-3. **Test policy generation**
-4. **Verify policy files** are correct
-5. **Deploy policies** to replicator
+3. **Rebuild the model** (`cd app/gamehub-model && npm run build`)
+4. **Test policy generation**
+5. **Verify policy files** are correct
+6. **Deploy policies** to replicator
 
 ### Phase 8: Write Tests
 1. **Create unit tests** for hooks and components
