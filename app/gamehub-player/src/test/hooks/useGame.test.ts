@@ -2,7 +2,7 @@ import { Challenge, Draw, Game, Join, model, Move, Player, PlayerName, Playgroun
 import { renderHook, waitFor } from '@testing-library/react';
 import { Jinaga, User } from 'jinaga';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { computePlayerRole, useGame } from '../hooks/useGame';
+import { computePlayerRole, useGame } from '../../hooks/useGame';
 import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
 
 // Mock the configuration to control test behavior

@@ -2,7 +2,7 @@ import { Playground, Tenant } from '@model/model';
 import { act, renderHook } from '@testing-library/react';
 import { User } from 'jinaga';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { usePlayerSession } from '../hooks/usePlayerSession';
+import { usePlayerSession } from '../../hooks/usePlayerSession';
 import { JinagaTestUtils, TestScenarios } from './jinaga-test-utils';
 
 // Mock the configuration to control test behavior

@@ -5,7 +5,7 @@ import {
     getTotalNameCount,
     getUsedNameCount,
     resetUsedNames
-} from '../utils/gamingNames';
+} from '../../utils/gamingNames';
 
 describe('Gaming Names Utility', () => {
     beforeEach(() => {
