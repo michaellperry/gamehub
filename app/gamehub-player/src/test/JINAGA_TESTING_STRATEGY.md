@@ -39,17 +39,15 @@ interface JinagaTestConfig {
 Test with specific authorization policies:
 
 ```typescript
-import { tenantAuthorization } from 'gamehub-model/authorization/tenantAuthorization';
+import { authorization } from '@model';
 
 const jinaga = JinagaTest.create({
-  authorization: (a) => tenantAuthorization(a)
+  authorization
 });
 ```
 
 **Available Authorization Options:**
-- `tenantAuthorization` - GameHub tenant-based authorization
-- `userAuthorization` - User-based authorization  
-- `bookkeepingAuthorization` - Bookkeeping authorization
+- `authorization` - GameHub authorization rules (imported from @model)
 - Custom authorization rules for specific test scenarios
 
 ### 2. Distribution Rules
@@ -57,10 +55,10 @@ const jinaga = JinagaTest.create({
 Test what specifications a user is allowed to execute:
 
 ```typescript
-import { tenantDistribution } from 'gamehub-model/distribution/tenantDistribution';
+import { distribution } from '@model';
 
 const jinaga = JinagaTest.create({
-  distribution: (d) => tenantDistribution(d),
+  distribution,
   user: new User('test-user-key')
 });
 ```
@@ -68,8 +66,7 @@ const jinaga = JinagaTest.create({
 Distribution rules determine which specifications a user can execute, not which facts they can access. If a user lacks permission to execute a specification, the query will fail.
 
 **Available Distribution Options:**
-- `tenantDistribution` - GameHub tenant-based specification execution permissions
-- `bookkeepingDistribution` - Bookkeeping specification execution permissions
+- `distribution` - GameHub distribution rules (imported from @model)
 - Custom distribution rules for specific test scenarios
 
 ### 3. Simulated Users
@@ -217,7 +214,7 @@ describe('Player Fact Creation', () => {
     const opponent = new Player(opponentUser, tenant);
 
     const jinaga = JinagaTest.create({
-      authorization: (a) => tenantAuthorization(a),
+      authorization,
       user: playerUser,
       initialState: [tenantOwner, tenant, playerUser, opponentUser, player, opponent]
     });
@@ -233,7 +230,7 @@ describe('Player Fact Creation', () => {
     const tenant = new Tenant(tenantOwner);
 
     const jinaga = JinagaTest.create({
-      authorization: (a) => tenantAuthorization(a),
+      authorization,
       user: playerUser,
       initialState: [tenantOwner, tenant, playerUser]
     });
@@ -270,6 +267,8 @@ describe('MyComponent', () => {
 ### 3. Testing Specification Execution with Distribution Rules
 
 ```typescript
+import { distribution } from '@model';
+
 describe('Specification Execution', () => {
   it('should allow authorized user to execute specification', async () => {
     const playerUser = new User('player-123');
@@ -279,7 +278,7 @@ describe('Specification Execution', () => {
     const playground = new Playground(tenant, 'TEST-001');
 
     const jinaga = JinagaTest.create({
-      distribution: (d) => tenantDistribution(d),
+      distribution,
       user: playerUser,
       initialState: [tenantOwner, tenant, playerUser, player, playground]
     });
@@ -296,7 +295,7 @@ describe('Specification Execution', () => {
     const playground = new Playground(tenant, 'TEST-001');
 
     const jinaga = JinagaTest.create({
-      distribution: (d) => tenantDistribution(d),
+      distribution,
       user: unauthorizedUser,
       initialState: [tenantOwner, tenant, playground, unauthorizedUser]
     });
@@ -330,8 +329,8 @@ describe('useActiveGames', () => {
     const game = new Game(challenge, true, new Date());
 
     const jinaga = JinagaTest.create({
-      authorization: (a) => tenantAuthorization(a),
-      distribution: (d) => tenantDistribution(d),
+      authorization,
+      distribution,
       user: playerUser,
       initialState: [
         tenantOwner, tenant, playerUser, opponentUser,
@@ -365,7 +364,7 @@ describe('Player Authorization', () => {
     const playground = new Playground(tenant, 'TEST-001');
 
     const jinaga = JinagaTest.create({
-      authorization: (a) => tenantAuthorization(a),
+      authorization,
       user: playerUser,
       initialState: [tenantOwner, tenant, playerUser, player, playground]
     });
@@ -382,7 +381,7 @@ describe('Player Authorization', () => {
     const otherPlayground = new Playground(otherTenant, 'OTHER-001');
 
     const jinaga = JinagaTest.create({
-      authorization: (a) => tenantAuthorization(a),
+      authorization,
       user: playerUser,
       initialState: [otherTenantOwner, otherTenant, otherPlayground, playerUser]
     });
@@ -395,6 +394,34 @@ describe('Player Authorization', () => {
   });
 });
 ```
+
+### 6. Player App Context Testing
+
+For testing components that require the full player app context, use the `givenPlayerApp` utility:
+
+```typescript
+import { givenPlayerApp } from '../security/givenPlayerApp';
+import { Player } from '@model/model';
+
+describe('PlayerComponent', () => {
+  it('should render with player context', () => {
+    givenPlayerApp((player: Player) => [
+      // Additional initial state facts if needed
+    ]);
+
+    render(<PlayerComponent />);
+    
+    expect(screen.getByText('Player Dashboard')).toBeInTheDocument();
+  });
+});
+```
+
+The `givenPlayerApp` utility automatically:
+- Creates a JinagaTest instance with authorization and distribution rules
+- Sets up a tenant owner, tenant, and player hierarchy
+- Mocks the global Jinaga instance (`j` from jinaga-config)
+- Mocks `useUser` hook to return the test player user
+- Mocks `useTenant` hook to return the test tenant
 
 ## Best Practices
 
@@ -449,9 +476,11 @@ describe('Player Authorization', () => {
 
 ## Example Test Files
 
-- `jinaga-example.test.ts` - Comprehensive examples
-- `BackgroundServiceManager.test.ts` - Service testing
+- `hooks/jinaga-example.test.ts` - Comprehensive Jinaga testing examples
+- `hooks/jinaga-test-utils.ts` - Jinaga testing utility functions
+- `security/givenPlayerApp.ts` - Player app testing setup utility
 - `basic.test.ts` - Simple verification tests
+- `components/Button.test.tsx` - Component testing example
 
 ## Running Tests
 
