@@ -8,14 +8,16 @@ import { usePlayer } from './usePlayer';
 import { j } from '../jinaga-config';
 
 export interface PlayerNameViewModel {
-    playerName: string;
-    showNameInput: boolean;
-    allowCancel: boolean;
+    data: {
+        playerName: string;
+        showNameInput: boolean;
+        allowCancel: boolean;
+        handleNameSubmit: (name: string) => void;
+        handleCancel: () => void;
+        setShowNameInput: (show: boolean) => void;
+    } | null;
     error: string | null;
     loading: boolean;
-    handleNameSubmit: (name: string) => void;
-    handleCancel: () => void;
-    setShowNameInput: (show: boolean) => void;
     clearError: () => void;
 }
 
@@ -91,15 +93,27 @@ export function usePlayerName(): PlayerNameViewModel {
     const combinedError = actionError || playerError || (specificationError ? specificationError.message : null);
     const combinedLoading = playerLoading || loading;
 
+    if (!playerNames) {
+        return {
+            data: null,
+            error: combinedError,
+            loading: combinedLoading,
+            clearError
+        };
+    }
+
+    // Return data structure with current state
     return {
-        playerName: playerNames?.[0]?.name || '',
-        showNameInput: showNameInput || playerNames?.length === 0,
-        allowCancel: playerNames?.length !== 0,
+        data: {
+            playerName: playerNames?.[0]?.name || '',
+            showNameInput: showNameInput || playerNames?.length === 0,
+            allowCancel: playerNames?.length !== 0,
+            handleNameSubmit,
+            handleCancel,
+            setShowNameInput,
+        },
         error: combinedError,
         loading: combinedLoading,
-        handleNameSubmit,
-        handleCancel,
-        setShowNameInput,
         clearError,
     };
 } 

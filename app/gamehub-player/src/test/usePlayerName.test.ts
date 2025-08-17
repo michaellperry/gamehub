@@ -1,11 +1,11 @@
 import { authorization, distribution } from '@model';
 import { Player, Tenant, model } from '@model/model';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { JinagaTest, User } from 'jinaga';
 import { describe, expect, it, vi } from 'vitest';
-import { usePlayerName } from '../hooks/usePlayerName';
 import * as UserProviderModule from '../auth/UserProvider';
 import * as UseTenantModule from '../auth/useTenant';
+import { usePlayerName } from '../hooks/usePlayerName';
 import * as JinagaConfigModule from '../jinaga-config';
 
 describe('usePlayerName', () => {
@@ -37,11 +37,16 @@ describe('usePlayerName', () => {
 
         const { result } = renderHook(() => usePlayerName());
 
-        // Wait for the specification to complete and data to be populated
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await waitFor(() => {
+            expect(result.current.data).not.toBeNull();
+        });
+        expect(result.current.error).toBeNull();
 
-        expect(result.current.showNameInput).toBe(true);
-        expect(result.current.playerName).toBe('');
-        expect(result.current.allowCancel).toBe(false);
+        const data = result.current.data!;
+
+        expect(data.showNameInput).toBe(true);
+        expect(data.playerName).toBe('');
+        expect(data.allowCancel).toBe(false);
+        expect(result.current.loading).toBe(false);
     });
 });
