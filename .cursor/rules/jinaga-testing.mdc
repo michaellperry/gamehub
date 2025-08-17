@@ -28,17 +28,15 @@ interface JinagaTestConfig {
 Test with specific authorization policies:
 
 ```typescript
-import { tenantAuthorization } from 'gamehub-model/authorization/tenantAuthorization';
+import { authorization } from '@model';
 
 const jinaga = JinagaTest.create({
-  authorization: (a) => tenantAuthorization(a)
+  authorization
 });
 ```
 
 **Available Authorization Options:**
-- `tenantAuthorization` - GameHub tenant-based authorization
-- `userAuthorization` - User-based authorization  
-- `bookkeepingAuthorization` - Bookkeeping authorization
+- `authorization` - GameHub authorization rules (imported from @model)
 - Custom authorization rules for specific test scenarios
 
 ### 2. Distribution Rules
@@ -46,16 +44,15 @@ const jinaga = JinagaTest.create({
 Test with distribution and sharing policies:
 
 ```typescript
-import { tenantDistribution } from 'gamehub-model/distribution/tenantDistribution';
+import { distribution } from '@model';
 
 const jinaga = JinagaTest.create({
-  distribution: (d) => tenantDistribution(d)
+  distribution
 });
 ```
 
 **Available Distribution Options:**
-- `tenantDistribution` - GameHub tenant-based distribution
-- `bookkeepingDistribution` - Bookkeeping distribution
+- `distribution` - GameHub distribution rules (imported from @model)
 - Custom distribution rules for specific test scenarios
 
 ### 3. Simulated Users
@@ -194,28 +191,7 @@ describe('Distribution Rules', () => {
 });
 ```
 
-### 3. Integration Testing
 
-Test the entire system working together:
-
-```typescript
-describe('Integration Tests', () => {
-  it('should create and query facts correctly', async () => {
-    const jinaga = JinagaTest.create({
-      authorization: (a) => myAuthorizationRules(a),
-      distribution: (d) => myDistributionRules(d),
-      user: testUser
-    });
-
-    // Create facts
-    const fact = await jinaga.fact(new MyFact(data, testUser));
-
-    // Query facts
-    const results = await jinaga.query(mySpec, testUser);
-    expect(results).toContain(fact);
-  });
-});
-```
 
 ## Validation and Testing
 
@@ -253,20 +229,19 @@ cat mesh/replicator/policies/gamehub.policy
 describe('useMyHook', () => {
   it('should load data when parameters are available', async () => {
     const jinaga = JinagaTest.create({
-      authorization: (a) => myAuthorizationRules(a),
-      distribution: (d) => myDistributionRules(d),
+      authorization,
+      distribution,
       user: testUser,
       initialState: [testUser, testData]
     });
 
+    // For hooks that need Jinaga context, use givenPlayerApp
+    givenPlayerApp((player: Player) => [
+      // Additional facts if needed
+    ]);
+
     // Test the hook
-    const { result } = renderHook(() => useMyHook(), {
-      wrapper: ({ children }) => (
-        <JinagaProvider jinaga={jinaga}>
-          {children}
-        </JinagaProvider>
-      )
-    });
+    const { result } = renderHook(() => useMyHook());
 
     // Wait for data to load
     await waitFor(() => {
@@ -275,6 +250,34 @@ describe('useMyHook', () => {
   });
 });
 ```
+
+### Testing with givenPlayerApp Pattern
+
+For testing components and hooks that require player app context, use the `givenPlayerApp` utility:
+
+```typescript
+import { givenPlayerApp } from '../security/givenPlayerApp';
+import { Player } from '@model/model';
+
+describe('PlayerComponent', () => {
+  it('should render with player context', () => {
+    givenPlayerApp((player: Player) => [
+      // Additional initial state facts if needed
+    ]);
+
+    render(<PlayerComponent />);
+    
+    expect(screen.getByText('Player Dashboard')).toBeInTheDocument();
+  });
+});
+```
+
+The `givenPlayerApp` utility automatically:
+- Creates a JinagaTest instance with authorization and distribution rules
+- Sets up a tenant owner, tenant, and player hierarchy
+- Mocks the global Jinaga instance (`j`)
+- Mocks `useUser` hook to return the test player user
+- Mocks `useTenant` hook to return the test tenant
 
 ### Testing Fact Creation
 
@@ -300,8 +303,8 @@ describe('Fact Creation', () => {
 describe('Performance Tests', () => {
   it('should handle large fact sets efficiently', async () => {
     const jinaga = JinagaTest.create({
-      authorization: (a) => myAuthorizationRules(a),
-      distribution: (d) => myDistributionRules(d),
+      authorization,
+      distribution,
       user: testUser,
       initialState: generateLargeFactSet()
     });
@@ -338,7 +341,6 @@ describe('Performance Tests', () => {
 - Measure query performance
 - Test distribution rule efficiency
 
-### 5. Integration Testing
-- Test the entire system working together
-- Verify authorization and distribution work together
-- Test real-world scenarios 
+### 5. Use givenPlayerApp for Component Testing
+- Use `givenPlayerApp` for testing components that need player context
+- Automatically handles mocking of global Jinaga instance and hooks 

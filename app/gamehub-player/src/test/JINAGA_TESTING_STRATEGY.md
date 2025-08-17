@@ -1,6 +1,6 @@
 # Jinaga Testing Strategy
 
-This document describes the testing strategy for Jinaga-based applications using the built-in `JinagaTest` utilities.
+This document describes the testing strategy for Jinaga-based applications using the built-in `JinagaTest` utilities and the `givenPlayerApp` testing pattern.
 
 ## Overview
 
@@ -247,17 +247,15 @@ describe('Player Fact Creation', () => {
 
 ```typescript
 import { render, screen } from '@testing-library/react';
-import { JinagaProvider } from 'jinaga-react';
 
 describe('MyComponent', () => {
   it('should render with Jinaga context', () => {
     const jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
 
-    render(
-      <JinagaProvider jinaga={jinaga}>
-        <MyComponent />
-      </JinagaProvider>
-    );
+    // For components that need Jinaga context, use givenPlayerApp
+    givenPlayerApp((player: Player) => []);
+
+    render(<MyComponent />);
 
     expect(screen.getByText('Expected Text')).toBeInTheDocument();
   });
@@ -312,7 +310,6 @@ describe('Specification Execution', () => {
 
 ```typescript
 import { renderHook } from '@testing-library/react';
-import { JinagaProvider } from 'jinaga-react';
 
 describe('useActiveGames', () => {
   it('should return games for authorized player', async () => {
@@ -338,13 +335,12 @@ describe('useActiveGames', () => {
       ]
     });
 
-    const wrapper = ({ children }) => (
-      <JinagaProvider jinaga={jinaga}>
-        {children}
-      </JinagaProvider>
-    );
+    // For hooks that need Jinaga context, use givenPlayerApp
+    givenPlayerApp((player: Player) => [
+      // Additional facts if needed
+    ]);
 
-    const { result } = renderHook(() => useActiveGames(player), { wrapper });
+    const { result } = renderHook(() => useActiveGames(player));
     
     expect(result.current.games).toHaveLength(1);
     expect(result.current.games[0]).toBe(game);
@@ -395,7 +391,7 @@ describe('Player Authorization', () => {
 });
 ```
 
-### 6. Player App Context Testing
+### 6. Player App Context Testing with givenPlayerApp
 
 For testing components that require the full player app context, use the `givenPlayerApp` utility:
 
@@ -455,6 +451,10 @@ The `givenPlayerApp` utility automatically:
 - Each test validates one user's permissions and capabilities
 - Test user workflows in isolation
 - Validate authorization and distribution rules from that user's perspective
+
+### 7. Use givenPlayerApp for Component Testing
+- Use `givenPlayerApp` for testing components that need player context
+- Automatically handles mocking of global Jinaga instance and hooks
 
 ## Common Issues and Solutions
 
@@ -519,4 +519,4 @@ npm run test:coverage
 
 For testing collaboration features and real-time synchronization, use integration tests with actual Jinaga Browser instances connected to a test replicator.
 
-This testing strategy provides a comprehensive approach to testing individual user permissions and workflows in Jinaga-based applications using isolated test environments. 
+This testing strategy provides a comprehensive approach to testing individual user permissions and workflows in Jinaga-based applications using isolated test environments and the efficient `givenPlayerApp` pattern. 

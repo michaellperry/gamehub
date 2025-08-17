@@ -73,7 +73,7 @@ Are you testing Jinaga applications or validating rules?
 - Testing authorization and distribution rules
 - Validating fact creation and queries
 - Performance testing Jinaga applications
-- Integration testing with React components
+- Component testing with givenPlayerApp
 
 ## Common Scenarios
 
