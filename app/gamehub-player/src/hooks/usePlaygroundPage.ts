@@ -149,7 +149,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     })) : undefined;
 
     // Create active games hook
-    const activeGames = useActiveGames(playground, playerId);
+    const activeGamesResult = useActiveGames(playground, playerId);
 
     // Navigation functions
     const goHome = () => navigate('/');
@@ -171,7 +171,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     };
 
     // Create the complete data structure
-    const composedData = players && activeGames ? {
+    const composedData = players && activeGamesResult.data ? {
         players,
         navigate: navigationViewModel,
         challenge: {
@@ -179,7 +179,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
             challengeViewModel,
         },
         leave: leavePlayground,
-        activeGames,
+        activeGames: activeGamesResult.data,
         ui: uiViewModel,
     } : null;
 
@@ -187,7 +187,7 @@ export function usePlaygroundPage(code: string | undefined): PlaygroundPageViewM
     const isLoading = playerLoading || playgroundLoading || playersLoading;
 
     // Combine errors
-    const combinedError = playgroundError || playerError || (specificationError ? specificationError.message : null);
+    const combinedError = playgroundError || playerError || (specificationError ? specificationError.message : null) || activeGamesResult.error;
 
     return {
         playground,
