@@ -8,7 +8,7 @@ import { givenPlayerApp } from './givenPlayerApp';
 describe('useActiveGames - Security', () => {
     it('should only show games where the current player is a participant', async () => {
         let playground: Playground | undefined;
-        givenPlayerApp((currentPlayer) => {
+        const [, , , currentPlayer] = givenPlayerApp((currentPlayer) => {
             // Create another player with a unique user in the same tenant
             const otherUser = new User('other-player-456');
             const otherPlayer = new Player(otherUser, currentPlayer.tenant);
@@ -47,9 +47,13 @@ describe('useActiveGames - Security', () => {
             ];
         });
 
+        // Import j to get the hash of the current player
+        const { j } = await import('../../jinaga-config');
+        const currentPlayerHash = j.hash(currentPlayer);
+
         const { result } = renderHook(() => useActiveGames(
             playground,
-            'player-123' // This should match the user key from givenPlayerApp
+            currentPlayerHash
         ));
 
         await waitFor(() => {
