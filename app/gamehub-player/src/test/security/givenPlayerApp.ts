@@ -6,19 +6,23 @@ import * as UserProviderModule from '../../auth/UserProvider';
 import * as UseTenantModule from '../../auth/useTenant';
 import * as JinagaConfigModule from '../../jinaga-config';
 
-export function givenPlayerApp(createInitialState: (player: Player) => Fact[]) {
+export function givenPlayerApp<T extends readonly Fact[]>(
+    createInitialState: (player: Player) => T
+): readonly [User, Tenant, User, Player, ...T] {
     const playerUser = new User('player-123');
     const tenantOwner = new User('tenant-owner');
     const tenant = new Tenant(tenantOwner);
     const player = new Player(playerUser, tenant);
     const initialState = createInitialState(player);
 
+    const fullInitialState = [tenantOwner, tenant, playerUser, player, ...initialState] as const;
+
     const jinaga = JinagaTest.create({
         model,
         authorization,
         distribution,
         user: playerUser,
-        initialState: [tenantOwner, tenant, playerUser, player, ...initialState]
+        initialState: [...fullInitialState]
     });
 
     // Mock the global j export from jinaga-config
@@ -32,4 +36,6 @@ export function givenPlayerApp(createInitialState: (player: Player) => Fact[]) {
 
     // Mock the useTenant hook to return our test tenant
     vi.spyOn(UseTenantModule, 'useTenant').mockReturnValue(tenant);
+
+    return fullInitialState;
 }

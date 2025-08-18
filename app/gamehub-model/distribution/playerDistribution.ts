@@ -11,6 +11,6 @@ export const playerDistribution = (r: DistributionRules) =>
                     .selectMany(player => PlayerName.current(player))
             )
         )
-        .with(model.given(User, Tenant).match((user, tenant) =>
+        .with(model.given(User, Tenant).match((user, _tenant) =>
             user
         ));

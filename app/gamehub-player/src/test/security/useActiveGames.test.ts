@@ -1,7 +1,7 @@
-import { Challenge, Game, Join, PlayerName, Playground, Player, model } from '@model/model';
+import { Challenge, Game, Join, Player, PlayerName, Playground } from '@model/model';
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
 import { User } from 'jinaga';
+import { describe, expect, it } from 'vitest';
 import { useActiveGames } from '../../hooks/useActiveGames';
 import { givenPlayerApp } from './givenPlayerApp';
 
@@ -70,7 +70,7 @@ describe('useActiveGames - Security', () => {
     });
 
     it('should not show games where the current player is not a participant', async () => {
-        const { jinaga } = givenPlayerApp((currentPlayer) => {
+        const initialState = givenPlayerApp((currentPlayer) => {
             // Create two other players with unique users in the same tenant
             const otherUser1 = new User('other-player-1-789');
             const otherUser2 = new User('other-player-2-012');
@@ -112,11 +112,7 @@ describe('useActiveGames - Security', () => {
             ];
         });
 
-        // Get the actual playground fact from the Jinaga instance
-        const playgroundSpec = model.given(Playground).match(playground => playground);
-        const playgrounds = await jinaga.query(playgroundSpec);
-        const testPlayground = playgrounds[0];
-
+        const testPlayground = initialState[4];
         const { result } = renderHook(() => useActiveGames(
             testPlayground,
             'player-123'
@@ -135,9 +131,7 @@ describe('useActiveGames - Security', () => {
     });
 
     it('should handle null playground gracefully', () => {
-        givenPlayerApp((currentPlayer) => {
-            return [];
-        });
+        givenPlayerApp(() => []);
 
         const { result } = renderHook(() => useActiveGames(
             null,
@@ -150,7 +144,7 @@ describe('useActiveGames - Security', () => {
     });
 
     it('should handle null currentPlayerId gracefully', async () => {
-        const { jinaga } = givenPlayerApp((currentPlayer) => {
+        const initialState = givenPlayerApp((currentPlayer) => {
             // Create another player with a unique user in the same tenant
             const otherUser = new User('other-player-456');
             const otherPlayer = new Player(otherUser, currentPlayer.tenant);
@@ -188,6 +182,7 @@ describe('useActiveGames - Security', () => {
             ];
         });
 
+        const testPlayground = initialState[4];
         const { result } = renderHook(() => useActiveGames(
             testPlayground,
             null
