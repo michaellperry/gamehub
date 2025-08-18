@@ -8,7 +8,7 @@ import * as JinagaConfigModule from '../../jinaga-config';
 
 export function givenPlayerApp<T extends readonly Fact[]>(
     createInitialState: (player: Player) => T
-): readonly [User, Tenant, User, Player, ...T] {
+): { jinaga: JinagaTest; initialState: readonly [User, Tenant, User, Player, ...T] } {
     const playerUser = new User('player-123');
     const tenantOwner = new User('tenant-owner');
     const tenant = new Tenant(tenantOwner);
@@ -37,5 +37,5 @@ export function givenPlayerApp<T extends readonly Fact[]>(
     // Mock the useTenant hook to return our test tenant
     vi.spyOn(UseTenantModule, 'useTenant').mockReturnValue(tenant);
 
-    return fullInitialState;
+    return { jinaga, initialState: fullInitialState };
 }

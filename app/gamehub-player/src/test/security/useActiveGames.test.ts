@@ -8,7 +8,7 @@ import { givenPlayerApp } from './givenPlayerApp';
 describe('useActiveGames - Security', () => {
     it('should only show games where the current player is a participant', async () => {
         let playground: Playground | undefined;
-        const [, , , currentPlayer] = givenPlayerApp((currentPlayer) => {
+        const { jinaga, initialState } = givenPlayerApp((currentPlayer) => {
             // Create another player with a unique user in the same tenant
             const otherUser = new User('other-player-456');
             const otherPlayer = new Player(otherUser, currentPlayer.tenant);
@@ -47,9 +47,8 @@ describe('useActiveGames - Security', () => {
             ];
         });
 
-        // Import j to get the hash of the current player
-        const { j } = await import('../../jinaga-config');
-        const currentPlayerHash = j.hash(currentPlayer);
+        const [, , , currentPlayer] = initialState;
+        const currentPlayerHash = jinaga.hash(currentPlayer);
 
         const { result } = renderHook(() => useActiveGames(
             playground,
@@ -74,7 +73,7 @@ describe('useActiveGames - Security', () => {
     });
 
     it('should not show games where the current player is not a participant', async () => {
-        const initialState = givenPlayerApp((currentPlayer) => {
+        const { jinaga, initialState } = givenPlayerApp((currentPlayer) => {
             // Create two other players with unique users in the same tenant
             const otherUser1 = new User('other-player-1-789');
             const otherUser2 = new User('other-player-2-012');
@@ -117,9 +116,11 @@ describe('useActiveGames - Security', () => {
         });
 
         const testPlayground = initialState[4];
+        const [, , , currentPlayer] = initialState;
+        const currentPlayerHash = jinaga.hash(currentPlayer);
         const { result } = renderHook(() => useActiveGames(
             testPlayground,
-            'player-123'
+            currentPlayerHash
         ));
 
         await waitFor(() => {
@@ -148,7 +149,7 @@ describe('useActiveGames - Security', () => {
     });
 
     it('should handle null currentPlayerId gracefully', async () => {
-        const initialState = givenPlayerApp((currentPlayer) => {
+        const { jinaga, initialState } = givenPlayerApp((currentPlayer) => {
             // Create another player with a unique user in the same tenant
             const otherUser = new User('other-player-456');
             const otherPlayer = new Player(otherUser, currentPlayer.tenant);
