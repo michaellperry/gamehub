@@ -306,6 +306,28 @@ The `givenPlayerApp` utility automatically:
 - Mocks `useUser` hook to return the test player user
 - Mocks `useTenant` hook to return the test tenant
 
+**Important**: The `player` parameter in the callback is a fully constructed `Player` instance with:
+- `player.tenant` - The tenant associated with the player
+- `player.user` - The user associated with the player
+- Proper fact relationships already established in the test environment
+
+**Best Practice**: Leverage the existing player context instead of recreating it:
+```typescript
+// ✅ Good: Use existing tenant from player
+givenPlayerApp((player) => {
+    const playground = new Playground(player.tenant, 'TEST12');
+    // ... rest of setup
+});
+
+// ❌ Avoid: Recreating tenant hierarchy
+givenPlayerApp((player) => {
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const playground = new Playground(tenant, 'TEST12');
+    // ... rest of setup
+});
+```
+
 ### Testing Fact Creation
 
 ```typescript
@@ -345,6 +367,85 @@ describe('Performance Tests', () => {
   });
 });
 ```
+
+## Testing Loading States and waitFor
+
+### ❌ Don't Wait for Loading Properties
+
+```typescript
+// This can be misleading - loading might complete before data is ready
+await waitFor(() => expect(result.current.loading).toBe(false));
+
+// This creates a false sense of completion
+await waitFor(() => expect(result.current.loading).toBe(false));
+expect(result.current.data).not.toBeNull(); // This might fail!
+```
+
+### ✅ Wait for Data Instead
+
+```typescript
+// This ensures the actual business outcome is achieved
+await waitFor(() => expect(result.current.data).not.toBeNull());
+
+// Or wait for specific data properties
+await waitFor(() => expect(result.current.data?.players).toHaveLength(1));
+```
+
+### ✅ Check for Errors First
+
+```typescript
+// Always check for errors before waiting for data
+await waitFor(() => {
+  expect(result.current.error).toBeNull();
+  expect(result.current.data).not.toBeNull();
+});
+
+// This prevents tests from hanging when errors occur
+// and provides better debugging information
+```
+
+**Important Benefit**: When `result.current.error` is not null, the test failure will include the actual error message. This provides valuable debugging information without requiring manual investigation or console logging.
+
+### Why This Matters
+
+**Loading State Deception:**
+- `loading: false` doesn't guarantee `data` is available
+- Multiple async operations can complete at different times
+- The loading state is an implementation detail, not a business outcome
+
+**Real Example from Testing:**
+```typescript
+// What we observed in testing:
+const { result } = renderHook(() => usePlaygroundPage('TEST12'));
+
+// Initial state
+console.log('Initial:', {
+  loading: result.current.loading,  // true
+  data: result.current.data,        // null
+  error: result.current.error       // null
+});
+
+// After waiting for loading to complete
+await waitFor(() => expect(result.current.loading).toBe(false));
+
+// Final state - loading is false but data is still null!
+console.log('Final:', {
+  loading: result.current.loading,  // false
+  data: result.current.data,        // null ← Still no data!
+  error: result.current.error       // null
+});
+
+// The hook finished "loading" but didn't successfully load the data
+// This creates a race condition where loading completes before data is ready
+```
+
+**Best Practice:**
+- Always wait for the actual business value (`data`, `players`, etc.)
+- Never rely on `loading` properties in `waitFor` assertions
+- Use `waitFor(() => expect(result.current.data).not.toBeNull())` as the standard pattern
+- **Always check for errors first**: `expect(result.current.error).toBeNull()` before checking data
+- This prevents tests from hanging indefinitely when errors occur and provides better debugging information
+- **Error messages in test failures**: When `error` is not null, the test failure includes the actual error message, eliminating the need for manual debugging or console logging
 
 ## Best Practices
 
