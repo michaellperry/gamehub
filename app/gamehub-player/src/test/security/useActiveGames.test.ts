@@ -95,6 +95,7 @@ describe('useActiveGames - Security', () => {
         const otherPlayer2Name = new PlayerName(otherPlayer2, 'OtherPlayer2', []);
 
         // Create joins
+        const currentPlayerJoin = new Join(currentPlayer, playground, new Date());
         const otherPlayer1Join = new Join(otherPlayer1, playground, new Date());
         const otherPlayer2Join = new Join(otherPlayer2, playground, new Date());
 
@@ -119,6 +120,7 @@ describe('useActiveGames - Security', () => {
             playground,
             otherPlayer1Name,
             otherPlayer2Name,
+            currentPlayerJoin,
             otherPlayer1Join,
             otherPlayer2Join,
             challenge,
@@ -132,16 +134,18 @@ describe('useActiveGames - Security', () => {
         ));
 
         await waitFor(() => {
-            // The hook should return an authorization error when trying to access games
-            // where the current player is not a participant
-            expect(result.current.error).not.toBeNull();
-            expect(result.current.data).toBeNull();
+            expect(result.current.error).toBeNull();
+            expect(result.current.data).not.toBeNull();
         });
 
-        // Verify the hook returns an authorization error
-        // This is correct security behavior - players can only see games they participate in
-        expect(result.current.error).toContain('Not authorized');
-        expect(result.current.data).toBeNull();
+        // Verify the hook returns data
+        const data = result.current.data!;
+        expect(data.games).toHaveLength(1);
+        expect(data.gameCount).toBe(1);
+        expect(data.hasGames).toBe(true);
+
+        // Verify the game shows the current player as not active
+        expect(data.games[0].isActivePlayer).toBe(false);
     });
 
     it('should handle null playground gracefully', () => {

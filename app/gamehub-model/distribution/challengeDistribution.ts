@@ -1,5 +1,5 @@
 import { DistributionRules } from 'jinaga';
-import { Challenge, Game, model, Player, PlayerName, Playground, Reject } from '../model/index.js';
+import { Challenge, Game, Join, model, Player, PlayerName, Playground, Reject } from '../model/index.js';
 
 export const challengeDistribution = (r: DistributionRules) =>
     r
@@ -25,7 +25,7 @@ export const challengeDistribution = (r: DistributionRules) =>
         )
         .with(model.given(Player).match((player) => player.user.predecessor()))
 
-        // The challenger can see the challenges
+        // Share all games in a playground with any player who has joined that playground
         .share(
             model.given(Playground).match((playground) => Game.in(playground)
                 .selectMany(game => game.challenge.opponentJoin.player.predecessor()
@@ -41,32 +41,9 @@ export const challengeDistribution = (r: DistributionRules) =>
             )
         )
         .with(model.given(Playground).match((playground) =>
-            Game.in(playground)
-                .selectMany(game => game.challenge.challengerJoin.player.predecessor()
-                    .selectMany(player => player.user.predecessor())
-                )
-        ))
-
-        // The opponent can see the challenges
-        .share(
-            model.given(Playground).match((playground) => Game.in(playground)
-                .selectMany(game => game.challenge.opponentJoin.player.predecessor()
-                    .selectMany(opponentPlayer => game.challenge.challengerJoin.player.predecessor()
-                        .select(challengerPlayer => ({
-                            gameId: game,
-                            opponentPlayer,
-                            challengerPlayer,
-                            opponentNames: PlayerName.current(opponentPlayer),
-                            challengerNames: PlayerName.current(challengerPlayer)
-                        }))
-                    ))
-            )
-        )
-        .with(model.given(Playground).match((playground) =>
-            Game.in(playground)
-                .selectMany(game => game.challenge.opponentJoin.player.predecessor()
-                    .selectMany(player => player.user.predecessor())
-                )
+            Join.in(playground)
+                .selectMany(join => join.player.predecessor())
+                .selectMany(player => player.user.predecessor())
         ))
 
         // Share rejects with the challenger and opponent only
