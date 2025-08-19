@@ -93,7 +93,7 @@ export function usePlayerName(): PlayerNameViewModel {
     const combinedError = actionError || playerError || (specificationError ? specificationError.message : null);
     const combinedLoading = playerLoading || loading;
 
-    if (!playerNames) {
+    if (playerNames === undefined || playerNames === null) {
         return {
             data: null,
             error: combinedError,
