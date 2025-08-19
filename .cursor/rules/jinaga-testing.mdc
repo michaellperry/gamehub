@@ -248,6 +248,53 @@ cat mesh/replicator/policies/gamehub.policy
 3. **Missing Imports**: Import all referenced fact types
 4. **Policy Generation**: Verify rules appear in generated policy
 
+## Testing Workflow with givenPlayerApp
+
+### Step-by-Step Testing Process
+1. **Create fact hierarchy** - Build User → Tenant → Player chain
+2. **Create test data** - Add playgrounds, challenges, games, etc.
+3. **Call givenPlayerApp** - Pass facts array, playerUser, and tenant
+4. **Use returned jinaga** - For any direct Jinaga operations
+5. **Test components/hooks** - They will use the mocked global instance
+
+### Example Workflow
+```typescript
+describe('Game Component Test', () => {
+  it('should display active games', async () => {
+    // Step 1: Create fact hierarchy
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const currentPlayer = new Player(playerUser, tenant);
+    
+    // Step 2: Create test data
+    const playground = new Playground(tenant, 'TEST12');
+    const playerName = new PlayerName(currentPlayer, 'TestPlayer', []);
+    const join = new Join(currentPlayer, playground, new Date());
+    
+    // Step 3: Set up test environment
+    const jinaga = givenPlayerApp([
+      playerUser,
+      tenantOwner,
+      tenant,
+      currentPlayer,
+      playground,
+      playerName,
+      join
+    ], playerUser, tenant);
+    
+    // Step 4: Test the component
+    const { result } = renderHook(() => useActiveGames(playground, jinaga.hash(currentPlayer)));
+    
+    // Step 5: Assert results
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+      expect(result.current.data).not.toBeNull();
+    });
+  });
+});
+```
+
 ## Testing Custom Hooks
 
 ### Testing useSpecification Hooks
@@ -263,9 +310,18 @@ describe('useMyHook', () => {
     });
 
     // For hooks that need Jinaga context, use givenPlayerApp
-    givenPlayerApp((player: Player) => [
-      // Additional facts if needed
-    ]);
+    const playerUser = new User('test-user-key');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const currentPlayer = new Player(playerUser, tenant);
+    
+    const jinaga = givenPlayerApp([
+      playerUser,
+      tenantOwner,
+      tenant,
+      currentPlayer,
+      testData
+    ], playerUser, tenant);
 
     // Test the hook
     const { result } = renderHook(() => useMyHook());
@@ -284,14 +340,31 @@ For testing components and hooks that require player app context, use the `given
 
 ```typescript
 import { givenPlayerApp } from '../security/givenPlayerApp';
-import { Player } from '@model/model';
+import { Player, Tenant, User } from '@model/model';
 
 describe('PlayerComponent', () => {
   it('should render with player context', () => {
-    givenPlayerApp((player: Player) => [
-      // Additional initial state facts if needed
-    ]);
+    // 1. Create the fact hierarchy
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const currentPlayer = new Player(playerUser, tenant);
+    
+    // 2. Create additional facts needed for the test
+    const playground = new Playground(tenant, 'TEST12');
+    const playerName = new PlayerName(currentPlayer, 'TestPlayer', []);
+    
+    // 3. Set up the test environment
+    const jinaga = givenPlayerApp([
+      playerUser,
+      tenantOwner,
+      tenant,
+      currentPlayer,
+      playground,
+      playerName
+    ], playerUser, tenant);
 
+    // 4. Test the component
     render(<PlayerComponent />);
     
     expect(screen.getByText('Player Dashboard')).toBeInTheDocument();
@@ -299,33 +372,42 @@ describe('PlayerComponent', () => {
 });
 ```
 
-The `givenPlayerApp` utility automatically:
+The `givenPlayerApp` utility:
 - Creates a JinagaTest instance with authorization and distribution rules
-- Sets up a tenant owner, tenant, and player hierarchy
-- Mocks the global Jinaga instance (`j`)
-- Mocks `useUser` hook to return the test player user
-- Mocks `useTenant` hook to return the test tenant
+- Mocks the global Jinaga instance (`j`) with the test instance
+- Mocks `useUser` hook to return the provided player user
+- Mocks `useTenant` hook to return the provided tenant
+- Returns the JinagaTest instance for use in tests
 
-**Important**: The `player` parameter in the callback is a fully constructed `Player` instance with:
-- `player.tenant` - The tenant associated with the player
-- `player.user` - The user associated with the player
-- Proper fact relationships already established in the test environment
+**Important**: The `givenPlayerApp` function requires you to:
+- Manually create the complete fact hierarchy (User → Tenant → Player)
+- Pass all required facts in the `initialState` array
+- Provide the `playerUser` and `tenant` instances
+- Use the returned `jinaga` instance for any direct Jinaga operations
 
-**Best Practice**: Leverage the existing player context instead of recreating it:
+**Return Value**: The function returns the `JinagaTest` instance, not a `Player` object.
+
+**Best Practice**: Create the complete fact hierarchy before calling givenPlayerApp:
 ```typescript
-// ✅ Good: Use existing tenant from player
-givenPlayerApp((player) => {
-    const playground = new Playground(player.tenant, 'TEST12');
-    // ... rest of setup
-});
+// ✅ Good: Create facts first, then pass to givenPlayerApp
+const playerUser = new User('player-123');
+const tenantOwner = new User('tenant-owner');
+const tenant = new Tenant(tenantOwner);
+const currentPlayer = new Player(playerUser, tenant);
+const playground = new Playground(tenant, 'TEST12');
 
-// ❌ Avoid: Recreating tenant hierarchy
-givenPlayerApp((player) => {
-    const tenantOwner = new User('tenant-owner');
-    const tenant = new Tenant(tenantOwner);
-    const playground = new Playground(tenant, 'TEST12');
-    // ... rest of setup
-});
+const jinaga = givenPlayerApp([
+    playerUser,
+    tenantOwner,
+    tenant,
+    currentPlayer,
+    playground
+], playerUser, tenant);
+
+// ❌ Avoid: Passing incomplete fact hierarchies
+givenPlayerApp([
+    // Missing required facts like tenantOwner or tenant
+], playerUser, tenant);
 ```
 
 ### Testing Fact Creation
@@ -471,4 +553,7 @@ console.log('Final:', {
 
 ### 5. Use givenPlayerApp for Component Testing
 - Use `givenPlayerApp` for testing components that need player context
-- Automatically handles mocking of global Jinaga instance and hooks 
+- Manually create the complete fact hierarchy before calling the function
+- Pass all required facts in the initialState array
+- Use the returned JinagaTest instance for direct Jinaga operations
+- Provides mocked global Jinaga instance and hooks for testing 
