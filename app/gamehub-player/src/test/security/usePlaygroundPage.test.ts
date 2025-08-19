@@ -1,5 +1,6 @@
-import { Join, PlayerName, Playground } from '@model/model';
+import { Join, Player, PlayerName, Playground, Tenant } from '@model/model';
 import { renderHook, waitFor } from '@testing-library/react';
+import { User } from 'jinaga';
 import { describe, expect, it, vi } from 'vitest';
 import { usePlaygroundPage } from '../../hooks/usePlaygroundPage';
 import { givenPlayerApp } from './givenPlayerApp';
@@ -11,15 +12,26 @@ vi.mock('react-router-dom', () => ({
 
 describe('usePlaygroundPage - Security', () => {
     it('should only list the current player in the players collection', async () => {
-        givenPlayerApp((player) => {
-            const playground = new Playground(player.tenant, 'TEST12');
-            const playerName = new PlayerName(player, 'TestPlayer', []);
-            const join = new Join(player, playground, new Date());
+        const playerUser = new User('player-123');
+        const tenantOwner = new User('tenant-owner');
+        const tenant = new Tenant(tenantOwner);
+        const currentPlayer = new Player(playerUser, tenant);
 
-            return [playground, playerName, join];
-        });
+        const playground = new Playground(tenant, 'TESTAB');
+        const playerName = new PlayerName(currentPlayer, 'TestPlayer', []);
+        const join = new Join(currentPlayer, playground, new Date());
 
-        const { result } = renderHook(() => usePlaygroundPage('TEST12'));
+        givenPlayerApp([
+            playerUser,
+            tenantOwner,
+            tenant,
+            currentPlayer,
+            playground,
+            playerName,
+            join
+        ], playerUser, tenant);
+
+        const { result } = renderHook(() => usePlaygroundPage('TESTAB'));
 
         await waitFor(() => {
             expect(result.current.error).toBeNull();
