@@ -1,4 +1,4 @@
-import { Challenge, Game, Join, Player, PlayerName, Playground, Tenant } from '@model/model';
+import { Challenge, Game, Join, Leave, Player, PlayerName, Playground, Tenant } from '@model/model';
 import { renderHook, waitFor } from '@testing-library/react';
 import { User } from 'jinaga';
 import { describe, expect, it } from 'vitest';
@@ -6,6 +6,65 @@ import { useActiveGames } from '../../hooks/useActiveGames';
 import { givenPlayerApp } from './givenPlayerApp';
 
 describe('useActiveGames - Security', () => {
+    it('should return error when player has not joined the playground', async () => {
+        const playerUser = new User('player-123');
+        const tenantOwner = new User('tenant-owner');
+        const tenant = new Tenant(tenantOwner);
+        const currentPlayer = new Player(playerUser, tenant);
+
+        // Create another player with a unique user in the same tenant
+        const otherUser = new User('other-player-456');
+        const otherPlayer = new Player(otherUser, currentPlayer.tenant);
+
+        // Create playground
+        const testPlayground = new Playground(currentPlayer.tenant, 'TEST12');
+
+        // Create player names
+        const otherPlayerName = new PlayerName(otherPlayer, 'OtherPlayer', []);
+
+        // Create join ONLY for the other player (current player has not joined)
+        const otherPlayerJoin = new Join(otherPlayer, testPlayground, new Date());
+
+        // Create challenge and game between other players
+        const challenge = new Challenge(
+            otherPlayerJoin,
+            otherPlayerJoin, // Self-challenge for simplicity
+            true,
+            new Date()
+        );
+        const game = new Game(challenge);
+
+        const jinaga = givenPlayerApp([
+            playerUser,
+            tenantOwner,
+            tenant,
+            currentPlayer,
+            otherUser,
+            otherPlayer,
+            testPlayground,
+            otherPlayerName,
+            otherPlayerJoin,
+            challenge,
+            game
+        ], playerUser, tenant);
+
+        const currentPlayerHash = jinaga.hash(currentPlayer);
+
+        const { result } = renderHook(() => useActiveGames(
+            testPlayground,
+            currentPlayerHash
+        ));
+
+        await waitFor(() => {
+            // Should return error since player has not joined the playground
+            expect(result.current.error).not.toBeNull();
+            expect(result.current.data).toBeNull();
+        });
+
+        // Verify the error message indicates the player is not authorized
+        expect(result.current.error).toContain('Not authorized');
+    });
+
     it('should show games where the current player is a participant', async () => {
         const playerUser = new User('player-123');
         const tenantOwner = new User('tenant-owner');
@@ -148,30 +207,7 @@ describe('useActiveGames - Security', () => {
         expect(data.games[0].isActivePlayer).toBe(false);
     });
 
-    it('should handle null playground gracefully', () => {
-        const playerUser = new User('player-123');
-        const tenantOwner = new User('tenant-owner');
-        const tenant = new Tenant(tenantOwner);
-        const currentPlayer = new Player(playerUser, tenant);
-
-        givenPlayerApp([
-            playerUser,
-            tenantOwner,
-            tenant,
-            currentPlayer
-        ], playerUser, tenant);
-
-        const { result } = renderHook(() => useActiveGames(
-            null,
-            'player-123'
-        ));
-
-        // Should return null data when playground is null
-        expect(result.current.data).toBeNull();
-        expect(result.current.error).toBeNull();
-    });
-
-    it('should handle null currentPlayerId gracefully', async () => {
+    it('should return error when player has left the playground', async () => {
         const playerUser = new User('player-123');
         const tenantOwner = new User('tenant-owner');
         const tenant = new Tenant(tenantOwner);
@@ -182,15 +218,15 @@ describe('useActiveGames - Security', () => {
         const otherPlayer = new Player(otherUser, currentPlayer.tenant);
 
         // Create playground
-        const playground = new Playground(currentPlayer.tenant, 'TEST12');
+        const testPlayground = new Playground(currentPlayer.tenant, 'TEST12');
 
         // Create player names
         const currentPlayerName = new PlayerName(currentPlayer, 'CurrentPlayer', []);
         const otherPlayerName = new PlayerName(otherPlayer, 'OtherPlayer', []);
 
         // Create joins
-        const currentPlayerJoin = new Join(currentPlayer, playground, new Date());
-        const otherPlayerJoin = new Join(otherPlayer, playground, new Date());
+        const currentPlayerJoin = new Join(currentPlayer, testPlayground, new Date());
+        const otherPlayerJoin = new Join(otherPlayer, testPlayground, new Date());
 
         // Create challenge and game
         const challenge = new Challenge(
@@ -201,40 +237,40 @@ describe('useActiveGames - Security', () => {
         );
         const game = new Game(challenge);
 
-        givenPlayerApp([
+        // Create a Leave fact for the current player
+        const leave = new Leave(currentPlayerJoin);
+
+        const jinaga = givenPlayerApp([
             playerUser,
             tenantOwner,
             tenant,
             currentPlayer,
             otherUser,
             otherPlayer,
-            playground,
+            testPlayground,
             currentPlayerName,
             otherPlayerName,
             currentPlayerJoin,
             otherPlayerJoin,
             challenge,
-            game
+            game,
+            leave
         ], playerUser, tenant);
 
+        const currentPlayerHash = jinaga.hash(currentPlayer);
+
         const { result } = renderHook(() => useActiveGames(
-            playground,
-            null
+            testPlayground,
+            currentPlayerHash
         ));
 
         await waitFor(() => {
-            expect(result.current.error).toBeNull();
-            expect(result.current.data).not.toBeNull();
+            // Should return error since player has left the playground
+            expect(result.current.error).not.toBeNull();
+            expect(result.current.data).toBeNull();
         });
 
-        // Verify the hook returns data but no player is marked as active
-        const data = result.current.data!;
-        expect(data.games).toHaveLength(1);
-        expect(data.gameCount).toBe(1);
-        expect(data.hasGames).toBe(true);
-
-        // Verify no player is marked as active when currentPlayerId is null
-        const gameData = data.games[0];
-        expect(gameData.isActivePlayer).toBe(false);
+        // Verify the error message indicates the player is not authorized
+        expect(result.current.error).toContain('Not authorized');
     });
 });
