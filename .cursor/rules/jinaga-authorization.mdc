@@ -131,6 +131,7 @@ Put complex logic in distribution rules, not authorization:
 ### 4. Test Continuously
 Build and generate policies after each change:
 ```bash
+cd app/gamehub-model
 npm run build
 npm run generate-policies
 ```

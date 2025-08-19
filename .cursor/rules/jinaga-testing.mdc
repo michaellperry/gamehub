@@ -28,17 +28,15 @@ interface JinagaTestConfig {
 Test with specific authorization policies:
 
 ```typescript
-import { tenantAuthorization } from 'gamehub-model/authorization/tenantAuthorization';
+import { authorization } from '@model';
 
 const jinaga = JinagaTest.create({
-  authorization: (a) => tenantAuthorization(a)
+  authorization
 });
 ```
 
 **Available Authorization Options:**
-- `tenantAuthorization` - GameHub tenant-based authorization
-- `userAuthorization` - User-based authorization  
-- `bookkeepingAuthorization` - Bookkeeping authorization
+- `authorization` - GameHub authorization rules (imported from @model)
 - Custom authorization rules for specific test scenarios
 
 ### 2. Distribution Rules
@@ -46,16 +44,15 @@ const jinaga = JinagaTest.create({
 Test with distribution and sharing policies:
 
 ```typescript
-import { tenantDistribution } from 'gamehub-model/distribution/tenantDistribution';
+import { distribution } from '@model';
 
 const jinaga = JinagaTest.create({
-  distribution: (d) => tenantDistribution(d)
+  distribution
 });
 ```
 
 **Available Distribution Options:**
-- `tenantDistribution` - GameHub tenant-based distribution
-- `bookkeepingDistribution` - Bookkeeping distribution
+- `distribution` - GameHub distribution rules (imported from @model)
 - Custom distribution rules for specific test scenarios
 
 ### 3. Simulated Users
@@ -194,35 +191,40 @@ describe('Distribution Rules', () => {
 });
 ```
 
-### 3. Integration Testing
 
-Test the entire system working together:
 
-```typescript
-describe('Integration Tests', () => {
-  it('should create and query facts correctly', async () => {
-    const jinaga = JinagaTest.create({
-      authorization: (a) => myAuthorizationRules(a),
-      distribution: (d) => myDistributionRules(d),
-      user: testUser
-    });
+## Critical: Model Rebuilding for Tests
 
-    // Create facts
-    const fact = await jinaga.fact(new MyFact(data, testUser));
-
-    // Query facts
-    const results = await jinaga.query(mySpec, testUser);
-    expect(results).toContain(fact);
-  });
-});
+**Before running tests after model changes:**
+```bash
+cd app/gamehub-model
+npm run build
 ```
+
+**Why this matters for testing:**
+- Tests use the compiled model, not source files
+- Distribution and authorization rules must be rebuilt to take effect
+- Test failures with old error messages often indicate outdated compiled rules
+
+### Testing Workflow
+1. **Make model changes**
+2. **Rebuild the model** (`cd app/gamehub-model && npm run build`)
+3. **Run tests** (`cd ../gamehub-player && npm test`)
+4. **Debug if needed** (check error messages carefully)
+5. **Repeat cycle**
+
+### Common Testing Pitfalls
+1. **Forgetting to rebuild** - Most common cause of "unfixable" test failures
+2. **Testing with old rules** - Distribution rules won't work until rebuilt
+3. **Multiple changes at once** - Makes debugging much harder
+4. **Ignoring error details** - Error messages contain the solution
 
 ## Validation and Testing
 
 ### Build and Policy Generation
 ```bash
 # Always build after changes
-npm run build
+cd app/gamehub-model && npm run build
 
 # Generate policies to verify rules
 npm run generate-policies
@@ -238,12 +240,60 @@ cat mesh/replicator/policies/gamehub.policy
 - [ ] Policy file contains expected rule entries
 - [ ] Facts support intended query patterns
 - [ ] Rules match business logic requirements
+- [ ] Model has been rebuilt after changes
 
 ### Common Issues
 1. **Authorization Errors**: Ensure rules return `LabelOf<User>`
 2. **Distribution Complexity**: Keep share clauses simple
 3. **Missing Imports**: Import all referenced fact types
 4. **Policy Generation**: Verify rules appear in generated policy
+
+## Testing Workflow with givenPlayerApp
+
+### Step-by-Step Testing Process
+1. **Create fact hierarchy** - Build User → Tenant → Player chain
+2. **Create test data** - Add playgrounds, challenges, games, etc.
+3. **Call givenPlayerApp** - Pass facts array, playerUser, and tenant
+4. **Use returned jinaga** - For any direct Jinaga operations
+5. **Test components/hooks** - They will use the mocked global instance
+
+### Example Workflow
+```typescript
+describe('Game Component Test', () => {
+  it('should display active games', async () => {
+    // Step 1: Create fact hierarchy
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const currentPlayer = new Player(playerUser, tenant);
+    
+    // Step 2: Create test data
+    const playground = new Playground(tenant, 'TEST12');
+    const playerName = new PlayerName(currentPlayer, 'TestPlayer', []);
+    const join = new Join(currentPlayer, playground, new Date());
+    
+    // Step 3: Set up test environment
+    const jinaga = givenPlayerApp([
+      playerUser,
+      tenantOwner,
+      tenant,
+      currentPlayer,
+      playground,
+      playerName,
+      join
+    ], playerUser, tenant);
+    
+    // Step 4: Test the component
+    const { result } = renderHook(() => useActiveGames(playground, jinaga.hash(currentPlayer)));
+    
+    // Step 5: Assert results
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+      expect(result.current.data).not.toBeNull();
+    });
+  });
+});
+```
 
 ## Testing Custom Hooks
 
@@ -253,20 +303,28 @@ cat mesh/replicator/policies/gamehub.policy
 describe('useMyHook', () => {
   it('should load data when parameters are available', async () => {
     const jinaga = JinagaTest.create({
-      authorization: (a) => myAuthorizationRules(a),
-      distribution: (d) => myDistributionRules(d),
+      authorization,
+      distribution,
       user: testUser,
       initialState: [testUser, testData]
     });
 
+    // For hooks that need Jinaga context, use givenPlayerApp
+    const playerUser = new User('test-user-key');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const currentPlayer = new Player(playerUser, tenant);
+    
+    const jinaga = givenPlayerApp([
+      playerUser,
+      tenantOwner,
+      tenant,
+      currentPlayer,
+      testData
+    ], playerUser, tenant);
+
     // Test the hook
-    const { result } = renderHook(() => useMyHook(), {
-      wrapper: ({ children }) => (
-        <JinagaProvider jinaga={jinaga}>
-          {children}
-        </JinagaProvider>
-      )
-    });
+    const { result } = renderHook(() => useMyHook());
 
     // Wait for data to load
     await waitFor(() => {
@@ -274,6 +332,82 @@ describe('useMyHook', () => {
     });
   });
 });
+```
+
+### Testing with givenPlayerApp Pattern
+
+For testing components and hooks that require player app context, use the `givenPlayerApp` utility:
+
+```typescript
+import { givenPlayerApp } from '../security/givenPlayerApp';
+import { Player, Tenant, User } from '@model/model';
+
+describe('PlayerComponent', () => {
+  it('should render with player context', () => {
+    // 1. Create the fact hierarchy
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const currentPlayer = new Player(playerUser, tenant);
+    
+    // 2. Create additional facts needed for the test
+    const playground = new Playground(tenant, 'TEST12');
+    const playerName = new PlayerName(currentPlayer, 'TestPlayer', []);
+    
+    // 3. Set up the test environment
+    const jinaga = givenPlayerApp([
+      playerUser,
+      tenantOwner,
+      tenant,
+      currentPlayer,
+      playground,
+      playerName
+    ], playerUser, tenant);
+
+    // 4. Test the component
+    render(<PlayerComponent />);
+    
+    expect(screen.getByText('Player Dashboard')).toBeInTheDocument();
+  });
+});
+```
+
+The `givenPlayerApp` utility:
+- Creates a JinagaTest instance with authorization and distribution rules
+- Mocks the global Jinaga instance (`j`) with the test instance
+- Mocks `useUser` hook to return the provided player user
+- Mocks `useTenant` hook to return the provided tenant
+- Returns the JinagaTest instance for use in tests
+
+**Important**: The `givenPlayerApp` function requires you to:
+- Manually create the complete fact hierarchy (User → Tenant → Player)
+- Pass all required facts in the `initialState` array
+- Provide the `playerUser` and `tenant` instances
+- Use the returned `jinaga` instance for any direct Jinaga operations
+
+**Return Value**: The function returns the `JinagaTest` instance, not a `Player` object.
+
+**Best Practice**: Create the complete fact hierarchy before calling givenPlayerApp:
+```typescript
+// ✅ Good: Create facts first, then pass to givenPlayerApp
+const playerUser = new User('player-123');
+const tenantOwner = new User('tenant-owner');
+const tenant = new Tenant(tenantOwner);
+const currentPlayer = new Player(playerUser, tenant);
+const playground = new Playground(tenant, 'TEST12');
+
+const jinaga = givenPlayerApp([
+    playerUser,
+    tenantOwner,
+    tenant,
+    currentPlayer,
+    playground
+], playerUser, tenant);
+
+// ❌ Avoid: Passing incomplete fact hierarchies
+givenPlayerApp([
+    // Missing required facts like tenantOwner or tenant
+], playerUser, tenant);
 ```
 
 ### Testing Fact Creation
@@ -300,8 +434,8 @@ describe('Fact Creation', () => {
 describe('Performance Tests', () => {
   it('should handle large fact sets efficiently', async () => {
     const jinaga = JinagaTest.create({
-      authorization: (a) => myAuthorizationRules(a),
-      distribution: (d) => myDistributionRules(d),
+      authorization,
+      distribution,
       user: testUser,
       initialState: generateLargeFactSet()
     });
@@ -315,6 +449,85 @@ describe('Performance Tests', () => {
   });
 });
 ```
+
+## Testing Loading States and waitFor
+
+### ❌ Don't Wait for Loading Properties
+
+```typescript
+// This can be misleading - loading might complete before data is ready
+await waitFor(() => expect(result.current.loading).toBe(false));
+
+// This creates a false sense of completion
+await waitFor(() => expect(result.current.loading).toBe(false));
+expect(result.current.data).not.toBeNull(); // This might fail!
+```
+
+### ✅ Wait for Data Instead
+
+```typescript
+// This ensures the actual business outcome is achieved
+await waitFor(() => expect(result.current.data).not.toBeNull());
+
+// Or wait for specific data properties
+await waitFor(() => expect(result.current.data?.players).toHaveLength(1));
+```
+
+### ✅ Check for Errors First
+
+```typescript
+// Always check for errors before waiting for data
+await waitFor(() => {
+  expect(result.current.error).toBeNull();
+  expect(result.current.data).not.toBeNull();
+});
+
+// This prevents tests from hanging when errors occur
+// and provides better debugging information
+```
+
+**Important Benefit**: When `result.current.error` is not null, the test failure will include the actual error message. This provides valuable debugging information without requiring manual investigation or console logging.
+
+### Why This Matters
+
+**Loading State Deception:**
+- `loading: false` doesn't guarantee `data` is available
+- Multiple async operations can complete at different times
+- The loading state is an implementation detail, not a business outcome
+
+**Real Example from Testing:**
+```typescript
+// What we observed in testing:
+const { result } = renderHook(() => usePlaygroundPage('TEST12'));
+
+// Initial state
+console.log('Initial:', {
+  loading: result.current.loading,  // true
+  data: result.current.data,        // null
+  error: result.current.error       // null
+});
+
+// After waiting for loading to complete
+await waitFor(() => expect(result.current.loading).toBe(false));
+
+// Final state - loading is false but data is still null!
+console.log('Final:', {
+  loading: result.current.loading,  // false
+  data: result.current.data,        // null ← Still no data!
+  error: result.current.error       // null
+});
+
+// The hook finished "loading" but didn't successfully load the data
+// This creates a race condition where loading completes before data is ready
+```
+
+**Best Practice:**
+- Always wait for the actual business value (`data`, `players`, etc.)
+- Never rely on `loading` properties in `waitFor` assertions
+- Use `waitFor(() => expect(result.current.data).not.toBeNull())` as the standard pattern
+- **Always check for errors first**: `expect(result.current.error).toBeNull()` before checking data
+- This prevents tests from hanging indefinitely when errors occur and provides better debugging information
+- **Error messages in test failures**: When `error` is not null, the test failure includes the actual error message, eliminating the need for manual debugging or console logging
 
 ## Best Practices
 
@@ -338,7 +551,9 @@ describe('Performance Tests', () => {
 - Measure query performance
 - Test distribution rule efficiency
 
-### 5. Integration Testing
-- Test the entire system working together
-- Verify authorization and distribution work together
-- Test real-world scenarios 
+### 5. Use givenPlayerApp for Component Testing
+- Use `givenPlayerApp` for testing components that need player context
+- Manually create the complete fact hierarchy before calling the function
+- Pass all required facts in the initialState array
+- Use the returned JinagaTest instance for direct Jinaga operations
+- Provides mocked global Jinaga instance and hooks for testing 

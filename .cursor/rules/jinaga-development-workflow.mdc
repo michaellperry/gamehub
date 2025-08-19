@@ -1,0 +1,35 @@
+---
+globs: app/gamehub-model/**/*
+alwaysApply: false
+---
+# Jinaga Development Workflow
+
+## Critical Workflow Steps
+
+### 1. Model Changes Require Rebuilding
+**ALWAYS rebuild the model after making changes:**
+```bash
+cd app/gamehub-model
+npm run build
+```
+
+**Why this matters:**
+- Distribution rules, authorization rules, and model changes are not applied until rebuilt
+- Tests will fail with outdated rules even if source code is correct
+- The `@model` import in dependent projects uses the compiled output, not source
+
+### 2. Development Cycle
+```bash
+# 1. Make changes to model files
+# 2. Rebuild the model
+cd app/gamehub-model && npm run build
+# 3. Test changes
+cd ../gamehub-player && npm test
+# 4. Repeat if needed
+```
+
+## Common Mistakes and How to Avoid Them
+
+### 1. Forgetting to Rebuild the Model
+**Symptom:** Tests fail with old error messages even after "fixing" the code
+**Solution:** Always run `npm run build` in `app/gamehub-model` after changes

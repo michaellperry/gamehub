@@ -5,7 +5,52 @@ import { useHomePage } from '../hooks/useHomePage';
 export default function HomePage() {
     const { playerName, playgroundLobby, playerPlaygrounds, playerSessions } = useHomePage();
 
-    if (playerName.showNameInput) {
+    // Show loading state if playerName is still loading
+    if (playerName.loading) {
+        return (
+            <PageLayout variant="default">
+                <Container variant="hero">
+                    <CenteredContent className="space-y-8">
+                        <div className="space-y-4">
+                            <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
+                            <Typography variant="h1" className="text-3xl font-bold text-gray-900">
+                                Loading...
+                            </Typography>
+                        </div>
+                    </CenteredContent>
+                </Container>
+            </PageLayout>
+        );
+    }
+
+    // Show error state if there's an error and no data
+    if (playerName.error && !playerName.data) {
+        return (
+            <PageLayout variant="default">
+                <Container variant="hero">
+                    <CenteredContent className="space-y-8">
+                        <div className="space-y-4">
+                            <Icon name="home" size="xl" className="text-primary-600 mx-auto" />
+                            <Typography variant="h1" className="text-3xl font-bold text-gray-900">
+                                Welcome to GameHub
+                            </Typography>
+                        </div>
+                        <Alert
+                            variant="error"
+                            title="Error"
+                            dismissible
+                            onDismiss={playerName.clearError}
+                            className="max-w-md mx-auto"
+                        >
+                            {playerName.error}
+                        </Alert>
+                    </CenteredContent>
+                </Container>
+            </PageLayout>
+        );
+    }
+
+    if (playerName.data && playerName.data.showNameInput) {
         return (
             <PageLayout variant="default">
                 <Container variant="hero">
@@ -34,10 +79,10 @@ export default function HomePage() {
                         )}
 
                         <NameInput
-                            value={playerName.playerName}
-                            onSubmit={playerName.handleNameSubmit}
-                            onCancel={playerName.handleCancel}
-                            allowCancel={playerName.allowCancel}
+                            value={playerName.data.playerName}
+                            onSubmit={playerName.data.handleNameSubmit}
+                            onCancel={playerName.data.handleCancel}
+                            allowCancel={playerName.data.allowCancel}
                             loading={playerName.loading}
                             disabled={playerName.loading}
                         />
@@ -46,6 +91,10 @@ export default function HomePage() {
             </PageLayout>
         );
     }
+
+    const welcomeMessage = playerName.data
+        ? `Welcome back, ${playerName.data.playerName || 'Player'}!`
+        : '';
 
     return (
         <PageLayout variant="default">
@@ -58,7 +107,7 @@ export default function HomePage() {
                             GameHub Lobby
                         </Typography>
                         <Typography variant="body" className="text-gray-600">
-                            Welcome back, {playerName.playerName}!
+                            {welcomeMessage}
                         </Typography>
                     </div>
 
@@ -195,7 +244,7 @@ export default function HomePage() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => playerName.setShowNameInput(true)}
+                            onClick={() => playerName.data?.setShowNameInput(true)}
                             className="text-gray-500 hover:text-gray-700"
                         >
                             Change Name

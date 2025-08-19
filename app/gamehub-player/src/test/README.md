@@ -14,13 +14,13 @@ The testing framework is configured with:
 ## Test Scripts
 
 ```bash
-# Run tests in watch mode (development)
+# Run tests once (default)
 npm run test
 
 # Run tests with UI
 npm run test:ui
 
-# Run tests once
+# Run tests once (explicit)
 npm run test:run
 
 # Run tests with coverage
@@ -36,12 +36,23 @@ npm run test:watch
 src/
 ├── test/
 │   ├── setup.ts                    # Global test setup
+│   ├── basic.test.ts               # Basic test verification
 │   ├── components/                 # Component tests
-│   │   └── Button.test.tsx
-│   ├── services/                   # Service tests
-│   │   └── background-service/
-│   │       └── BackgroundServiceManager.test.ts
+│   │   ├── ActiveGames.test.tsx
+│   │   ├── Button.test.tsx
+│   │   ├── ChallengeStatus.test.tsx
+│   │   └── PlayerCard.test.tsx
+│   ├── hooks/                      # Hook tests
+│   │   ├── jinaga-example.test.ts
+│   │   ├── jinaga-test-utils.ts    # Jinaga testing utilities
+│   │   ├── useGame.test.ts
+│   │   ├── usePlayerSession.test.ts
+│   │   └── usePlayerSessions.test.ts
+│   ├── security/                   # Security-related tests
+│   │   ├── givenPlayerApp.ts       # Player app test setup utility
+│   │   └── usePlayerName.test.ts
 │   └── utils/                      # Utility function tests
+│       └── gamingNames.test.ts
 └── ...
 ```
 
@@ -245,3 +256,32 @@ const renderWithRouter = (ui: React.ReactElement) => {
 ### Testing with Jinaga
 
 Please see [Jinaga Testing Strategy](./JINAGA_TESTING_STRATEGY.md).
+
+### Player App Testing Utilities
+
+For testing components and hooks that require a complete player app context, use the `givenPlayerApp` utility:
+
+```typescript
+import { givenPlayerApp } from '../security/givenPlayerApp';
+import { Player } from '@model/model';
+
+describe('MyPlayerComponent', () => {
+  it('should work with player context', () => {
+    givenPlayerApp((player: Player) => [
+      // Additional initial state facts
+    ]);
+
+    // Your test code here - the app context is now mocked
+    render(<MyPlayerComponent />);
+    
+    expect(screen.getByText('Player content')).toBeInTheDocument();
+  });
+});
+```
+
+The `givenPlayerApp` utility automatically:
+- Creates a test Jinaga instance with authorization and distribution rules
+- Sets up a tenant owner, tenant, and player
+- Mocks the global Jinaga instance (`j`)
+- Mocks `useUser` to return the test player user
+- Mocks `useTenant` to return the test tenant

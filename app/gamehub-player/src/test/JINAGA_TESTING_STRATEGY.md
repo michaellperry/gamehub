@@ -1,17 +1,19 @@
 # Jinaga Testing Strategy
 
-This document describes the testing strategy for Jinaga-based applications using the built-in `JinagaTest` utilities.
+This document describes the testing strategy for Jinaga-based applications using the built-in `JinagaTest` utilities and the `givenPlayerApp` testing pattern.
 
 ## Overview
 
 Jinaga provides a comprehensive testing framework through `JinagaTest.create()` that allows you to create isolated test instances with full control over:
 
-- **Authorization Rules** - Test with specific authorization policies
-- **Distribution Rules** - Test with distribution and sharing policies  
+- **Authorization Rules** - Test what facts a user can create and modify
+- **Distribution Rules** - Test what specifications a user can execute
 - **Simulated Users** - Test as specific logged-in users
 - **Pre-initialized State** - Start tests with existing facts
 - **Memory Store** - Isolated, in-memory fact storage
 - **Observable Source** - Real-time fact observation
+
+Each JinagaTest instance is completely isolated and does not communicate with other instances.
 
 ## JinagaTest Configuration Options
 
@@ -37,34 +39,34 @@ interface JinagaTestConfig {
 Test with specific authorization policies:
 
 ```typescript
-import { tenantAuthorization } from 'gamehub-model/authorization/tenantAuthorization';
+import { authorization } from '@model';
 
 const jinaga = JinagaTest.create({
-  authorization: (a) => tenantAuthorization(a)
+  authorization
 });
 ```
 
 **Available Authorization Options:**
-- `tenantAuthorization` - GameHub tenant-based authorization
-- `userAuthorization` - User-based authorization  
-- `bookkeepingAuthorization` - Bookkeeping authorization
+- `authorization` - GameHub authorization rules (imported from @model)
 - Custom authorization rules for specific test scenarios
 
 ### 2. Distribution Rules
 
-Test with distribution and sharing policies:
+Test what specifications a user is allowed to execute:
 
 ```typescript
-import { tenantDistribution } from 'gamehub-model/distribution/tenantDistribution';
+import { distribution } from '@model';
 
 const jinaga = JinagaTest.create({
-  distribution: (d) => tenantDistribution(d)
+  distribution,
+  user: new User('test-user-key')
 });
 ```
 
+Distribution rules determine which specifications a user can execute, not which facts they can access. If a user lacks permission to execute a specification, the query will fail.
+
 **Available Distribution Options:**
-- `tenantDistribution` - GameHub tenant-based distribution
-- `bookkeepingDistribution` - Bookkeeping distribution
+- `distribution` - GameHub distribution rules (imported from @model)
 - Custom distribution rules for specific test scenarios
 
 ### 3. Simulated Users
@@ -198,21 +200,45 @@ const join = await factories.createTestJoin(jinaga, player, playground);
 
 ## Testing Patterns
 
-### 1. Basic Service Testing
+### 1. Testing Fact Creation Authorization
 
 ```typescript
-describe('MyService', () => {
-  let jinaga: any;
-  let service: MyService;
+describe('Player Fact Creation', () => {
+  it('should allow player to create challenge', async () => {
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const opponentUser = new User('opponent-456');
+    
+    const tenant = new Tenant(tenantOwner);
+    const player = new Player(playerUser, tenant);
+    const opponent = new Player(opponentUser, tenant);
 
-  beforeEach(async () => {
-    jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
-    service = new MyService(jinaga);
+    const jinaga = JinagaTest.create({
+      authorization,
+      user: playerUser,
+      initialState: [tenantOwner, tenant, playerUser, opponentUser, player, opponent]
+    });
+
+    // Test that this player can create a challenge
+    const challenge = await jinaga.fact(new Challenge(player, opponent, new Date()));
+    expect(challenge).toBeDefined();
   });
 
-  it('should perform operation', async () => {
-    const result = await service.doSomething();
-    expect(result).toBeDefined();
+  it('should prevent unauthorized fact creation', async () => {
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+
+    const jinaga = JinagaTest.create({
+      authorization,
+      user: playerUser,
+      initialState: [tenantOwner, tenant, playerUser]
+    });
+
+    // Test that this player cannot create tenant-level settings
+    await expect(async () => {
+      await jinaga.fact(new TenantSettings(tenant, 'config'));
+    }).rejects.toThrow();
   });
 });
 ```
@@ -221,102 +247,214 @@ describe('MyService', () => {
 
 ```typescript
 import { render, screen } from '@testing-library/react';
-import { JinagaProvider } from 'jinaga-react';
 
 describe('MyComponent', () => {
   it('should render with Jinaga context', () => {
     const jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
 
-    render(
-      <JinagaProvider jinaga={jinaga}>
-        <MyComponent />
-      </JinagaProvider>
-    );
+    // For components that need Jinaga context, use givenPlayerApp
+    givenPlayerApp((player: Player) => []);
+
+    render(<MyComponent />);
 
     expect(screen.getByText('Expected Text')).toBeInTheDocument();
   });
 });
 ```
 
-### 3. Hook Testing with Jinaga
+### 3. Testing Specification Execution with Distribution Rules
+
+```typescript
+import { distribution } from '@model';
+
+describe('Specification Execution', () => {
+  it('should allow authorized user to execute specification', async () => {
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const player = new Player(playerUser, tenant);
+    const playground = new Playground(tenant, 'TEST-001');
+
+    const jinaga = JinagaTest.create({
+      distribution,
+      user: playerUser,
+      initialState: [tenantOwner, tenant, playerUser, player, playground]
+    });
+
+    // Test that this user can execute the specification
+    const games = await jinaga.query(Game.inPlayground(playground));
+    expect(games).toBeDefined(); // Should not throw
+  });
+
+  it('should prevent unauthorized specification execution', async () => {
+    const unauthorizedUser = new User('unauthorized-user');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const playground = new Playground(tenant, 'TEST-001');
+
+    const jinaga = JinagaTest.create({
+      distribution,
+      user: unauthorizedUser,
+      initialState: [tenantOwner, tenant, playground, unauthorizedUser]
+    });
+
+    // Test that unauthorized user cannot execute tenant specifications
+    await expect(async () => {
+      await jinaga.query(AdminReport.forTenant(tenant));
+    }).rejects.toThrow();
+  });
+});
+```
+
+### 4. Hook Testing with Pre-populated Game State
 
 ```typescript
 import { renderHook } from '@testing-library/react';
-import { JinagaProvider } from 'jinaga-react';
 
-describe('useMyHook', () => {
-  it('should work with Jinaga', () => {
-    const jinaga = JinagaTestUtils.createBasicTestInstance(new User('test-user-key'));
+describe('useActiveGames', () => {
+  it('should return games for authorized player', async () => {
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const opponentUser = new User('opponent-456');
+    
+    // Pre-populate with complete game scenario
+    const tenant = new Tenant(tenantOwner);
+    const player = new Player(playerUser, tenant);
+    const opponent = new Player(opponentUser, tenant);
+    const playground = new Playground(tenant, 'TEST-001');
+    const challenge = new Challenge(player, opponent, new Date());
+    const game = new Game(challenge, true, new Date());
 
-    const wrapper = ({ children }) => (
-      <JinagaProvider jinaga={jinaga}>
-        {children}
-      </JinagaProvider>
-    );
+    const jinaga = JinagaTest.create({
+      authorization,
+      distribution,
+      user: playerUser,
+      initialState: [
+        tenantOwner, tenant, playerUser, opponentUser,
+        player, opponent, playground, challenge, game
+      ]
+    });
 
-    const { result } = renderHook(() => useMyHook(), { wrapper });
-    expect(result.current).toBeDefined();
-  });
-});
-```
-
-### 4. Complex Scenario Testing
-
-```typescript
-describe('Complex Scenario', () => {
-  it('should handle multi-user tenant', async () => {
-    const { jinaga, tenant, users } = await TestScenarios.multipleUsersInTenant([
-      new User('admin'),
-      new User('player1'),
-      new User('player2')
+    // For hooks that need Jinaga context, use givenPlayerApp
+    givenPlayerApp((player: Player) => [
+      // Additional facts if needed
     ]);
 
-    // Test complex interactions
-    const playground = await jinaga.fact(new Playground(tenant, 'TEST-PLAY'));
+    const { result } = renderHook(() => useActiveGames(player));
     
-    for (const user of users.slice(1)) { // Skip admin
-      const player = await jinaga.fact(new Player(user, tenant));
-      await jinaga.fact(new Join(player, playground, new Date()));
-    }
-
-    // Verify results
-    const joins = await jinaga.query(Join);
-    expect(joins).toHaveLength(2);
+    expect(result.current.games).toHaveLength(1);
+    expect(result.current.games[0]).toBe(game);
   });
 });
 ```
+
+### 5. Authorization Testing with Pre-populated State
+
+```typescript
+describe('Player Authorization', () => {
+  it('should allow player to join playground in their tenant', async () => {
+    const playerUser = new User('player-123');
+    const tenantOwner = new User('tenant-owner');
+    const tenant = new Tenant(tenantOwner);
+    const player = new Player(playerUser, tenant);
+    const playground = new Playground(tenant, 'TEST-001');
+
+    const jinaga = JinagaTest.create({
+      authorization,
+      user: playerUser,
+      initialState: [tenantOwner, tenant, playerUser, player, playground]
+    });
+
+    // Test that this player can join the playground
+    const join = await jinaga.fact(new Join(player, playground, new Date()));
+    expect(join).toBeDefined();
+  });
+
+  it('should prevent player from accessing other tenant data', async () => {
+    const playerUser = new User('player-123');
+    const otherTenantOwner = new User('other-owner');
+    const otherTenant = new Tenant(otherTenantOwner);
+    const otherPlayground = new Playground(otherTenant, 'OTHER-001');
+
+    const jinaga = JinagaTest.create({
+      authorization,
+      user: playerUser,
+      initialState: [otherTenantOwner, otherTenant, otherPlayground, playerUser]
+    });
+
+    // Test that this player cannot access other tenant's playground
+    await expect(async () => {
+      const player = new Player(playerUser, otherTenant); // Should fail
+      await jinaga.fact(new Join(player, otherPlayground, new Date()));
+    }).rejects.toThrow();
+  });
+});
+```
+
+### 6. Player App Context Testing with givenPlayerApp
+
+For testing components that require the full player app context, use the `givenPlayerApp` utility:
+
+```typescript
+import { givenPlayerApp } from '../security/givenPlayerApp';
+import { Player } from '@model/model';
+
+describe('PlayerComponent', () => {
+  it('should render with player context', () => {
+    givenPlayerApp((player: Player) => [
+      // Additional initial state facts if needed
+    ]);
+
+    render(<PlayerComponent />);
+    
+    expect(screen.getByText('Player Dashboard')).toBeInTheDocument();
+  });
+});
+```
+
+The `givenPlayerApp` utility automatically:
+- Creates a JinagaTest instance with authorization and distribution rules
+- Sets up a tenant owner, tenant, and player hierarchy
+- Mocks the global Jinaga instance (`j` from jinaga-config)
+- Mocks `useUser` hook to return the test player user
+- Mocks `useTenant` hook to return the test tenant
 
 ## Best Practices
 
 ### 1. Test Isolation
-- Each test gets a fresh Jinaga instance
-- No shared state between tests
+- Each test gets a fresh, isolated JinagaTest instance
+- No communication between JinagaTest instances
 - Use `beforeEach` to set up test state
 
-### 2. Fact Creation
-- Create facts using `jinaga.fact()`
-- Use proper fact constructors
-- Include all required predecessor facts
+### 2. Comprehensive Initial State
+- Populate `initialState` with all prerequisite facts
+- Include complete fact hierarchies (User → Tenant → Player → etc.)
+- Ensure facts exist before testing operations that depend on them
 
-### 3. Query Testing
-- Test queries with `jinaga.query()`
-- Verify expected fact counts and properties
-- Test complex query patterns
+### 3. Authorization Testing
+- Test what facts a specific user can create/modify
+- Test fact creation permissions with realistic user contexts
+- Verify authorization rules prevent unauthorized fact creation
 
-### 4. Authorization Testing
-- Test with different user contexts
-- Verify authorization rules work correctly
-- Test unauthorized access scenarios
+### 4. Distribution Testing  
+- Test what specifications a user can execute
+- Verify users with proper permissions can run queries
+- Test that unauthorized users cannot execute restricted specifications
+- Focus on specification execution authorization, not fact sharing
 
-### 5. Distribution Testing
-- Test with distribution rules enabled
-- Verify facts are distributed correctly
-- Test sharing and access patterns
+### 5. Specification Testing with Realistic Data
+- Use `initialState` to create realistic fact scenarios
+- Test custom hooks and specifications with complete data hierarchies
+- Verify specifications return expected results for authorized users
 
-### 6. Real-time Testing
-- Use `jinaga.watch()` for real-time updates
-- Test observable patterns
-- Verify fact propagation
+### 6. Single-User Focus
+- Each test validates one user's permissions and capabilities
+- Test user workflows in isolation
+- Validate authorization and distribution rules from that user's perspective
+
+### 7. Use givenPlayerApp for Component Testing
+- Use `givenPlayerApp` for testing components that need player context
+- Automatically handles mocking of global Jinaga instance and hooks
 
 ## Common Issues and Solutions
 
@@ -329,8 +467,8 @@ describe('Complex Scenario', () => {
 **Solution:** Test with proper user context and authorization rules
 
 ### 3. Distribution Errors
-**Issue:** Facts not distributed as expected
-**Solution:** Enable distribution rules and test sharing patterns
+**Issue:** Specification execution fails with permission errors
+**Solution:** Ensure user has proper distribution permissions to execute the specification
 
 ### 4. Type Errors
 **Issue:** TypeScript errors with Jinaga types
@@ -338,9 +476,11 @@ describe('Complex Scenario', () => {
 
 ## Example Test Files
 
-- `jinaga-example.test.ts` - Comprehensive examples
-- `BackgroundServiceManager.test.ts` - Service testing
+- `hooks/jinaga-example.test.ts` - Comprehensive Jinaga testing examples
+- `hooks/jinaga-test-utils.ts` - Jinaga testing utility functions
+- `security/givenPlayerApp.ts` - Player app testing setup utility
 - `basic.test.ts` - Simple verification tests
+- `components/Button.test.tsx` - Component testing example
 
 ## Running Tests
 
@@ -358,4 +498,25 @@ npm run test:ui
 npm run test:coverage
 ```
 
-This testing strategy provides a comprehensive approach to testing Jinaga-based applications with full control over the testing environment and realistic scenarios. 
+## JinagaTest Capabilities and Limitations
+
+### What JinagaTest CAN Test
+- Individual user authorization (can this user create/read/modify this fact?)
+- Specification execution permissions (can this user run this query?)
+- Authorization rule correctness for single users
+- Distribution rule correctness for single users
+- Component behavior with Jinaga context and realistic data
+- Custom hook behavior with pre-populated fact hierarchies
+- Single-user workflows and business logic
+
+### What JinagaTest CANNOT Test
+- Real-time collaboration between multiple users
+- Fact synchronization across different clients
+- Network communication or replicator behavior
+- Cross-instance fact sharing or communication
+- Multi-user concurrent operations
+- Distributed system behavior
+
+For testing collaboration features and real-time synchronization, use integration tests with actual Jinaga Browser instances connected to a test replicator.
+
+This testing strategy provides a comprehensive approach to testing individual user permissions and workflows in Jinaga-based applications using isolated test environments and the efficient `givenPlayerApp` pattern. 

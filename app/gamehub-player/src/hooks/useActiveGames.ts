@@ -23,8 +23,8 @@ const gamesSpec = model.given(Playground).match((playground) => Game.in(playgrou
         ))
 );
 
-export function useActiveGames(playground: Playground | null, currentPlayerId: string | null): ActiveGamesViewModel | null {
-    const { data: gameProjections } = useSpecification(j, gamesSpec, playground);
+export function useActiveGames(playground: Playground | null, currentPlayerId: string | null): { data: ActiveGamesViewModel | null; error: string | null } {
+    const { data: gameProjections, error } = useSpecification(j, gamesSpec, playground);
 
     const games = gameProjections?.map<PlaygroundGame>(projection => ({
         id: projection.gameId,
@@ -35,9 +35,12 @@ export function useActiveGames(playground: Playground | null, currentPlayerId: s
             false,
     }));
 
-    return games ? {
-        games,
-        gameCount: games.length,
-        hasGames: games.length > 0,
-    } : null;
+    return {
+        data: games ? {
+            games,
+            gameCount: games.length,
+            hasGames: games.length > 0,
+        } : null,
+        error: error?.message || null
+    };
 } 

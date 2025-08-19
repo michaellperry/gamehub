@@ -61,6 +61,10 @@ export class PlayerName {
             .successors(PlayerName, (name) => name.player)
             .notExists((name) => name.successors(PlayerName, (next) => next.prior));
     }
+
+    static of(player: LabelOf<Player>) {
+        return player.successors(PlayerName, (name) => name.player);
+    }
 }
 
 export class Playground {

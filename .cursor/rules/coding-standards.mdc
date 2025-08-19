@@ -227,29 +227,23 @@ describe('Service', () => {
 });
 ```
 
-### Integration Tests
+### Comprehensive Tests
 ```typescript
-// Test service interactions
-// Use test databases and mock services
-// Clean up test data after each test
+// Test complete workflows with JinagaTest
+// Use givenPlayerApp for component testing
+// Test authorization and distribution rules
 
-describe('Service Integration', () => {
-  beforeEach(async () => {
-    // Setup test data
-  });
+describe('Complete Workflow Tests', () => {
+  it('should handle complete user workflow', async () => {
+    givenPlayerApp((player: Player) => [
+      // Additional initial state facts
+    ]);
 
-  afterEach(async () => {
-    // Clean up test data
-  });
-
-  it('should create and retrieve facts', async () => {
-    const jinaga = new Jinaga();
-    const fact = new TestFact('test');
+    // Test the complete workflow
+    render(<UserWorkflowComponent />);
     
-    await jinaga.store(fact);
-    const facts = await jinaga.query(TestFact);
-    
-    expect(facts).toContainEqual(fact);
+    // Verify the workflow works end-to-end
+    expect(screen.getByText('Workflow Complete')).toBeInTheDocument();
   });
 });
 ```
